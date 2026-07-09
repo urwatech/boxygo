@@ -12,19 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('shipments', function (Blueprint $table) {
-            if (!Schema::hasColumn('shipments', 'is_diff_city')) {
+            if (! Schema::hasColumn('shipments', 'is_diff_city')) {
                 $table->boolean('is_diff_city')->default(false)->after('receiver_building');
             }
 
-            if (!Schema::hasColumn('shipments', 'delivery_zone_id')) {
+            if (! Schema::hasColumn('shipments', 'delivery_zone_id')) {
                 $table->bigInteger('delivery_zone_id')->nullable()->after('zone_id');
             }
 
-            if (!Schema::hasColumn('shipments', 'sender_zone_delivery_fee')) {
+            if (! Schema::hasColumn('shipments', 'sender_zone_delivery_fee')) {
                 $table->decimal('sender_zone_delivery_fee', 12, 2)->nullable()->after('is_diff_city');
             }
 
-            if (!Schema::hasColumn('shipments', 'reciever_zone_delivery_fee')) {
+            if (! Schema::hasColumn('shipments', 'reciever_zone_delivery_fee')) {
                 $table->decimal('reciever_zone_delivery_fee', 12, 2)->nullable()->after('sender_zone_delivery_fee');
             }
         });
@@ -54,7 +54,7 @@ return new class extends Migration
                 $columns[] = 'reciever_zone_delivery_fee';
             }
 
-            if (!empty($columns)) {
+            if (! empty($columns)) {
                 $table->dropColumn($columns);
             }
         });

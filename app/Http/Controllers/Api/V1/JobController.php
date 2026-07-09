@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Enums\ShipmentStatus;
 use App\Enums\Role;
+use App\Enums\ShipmentStatus;
 use App\Http\ApiResponse;
-use App\Models\Shipment;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\Job\CollectPaymentRequest;
 use App\Http\Requests\Api\Job\CreateCancelledRequest;
@@ -13,6 +12,7 @@ use App\Http\Requests\Api\Job\ScanParcelRequest;
 use App\Http\Requests\Api\Job\UpdateBarcodeRequest;
 use App\Http\Requests\Api\Job\UpdateStatusRequest;
 use App\Http\Resources\JobResource;
+use App\Models\Shipment;
 use App\Services\ShipmentService;
 use App\Services\ShipmentTrackingService;
 use App\Services\WalletService;
@@ -21,7 +21,6 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response;
 
 class JobController extends Controller
 {
@@ -105,11 +104,11 @@ class JobController extends Controller
             // For riders, only return the basic statuses they can set
             $allowedStatuses = array_filter(
                 ShipmentStatus::cases(),
-                fn(ShipmentStatus $status) => in_array($status->value, $riderVisibleStatuses, true)
+                fn (ShipmentStatus $status) => in_array($status->value, $riderVisibleStatuses, true)
             );
 
             $statuses = array_map(
-                fn(ShipmentStatus $status) => [
+                fn (ShipmentStatus $status) => [
                     'value' => $status->value,
                     'label' => $this->getRiderFriendlyLabel($status),
                     'slug' => $status->slug(),
@@ -119,7 +118,7 @@ class JobController extends Controller
         } else {
             // For other roles (admin, keeper, driver), return all statuses
             $statuses = array_map(
-                fn(ShipmentStatus $status) => [
+                fn (ShipmentStatus $status) => [
                     'value' => $status->value,
                     'label' => $status->label(),
                     'slug' => $status->slug(),
@@ -192,7 +191,7 @@ class JobController extends Controller
             $job = null;
         }
 
-        if (!$job) {
+        if (! $job) {
             return ApiResponse::notFound(__('jobNotFoundOrNotAssignedToYou'));
         }
 
@@ -202,7 +201,7 @@ class JobController extends Controller
         return ApiResponse::success([
             'job' => new JobResource($job),
             'timeline' => $timeline,
-            'timeline_cancel' => $timelineCancel
+            'timeline_cancel' => $timelineCancel,
         ]);
     }
 
@@ -215,10 +214,9 @@ class JobController extends Controller
         DB::beginTransaction();
         try {
             $user = $request->user();
-            if (!$user) {
+            if (! $user) {
                 return ApiResponse::unauthorized();
             }
-
 
             $data = $request->validated();
 
@@ -258,7 +256,7 @@ class JobController extends Controller
                                 'address' => $nearestKeeper->address,
                                 'latitude' => $nearestKeeper->latitude,
                                 'longitude' => $nearestKeeper->longitude,
-                                'distance_km' => isset($nearestKeeper->distance_km) ? round((float)$nearestKeeper->distance_km, 3) : null,
+                                'distance_km' => isset($nearestKeeper->distance_km) ? round((float) $nearestKeeper->distance_km, 3) : null,
                             ];
                         }
                     }
@@ -290,7 +288,7 @@ class JobController extends Controller
                                 'address' => $nearestKeeper->address,
                                 'latitude' => $nearestKeeper->latitude,
                                 'longitude' => $nearestKeeper->longitude,
-                                'distance_km' => isset($nearestKeeper->distance_km) ? round((float)$nearestKeeper->distance_km, 3) : null,
+                                'distance_km' => isset($nearestKeeper->distance_km) ? round((float) $nearestKeeper->distance_km, 3) : null,
                             ];
                         }
                     }
@@ -320,6 +318,7 @@ class JobController extends Controller
                 'stack' => $e->getTraceAsString(),
             ]);
             DB::rollback();
+
             return ApiResponse::badRequest($e->getMessage());
         }
     }
@@ -396,7 +395,7 @@ class JobController extends Controller
             $job = null;
         }
 
-        if (!$job) {
+        if (! $job) {
             return ApiResponse::notFound(__('jobNotFoundOrNotAssignedToYou'));
         }
 
@@ -418,7 +417,7 @@ class JobController extends Controller
 
         $job = $this->shipmentService->findJobForRider($id, $user->id);
 
-        if (!$job) {
+        if (! $job) {
             return ApiResponse::notFound(__('jobNotFoundOrNotAssignedToYou'));
         }
 
@@ -443,7 +442,7 @@ class JobController extends Controller
     public function updateBarcode(UpdateBarcodeRequest $request, int $id): JsonResponse
     {
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return ApiResponse::unauthorized();
         }
 
@@ -452,7 +451,7 @@ class JobController extends Controller
         try {
             $job = $this->shipmentService->updateBarcode($id, $user->id, $data['barcode_number']);
 
-            if (!$job) {
+            if (! $job) {
                 return ApiResponse::notFound(__('jobNotFound'));
             }
 

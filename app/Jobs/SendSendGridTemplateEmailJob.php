@@ -41,7 +41,7 @@ class SendSendGridTemplateEmailJob implements ShouldQueue
             $this->fromName
         );
 
-        if (!$sent) {
+        if (! $sent) {
             throw new RuntimeException('SendGrid template email sending failed.');
         }
     }

@@ -7,7 +7,6 @@ use App\Http\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
-use App\Mail\WelcomeNewUserMail;
 use App\Models\User;
 use App\Services\OtpService;
 use App\Services\RoleService;
@@ -17,7 +16,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class RegistrationController extends Controller
@@ -27,8 +25,7 @@ class RegistrationController extends Controller
         private UserService $userService,
         private RoleService $roleService,
         private SendGridEmailService $sendGridEmailService
-    ) {
-    }
+    ) {}
 
     public function store(RegisterRequest $request): JsonResponse
     {
@@ -47,6 +44,7 @@ class RegistrationController extends Controller
 
             // Assign the role specified in the registration request
             $user->assignRole($payload['role']);
+
             return $user;
         });
 
@@ -85,7 +83,7 @@ class RegistrationController extends Controller
 
     private function sendWelcomeEmail(User $user): void
     {
-        if (!$this->shouldSendWelcomeEmail()) {
+        if (! $this->shouldSendWelcomeEmail()) {
             return;
         }
 
@@ -108,10 +106,10 @@ class RegistrationController extends Controller
 
         $smtpConfig = config('mail.mailers.smtp');
 
-        if (!is_array($smtpConfig)) {
+        if (! is_array($smtpConfig)) {
             return false;
         }
 
-        return !empty($smtpConfig['host']) && !empty($smtpConfig['port']);
+        return ! empty($smtpConfig['host']) && ! empty($smtpConfig['port']);
     }
 }

@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\ResendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Http\Resources\UserResource;
-use App\Models\User;
 use App\Models\UserOtp;
 use App\Services\OtpService;
 use App\Services\SendGridEmailService;
@@ -23,8 +22,7 @@ class OtpVerificationController extends Controller
         private OtpService $otpService,
         private UserService $userService,
         private SendGridEmailService $sendGridEmailService
-    ) {
-    }
+    ) {}
 
     public function store(VerifyOtpRequest $request): JsonResponse
     {
@@ -33,7 +31,7 @@ class OtpVerificationController extends Controller
         /** @var UserOtp|null $otp */
         $otp = $this->otpService->findLatestByIdentifier($data['verification_token']);
 
-        if (!$otp || !$otp->user) {
+        if (! $otp || ! $otp->user) {
             return ApiResponse::validationError(
                 ['verification_token' => [__('invalidVerificationCode')]],
                 __('invalidVerificationCode')
@@ -43,7 +41,7 @@ class OtpVerificationController extends Controller
         // Allow bypass code in local environment
         $isLocalBypass = config('app.env') === 'local' && $data['code'] === '000000';
 
-        if (!$isLocalBypass && !$this->otpService->validateCode($otp, $data['code'])) {
+        if (! $isLocalBypass && ! $this->otpService->validateCode($otp, $data['code'])) {
             $message = $otp->isExpired()
                 ? __('verificationCodeExpiredPleaseRequestANewCode')
                 : __('invalidVerificationCode');
@@ -84,14 +82,14 @@ class OtpVerificationController extends Controller
         $user = null;
         $previousOtp = null;
 
-        if (!empty($data['verification_token'])) {
+        if (! empty($data['verification_token'])) {
             $previousOtp = $this->otpService->findLatestByIdentifier($data['verification_token']);
             $user = $previousOtp?->user;
-        } elseif (!empty($data['email'])) {
+        } elseif (! empty($data['email'])) {
             $user = $this->userService->findByEmail($data['email']);
         }
 
-        if (!$user) {
+        if (! $user) {
             return ApiResponse::notFound(__('userCouldNotBeFound'));
         }
 
@@ -99,7 +97,7 @@ class OtpVerificationController extends Controller
             return ApiResponse::badRequest(__('accountAlreadyVerified'));
         }
 
-        if ($previousOtp && !$previousOtp->isConsumed()) {
+        if ($previousOtp && ! $previousOtp->isConsumed()) {
             $previousOtp->forceFill(['consumed_at' => now()])->save();
         }
 

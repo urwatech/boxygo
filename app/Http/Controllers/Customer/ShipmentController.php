@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Customer;
 use App\Contracts\ShipmentServiceInterface;
 use App\Enums\ShipmentStatus;
 use App\Helpers\helpers;
-use App\Services\WalletService;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\Shipment\CompensationStatusRequest;
 use App\Http\Requests\Customer\Shipment\CompensationStoreRequest;
@@ -13,24 +12,25 @@ use App\Http\Requests\Customer\Shipment\CreateShipmentStoreRequest;
 use App\Http\Requests\Customer\Shipment\ShipmentReturnStoreRequest;
 use App\Models\City;
 use App\Models\Shipment;
-use App\Support\FinancialSettings;
-use App\Notifications\ShipmentCreatedNotification;
-use App\Services\MtnSmsService;
 use App\Models\User;
 use App\Notifications\GenericNotification;
 use App\Notifications\ShipmentCompensationAcceptedNotification;
 use App\Notifications\ShipmentCompensationRejectedNotification;
 use App\Notifications\ShipmentCompensationRequestNotification;
 use App\Notifications\ShipmentCompensationReturnedSuccessNotification;
+use App\Notifications\ShipmentCreatedNotification;
 use App\Notifications\ShipmentReturnCreatedNotification;
 use App\Notifications\ShipmentReturnRDFDeductNotification;
+use App\Services\MtnSmsService;
 use App\Services\UserService;
+use App\Services\WalletService;
+use App\Support\FinancialSettings;
 use App\Support\ShipmentPaymentHelper;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,9 +44,6 @@ class ShipmentController extends Controller
 
     /**
      * Display a listing of shipments.
-     *
-     * @param Request $request
-     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -188,7 +185,7 @@ class ShipmentController extends Controller
             'directStatus',
             'indirectStatus',
             'review',
-            'statusHistory' => fn($q) => $q->with(['user:id,name'])->orderBy('created_at', 'asc'),
+            'statusHistory' => fn ($q) => $q->with(['user:id,name'])->orderBy('created_at', 'asc'),
         ]);
 
         // Add payment details to selected shipment
@@ -199,8 +196,9 @@ class ShipmentController extends Controller
             'directStatus',
             'indirectStatus',
             'review',
-            'statusHistory' => fn($q) => $q->with(['user:id,name'])->orderBy('created_at', 'asc'),
+            'statusHistory' => fn ($q) => $q->with(['user:id,name'])->orderBy('created_at', 'asc'),
         ]) : null;
+
         return Inertia::render('Customer/SendingParcels', [
             'shipments' => [],
             'filters' => [
@@ -226,7 +224,7 @@ class ShipmentController extends Controller
             'directStatus',
             'indirectStatus',
             'review',
-            'statusHistory' => fn($q) => $q->with(['user:id,name'])->orderBy('created_at', 'asc'),
+            'statusHistory' => fn ($q) => $q->with(['user:id,name'])->orderBy('created_at', 'asc'),
         ]);
 
         // Add payment details to selected shipment
@@ -237,8 +235,9 @@ class ShipmentController extends Controller
             'directStatus',
             'indirectStatus',
             'review',
-            'statusHistory' => fn($q) => $q->with(['user:id,name'])->orderBy('created_at', 'asc'),
+            'statusHistory' => fn ($q) => $q->with(['user:id,name'])->orderBy('created_at', 'asc'),
         ]) : null;
+
         return Inertia::render('Customer/ReceivingParcels', [
             'shipments' => [],
             'filters' => [
@@ -263,7 +262,7 @@ class ShipmentController extends Controller
         ]);
 
         $shipment = $this->shipmentService->find((int) $request->shipment_id);
-        if (!$shipment) {
+        if (! $shipment) {
             return response()->json([
                 'success' => false,
                 'message' => __('commonShipmentNotFound'),
@@ -281,7 +280,7 @@ class ShipmentController extends Controller
 
         $smsService = app(MtnSmsService::class);
         $user = $request->user();
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => __('unauthorized'),
@@ -299,7 +298,7 @@ class ShipmentController extends Controller
             }
 
             $alreadyPaid = strtolower((string) $shipment->sender_payment_status) === 'paid';
-            if (!$alreadyPaid) {
+            if (! $alreadyPaid) {
                 $shipment->sender_payment_status = 'paid';
                 $shipment->save();
 
@@ -313,7 +312,7 @@ class ShipmentController extends Controller
                         type: 'shipment',
                         icon: 'payment',
                         extraData: [
-                            'role' => 'sender'
+                            'role' => 'sender',
                         ]
                     ));
                 }
@@ -333,14 +332,14 @@ class ShipmentController extends Controller
 
         $isReceiverAuthorized = (int) $shipment->receiver_id === (int) $user->id
             || (int) $shipment->user_id === (int) $user->id;
-        if (!$isReceiverAuthorized) {
+        if (! $isReceiverAuthorized) {
             return response()->json([
                 'success' => false,
                 'message' => __('youAreNotAllowedToPayThisShipmentAsReceiver'),
             ], JsonResponse::HTTP_FORBIDDEN);
         }
 
-        if (!in_array($paymentMethod, ['cash', 'online'], true)) {
+        if (! in_array($paymentMethod, ['cash', 'online'], true)) {
             return response()->json([
                 'success' => false,
                 'message' => __('validationFailed'),
@@ -354,7 +353,7 @@ class ShipmentController extends Controller
             ? strtolower((string) $shipment->rdf_payment_status) === 'paid'
             : strtolower((string) $shipment->payment_status) === 'paid';
 
-        if (!$alreadyPaid) {
+        if (! $alreadyPaid) {
             if ($paymentFor === 'return_delivery') {
                 $shipment->rdf_payment_status = 'paid';
                 $shipment->rdf_paid_at = now();
@@ -375,7 +374,7 @@ class ShipmentController extends Controller
                         type: 'shipment',
                         icon: 'payment',
                         extraData: [
-                            'role' => 'sender'
+                            'role' => 'sender',
                         ]
                     ));
                 }
@@ -442,8 +441,7 @@ class ShipmentController extends Controller
     /**
      * Store a newly created shipment.
      *
-     * @param Request $request
-     * @return JsonResponse
+     * @param  Request  $request
      */
     public function store(CreateShipmentStoreRequest $request): JsonResponse
     {
@@ -461,7 +459,7 @@ class ShipmentController extends Controller
         // Summary card values
         $totalBalance = (float) $wallet->balance;
 
-        if($data['sender_amount'] == 0){
+        if ($data['sender_amount'] == 0) {
             $data['sender_payment_status'] = 'paid';
         }
 
@@ -508,7 +506,7 @@ class ShipmentController extends Controller
 
         // Initialize tracking status row based on delivery speed
         // Starting at index 0 (Assigned stage)
-        $speed = strtolower((string)($data['delivery_speed'] ?? 'direct'));
+        $speed = strtolower((string) ($data['delivery_speed'] ?? 'direct'));
         if (str_starts_with($speed, 'direct')) {
             \App\Models\ShipmentStatusDirect::create([
                 'shipment_id' => $shipment->id,
@@ -543,11 +541,11 @@ class ShipmentController extends Controller
             (float) $shipment->delivery_longitude
         );
 
-        if($handoverZone){
+        if ($handoverZone) {
             $shipment->zone_id = $handoverZone->id;
         }
 
-        if($deliveryZone){
+        if ($deliveryZone) {
             $shipment->delivery_zone_id = $deliveryZone->id;
         }
 
@@ -634,7 +632,7 @@ class ShipmentController extends Controller
                 $this->walletService->debit(
                     $request->user()->id,
                     max($totalSenderPaid, 0.01), // ensure positive amount
-                    'Booking created - ' . $shipment->order_number,
+                    'Booking created - '.$shipment->order_number,
                     [
                         'shipment_id' => $shipment->id,
                         'shipment_order_number' => $shipment->order_number,
@@ -657,7 +655,7 @@ class ShipmentController extends Controller
                     $this->walletService->hold(
                         $request->user()->id,
                         $rdfAmount,
-                        'RDF Hold - ' . $shipment->order_number,
+                        'RDF Hold - '.$shipment->order_number,
                         [
                             'shipment_id' => $shipment->id,
                             'shipment_order_number' => $shipment->order_number,
@@ -678,7 +676,7 @@ class ShipmentController extends Controller
                         type: 'shipment',
                         icon: 'payment',
                         extraData: [
-                            "role" => 'reciever'
+                            'role' => 'reciever',
                         ]
                     ));
                 }
@@ -695,7 +693,7 @@ class ShipmentController extends Controller
                         type: 'shipment',
                         icon: 'payment',
                         extraData: [
-                            "role" => 'reciever'
+                            'role' => 'reciever',
                         ]
                     ));
                 }
@@ -712,7 +710,7 @@ class ShipmentController extends Controller
             if (($data['accept_returns'] ?? false) && ($data['return_delivery_fee_payer'] ?? '') === 'receiver') {
                 $shipment->update([
                     'rdf_amount' => $rdfAmount,
-                    'rdf_payment_status' => 'pending'
+                    'rdf_payment_status' => 'pending',
                 ]);
             }
         } catch (\Exception $e) {
@@ -768,7 +766,7 @@ class ShipmentController extends Controller
             'sender_building',
             'handover_address',
             'handover_latitude',
-            'handover_longitude'
+            'handover_longitude',
         ];
         $receiverFields = [
             'receiver_name',
@@ -778,7 +776,7 @@ class ShipmentController extends Controller
             'receiver_building',
             'delivery_address',
             'delivery_latitude',
-            'delivery_longitude'
+            'delivery_longitude',
         ];
 
         foreach ($senderFields as $index => $field) {
@@ -817,7 +815,7 @@ class ShipmentController extends Controller
         $originalShipment->save();
         // Initialize tracking status row based on delivery speed
         // Starting at index 0 (Assigned stage)
-        $speed = strtolower((string)($newShipmentData['delivery_speed'] ?? 'direct'));
+        $speed = strtolower((string) ($newShipmentData['delivery_speed'] ?? 'direct'));
         if (str_starts_with($speed, 'direct')) {
             \App\Models\ShipmentStatusDirect::create([
                 'shipment_id' => $shipment->id,
@@ -865,7 +863,7 @@ class ShipmentController extends Controller
             $this->walletService->creditHold(
                 $originalShipment->user_id,
                 max($originalShipment->parcel_amount, 0.01), // ensure positive amount
-                'Return Develivery Fee Deduct on Shipment - ' . $shipment->order_number,
+                'Return Develivery Fee Deduct on Shipment - '.$shipment->order_number,
                 [
                     'shipment_id' => $shipment->id,
                     'shipment_order_number' => $shipment->order_number,
@@ -881,7 +879,7 @@ class ShipmentController extends Controller
                 $this->walletService->deductHold(
                     $originalShipment->user_id,
                     max($totalSenderPaid, 0.01), // ensure positive amount
-                    'Return Develivery Fee Deduct on Shipment - ' . $shipment->order_number,
+                    'Return Develivery Fee Deduct on Shipment - '.$shipment->order_number,
                     [
                         'shipment_id' => $shipment->id,
                         'shipment_order_number' => $shipment->order_number,
@@ -909,7 +907,7 @@ class ShipmentController extends Controller
             }
         } catch (\Throwable $e) {
             // Don't fail the booking if wallet entry fails — log it
-            \Illuminate\Support\Facades\Log::warning('Wallet transaction creation failed for shipment: ' . $shipment->order_number, [
+            \Illuminate\Support\Facades\Log::warning('Wallet transaction creation failed for shipment: '.$shipment->order_number, [
                 'error' => $e->getMessage(),
             ]);
         }
@@ -939,7 +937,7 @@ class ShipmentController extends Controller
                 $this->walletService->credit(
                     $shipment->receiver_id,
                     max($reciever_amount, 0.01),
-                    'Booking return - ' . $shipment->order_number,
+                    'Booking return - '.$shipment->order_number,
                     [
                         'shipment_id' => $shipment->id,
                         'shipment_order_number' => $shipment->order_number,
@@ -1024,7 +1022,7 @@ class ShipmentController extends Controller
                 $this->walletService->credit(
                     $shipment->receiver_id,
                     max($reciever_amount, 0.01),
-                    'Booking return - ' . $shipment->order_number,
+                    'Booking return - '.$shipment->order_number,
                     [
                         'shipment_id' => $shipment->id,
                         'shipment_order_number' => $shipment->order_number,
@@ -1045,7 +1043,7 @@ class ShipmentController extends Controller
             $this->walletService->credit(
                 $shipment->user_id,
                 max($shipment->componsation_amount, 0.01),
-                'Booking return - ' . $shipment->order_number,
+                'Booking return - '.$shipment->order_number,
                 [
                     'shipment_id' => $shipment->id,
                     'shipment_order_number' => $shipment->order_number,
@@ -1098,7 +1096,7 @@ class ShipmentController extends Controller
                 $this->walletService->credit(
                     $shipment->receiver_id,
                     max($reciever_amount, 0.01),
-                    'Booking return - ' . $shipment->order_number,
+                    'Booking return - '.$shipment->order_number,
                     [
                         'shipment_id' => $shipment->id,
                         'shipment_order_number' => $shipment->order_number,
@@ -1119,7 +1117,7 @@ class ShipmentController extends Controller
             $this->walletService->credit(
                 $shipment->user_id,
                 max($shipment->componsation_amount, 0.01),
-                'Booking return - ' . $shipment->order_number,
+                'Booking return - '.$shipment->order_number,
                 [
                     'shipment_id' => $shipment->id,
                     'shipment_order_number' => $shipment->order_number,
@@ -1151,10 +1149,6 @@ class ShipmentController extends Controller
 
     /**
      * Display a specific shipment and open details view.
-     *
-     * @param Request $request
-     * @param Shipment $shipment
-     * @return Response
      */
     public function show(Request $request, Shipment $shipment): Response
     {
@@ -1167,7 +1161,7 @@ class ShipmentController extends Controller
             'directStatus',
             'indirectStatus',
             'review',
-            'statusHistory' => fn($q) => $q->orderBy('created_at', 'asc'),
+            'statusHistory' => fn ($q) => $q->orderBy('created_at', 'asc'),
         ]);
 
         // Add payment details to selected shipment
@@ -1178,8 +1172,9 @@ class ShipmentController extends Controller
             'directStatus',
             'indirectStatus',
             'review',
-            'statusHistory' => fn($q) => $q->orderBy('created_at', 'asc'),
+            'statusHistory' => fn ($q) => $q->orderBy('created_at', 'asc'),
         ]) : null;
+
         return Inertia::render('Customer/Shipments', [
             'shipments' => [],
             'filters' => [
@@ -1195,10 +1190,6 @@ class ShipmentController extends Controller
 
     /**
      * Display a shipment tracking page without requiring login.
-     *
-     * @param Request $request
-     * @param string $trackingNumber
-     * @return Response
      */
     public function track(Request $request, string $trackingNumber): Response
     {
@@ -1210,7 +1201,7 @@ class ShipmentController extends Controller
             'directStatus',
             'indirectStatus',
             'review',
-            'statusHistory' => fn($q) => $q->orderBy('created_at', 'asc'),
+            'statusHistory' => fn ($q) => $q->orderBy('created_at', 'asc'),
         ]);
 
         // Add payment details to selected shipment
@@ -1234,7 +1225,7 @@ class ShipmentController extends Controller
     public function updateStatus(Request $request, Shipment $shipment)
     {
         $user = $request->user();
-        if (!$user || $shipment->user_id !== $user->id) {
+        if (! $user || $shipment->user_id !== $user->id) {
             abort(403);
         }
 
@@ -1266,14 +1257,14 @@ class ShipmentController extends Controller
             $shipment = Shipment::where('tracking_number', $normalized)->first();
         }
 
-        if (!$shipment && preg_match('/(\d+)/', $normalized, $matches)) {
+        if (! $shipment && preg_match('/(\d+)/', $normalized, $matches)) {
             $id = (int) ltrim($matches[1], '0');
             if ($id > 0) {
                 $shipment = Shipment::find($id);
             }
         }
 
-        if (!$shipment) {
+        if (! $shipment) {
             abort(404);
         }
 
@@ -1288,12 +1279,12 @@ class ShipmentController extends Controller
     private function resolvePaymentStatus(Request $request): ?array
     {
         $status = $request->session()->get('paymentStatus');
-        if (!is_array($status)) {
+        if (! is_array($status)) {
             return null;
         }
 
         $type = strtolower((string) ($status['type'] ?? ''));
-        if (!in_array($type, ['success', 'error'], true)) {
+        if (! in_array($type, ['success', 'error'], true)) {
             return null;
         }
 
@@ -1361,12 +1352,13 @@ class ShipmentController extends Controller
 
         return is_numeric($clean) ? (float) $clean : 0.0;
     }
+
     public function requestReturn(Request $request, Shipment $shipment): JsonResponse
     {
         // 1. Validate ownership or public access logic if needed
 
         // 2. Initial Checks
-        if (!$shipment->accept_returns) {
+        if (! $shipment->accept_returns) {
             return response()->json(['ok' => false, 'message' => __('returnsAreNotAcceptedForThisShipment')], 400);
         }
 
@@ -1374,7 +1366,7 @@ class ShipmentController extends Controller
         $currentStatus = strtolower($shipment->status ?? '');
         $allowed = ['delivered', 'completed', 'pending handover']; // Expanded allowed statuses
 
-        if (!in_array($currentStatus, $allowed)) {
+        if (! in_array($currentStatus, $allowed)) {
             // Check history just in case
             $latest = $shipment->statusHistory()->latest()->first();
             $status = strtolower($latest ? $latest->status : '');
@@ -1386,7 +1378,7 @@ class ShipmentController extends Controller
                 }
             }
 
-            if (!$found) {
+            if (! $found) {
                 return response()->json(['ok' => false, 'message' => __('shipmentMustBeDeliveredBeforeRequestingAReturn')], 400);
             }
         }
@@ -1427,7 +1419,7 @@ class ShipmentController extends Controller
 
         // Additional Logic: Require images for Damaged/Wrong Item
         $reason = $request->input('return_reason');
-        if (in_array($reason, ['Damaged Item', 'Wrong Item']) && !$request->hasFile('images')) {
+        if (in_array($reason, ['Damaged Item', 'Wrong Item']) && ! $request->hasFile('images')) {
             return response()->json(['ok' => false, 'message' => __('imagesAreRequiredForThisReturnReason')], 422);
         }
 
@@ -1437,10 +1429,10 @@ class ShipmentController extends Controller
             foreach ($request->file('images') as $file) {
                 $path = $file->store('assets/customer-uploads/return-evidence', 'public_uploads');
                 // Check if public_uploads disk is configured, otherwise fallback to public
-                if (!$path) {
-                    $name = uniqid('return_') . '.' . $file->getClientOriginalExtension();
+                if (! $path) {
+                    $name = uniqid('return_').'.'.$file->getClientOriginalExtension();
                     $file->move(public_path('assets/customer-uploads/return-evidence'), $name);
-                    $path = 'assets/customer-uploads/return-evidence/' . $name;
+                    $path = 'assets/customer-uploads/return-evidence/'.$name;
                 }
                 $imagePaths[] = $path;
             }
@@ -1452,7 +1444,7 @@ class ShipmentController extends Controller
         if ($instruction) {
             $note .= "\nInstruction: $instruction";
         }
-        $note .= "\nRequested At: " . now()->toDateTimeString();
+        $note .= "\nRequested At: ".now()->toDateTimeString();
 
         $shipment->admin_notes .= $note;
         $shipment->return_status = 'requested';
@@ -1473,7 +1465,7 @@ class ShipmentController extends Controller
                     ->where(function ($q) use ($shipment) {
                         $q->whereJsonContains('metadata->shipment_id', $shipment->id)
                             ->orWhereJsonContains('metadata->shipment_id', (string) $shipment->id)
-                            ->orWhere('description', 'like', '%' . $shipment->order_number . '%');
+                            ->orWhere('description', 'like', '%'.$shipment->order_number.'%');
                     })
                     ->latest()
                     ->first();
@@ -1489,7 +1481,7 @@ class ShipmentController extends Controller
                     // Update Return Details in Metadata
                     $meta['return_reason'] = $reason;
                     // Map local paths to full URLs for the frontend
-                    $meta['photos'] = array_map(fn($path) => asset($path), $imagePaths);
+                    $meta['photos'] = array_map(fn ($path) => asset($path), $imagePaths);
 
                     $transaction->metadata = $meta;
                     $transaction->save();
@@ -1502,7 +1494,7 @@ class ShipmentController extends Controller
                 \Illuminate\Support\Facades\Log::warning("No wallet found for User ID: {$shipment->user_id}");
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Failed to update wallet status for shipment {$shipment->id}: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Failed to update wallet status for shipment {$shipment->id}: ".$e->getMessage());
         }
 
         return response()->json(['ok' => true]);

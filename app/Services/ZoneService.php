@@ -53,7 +53,7 @@ class ZoneService extends AbstractService implements ZoneServiceInterface
     {
         $zone = $this->find($zoneId);
 
-        if (!$zone) {
+        if (! $zone) {
             return false;
         }
 
@@ -64,4 +64,3 @@ class ZoneService extends AbstractService implements ZoneServiceInterface
         return $zone->save();
     }
 }
-

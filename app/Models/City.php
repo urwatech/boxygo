@@ -25,4 +25,3 @@ class City extends Model
         return $this->belongsTo(Governate::class);
     }
 }
-

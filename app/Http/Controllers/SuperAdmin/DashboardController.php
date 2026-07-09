@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
+use App\Enums\DeliveryStage;
+use App\Enums\Role as RoleEnum;
+use App\Enums\ShipmentStatus;
+use App\Helpers\helpers;
 use App\Http\Controllers\Controller;
 use App\Models\Shipment;
-use App\Support\FinancialSettings;
+use App\Models\User;
+use App\Services\ShipmentService;
+use App\Services\ShipmentTrackingService;
 use App\Support\AdminRouteResolver;
+use App\Support\FinancialSettings;
+use App\Support\SortHelper;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Models\User;
-use Illuminate\Http\RedirectResponse;
-use App\Services\ShipmentTrackingService;
-use App\Services\ShipmentService;
-use App\Enums\DeliveryStage;
-use App\Enums\ShipmentStatus;
-use App\Enums\Role as RoleEnum;
-use App\Helpers\helpers;
-use App\Support\SortHelper;
 
 class DashboardController extends Controller
 {
@@ -28,7 +28,7 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || !$user->can('admin.access')) {
+        if (! $user || ! $user->can('admin.access')) {
             abort(401);
         }
 
@@ -47,7 +47,7 @@ class DashboardController extends Controller
         $sortBy = trim((string) $request->query('sort_by', 'date'));
         $sortKey = SortHelper::key($sortBy);
         $allowedSorts = ['rider', 'date', 'status', 'location', 'order_number', 'sender', 'receiver', 'total_fee', 'payment_status', 'delivery_speed', 'updated_at'];
-        if (!in_array($sortKey, $allowedSorts, true)) {
+        if (! in_array($sortKey, $allowedSorts, true)) {
             $sortKey = 'date';
             $sortBy = 'date';
         }
@@ -77,8 +77,8 @@ class DashboardController extends Controller
                 'carDriverCollection',
                 'dropPointKeeperCollection',
                 'adminSettlement.collectedBy',
-                'review' => function($query) {
-                    $query->with(['rider' => function($q) {
+                'review' => function ($query) {
+                    $query->with(['rider' => function ($q) {
                         $q->select('id', 'name', 'avatar_path', 'phone_number');
                     }]);
                 },
@@ -158,7 +158,7 @@ class DashboardController extends Controller
                 foreach ($shipmentUsers as $user) {
                     if ($user['roles'] === RoleEnum::DROP_POINT_KEEPER->value) {
 
-                        if (!$senderDropPoint) {
+                        if (! $senderDropPoint) {
                             $senderDropPoint = [
                                 'id' => $user['drop_point_id'],
                                 'name' => $user['name'],
@@ -205,18 +205,18 @@ class DashboardController extends Controller
                 if ($isDropPointToDropPoint) {
                     // drop_point_to_drop_point: no rider ever needed from admin table
                     $needsAssignment = false;
-                } elseif ($isDoorDelivery && $isAtDP2 && !$shipment->delivery_rider_id) {
+                } elseif ($isDoorDelivery && $isAtDP2 && ! $shipment->delivery_rider_id) {
                     // door_to_door or drop_point_to_door at DP2: needs delivery rider
                     $needsAssignment = true;
                 } else {
                     // All other modes: show "Assign" only if no pickup rider yet
                     // drop_point_to_door before DP2 has no pickup rider so stays "View Details"
-                    $needsAssignment = $isDropPointToDoor ? false : !$shipment->rider_id;
+                    $needsAssignment = $isDropPointToDoor ? false : ! $shipment->rider_id;
                 }
 
                 return [
                     'id' => $shipment->id,
-                    'ship_id' => 'MP' . str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
+                    'ship_id' => 'MP'.str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
                     'order_number' => $shipment->order_number,
                     'zone_id' => $shipment->zone_id,
                     'booking_type' => $shipment->booking_type,
@@ -261,12 +261,12 @@ class DashboardController extends Controller
                     'pickup_location' => $shipment->handover_address ?? '--',
                     'dropoff_location' => $shipment->delivery_address ?? '--',
                     'weight' => $shipment->weight,
-                    'weight_text' => $shipment->weight ? ($shipment->weight . ' kg') : '--',
+                    'weight_text' => $shipment->weight ? ($shipment->weight.' kg') : '--',
                     'size' => $shipment->size,
                     'size_text' => $this->formatSize($shipment),
                     'insurance' => $this->formatInsuranceText($shipment->insurance),
-                    'value_text' => $shipment->parcel_amount !== null ? (number_format((float)$shipment->parcel_amount) . ' SYP') : '--',
-                    'total_fee' => $shipment->total_fee !== null ? (number_format((float)$shipment->total_fee) . ' SYP') : '--',
+                    'value_text' => $shipment->parcel_amount !== null ? (number_format((float) $shipment->parcel_amount).' SYP') : '--',
+                    'total_fee' => $shipment->total_fee !== null ? (number_format((float) $shipment->total_fee).' SYP') : '--',
                     'parcel_amount' => $shipment->parcel_amount,
                     'service_fee' => $shipment->service_fee,
                     'platform_fee' => $shipment->platform_fee ?? $shipment->platform_fee_amount ?? config('pricing.platform_fee', 5),
@@ -342,7 +342,7 @@ class DashboardController extends Controller
                     'raw' => [
                         'id' => $shipment->id,
                         'order_number' => $shipment->order_number,
-                        'tracking_number' => 'SHIP-' . str_pad($shipment->id, 8, '0', STR_PAD_LEFT),
+                        'tracking_number' => 'SHIP-'.str_pad($shipment->id, 8, '0', STR_PAD_LEFT),
                         'zone_id' => $shipment->zone_id,
                         'handover_latitude' => $shipment->handover_latitude,
                         'handover_longitude' => $shipment->handover_longitude,
@@ -474,7 +474,7 @@ class DashboardController extends Controller
             };
 
             $normalizedStatuses = array_values(array_unique(array_filter(array_map(
-                fn($value) => strtolower(trim((string) $value)),
+                fn ($value) => strtolower(trim((string) $value)),
                 $statuses
             ))));
 
@@ -491,6 +491,7 @@ class DashboardController extends Controller
                     ->orWhereHas('latestStatusHistory', function ($historyQuery) use ($placeholders, $normalizedStatuses) {
                         $historyQuery->whereRaw("LOWER(TRIM(to_status)) IN ({$placeholders})", $normalizedStatuses);
                     });
+
                 return;
             }
 
@@ -545,7 +546,7 @@ class DashboardController extends Controller
         ];
 
         $statuses = array_map(
-            fn(ShipmentStatus $shipmentStatus) => $shipmentStatus->value,
+            fn (ShipmentStatus $shipmentStatus) => $shipmentStatus->value,
             array_merge(ShipmentStatus::directStatuses(), ShipmentStatus::indirectStatuses(), [
                 ShipmentStatus::PENDING_HANDOVER,
                 ShipmentStatus::INCOMPLETE_COLLECTED,
@@ -614,9 +615,9 @@ class DashboardController extends Controller
             });
 
         // Apply zone filtering for non-superadmin employees
-        if ($user && !$user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
+        if ($user && ! $user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
             $zoneIds = $user->getAssignedZoneIds();
-            if (!empty($zoneIds)) {
+            if (! empty($zoneIds)) {
                 $query->whereIn('shipments.zone_id', $zoneIds);
             }
         }
@@ -633,7 +634,7 @@ class DashboardController extends Controller
         // Group by shipment ID and take the first occurrence (which will be the highest ID due to DESC order)
         $shipmentsByIdMap = [];
         foreach ($shipments as $shipment) {
-            if (!isset($shipmentsByIdMap[$shipment->id])) {
+            if (! isset($shipmentsByIdMap[$shipment->id])) {
                 $shipmentsByIdMap[$shipment->id] = $shipment;
             }
         }
@@ -648,7 +649,7 @@ class DashboardController extends Controller
             } elseif (in_array($status, $pickupPendingStatuses)) {
                 // Calculate delay based on when status last changed (or created if no status history)
                 $relevantTime = $shipment->status_changed_at ?? $shipment->created_at;
-                if (!$relevantTime instanceof \Illuminate\Support\Carbon) {
+                if (! $relevantTime instanceof \Illuminate\Support\Carbon) {
                     $relevantTime = \Illuminate\Support\Carbon::parse($relevantTime);
                 }
                 $minutesElapsed = $relevantTime->diffInMinutes($now);
@@ -677,17 +678,15 @@ class DashboardController extends Controller
     {
         if ($shipment->delivery_speed === 'direct') {
             return 'Direct D-D';
-        }
-        else {
+        } else {
             if ($shipment->indirect_delivery_mode === 'door_to_drop_point') {
                 return 'In-Direct D-P';
-            }
-            else if ($shipment->indirect_delivery_mode === 'drop_point_to_drop_point') {
+            } elseif ($shipment->indirect_delivery_mode === 'drop_point_to_drop_point') {
                 return 'In-Direct P-P';
-            }
-            else if ($shipment->indirect_delivery_mode === 'drop_point_to_door') {
+            } elseif ($shipment->indirect_delivery_mode === 'drop_point_to_door') {
                 return 'In-Direct P-D';
             }
+
             return 'In-Direct D-D';
         }
 
@@ -699,13 +698,14 @@ class DashboardController extends Controller
         $isDropPointMode = $shipment->delivery_speed === 'indirect'
             && in_array($shipment->indirect_delivery_mode, ['drop_point_to_door', 'drop_point_to_drop_point'], true);
 
-        if ($isDropPointMode && !$shipment->rider_id) {
+        if ($isDropPointMode && ! $shipment->rider_id) {
             return '--';
         }
 
         // Try to get vehicle type from rider's vehicle
         if ($shipment->rider && $shipment->rider->vehicles()->exists()) {
             $vehicle = $shipment->rider->vehicles()->first();
+
             return $vehicle->type ?? 'Bike';
         }
 
@@ -744,13 +744,13 @@ class DashboardController extends Controller
         $normalizedStatus = trim($status);
 
         // For empty or pending status
-        if (!$normalizedStatus || strtolower($normalizedStatus) === 'pending') {
+        if (! $normalizedStatus || strtolower($normalizedStatus) === 'pending') {
             // For door-to-door (direct or door_to_* indirect) shipments without a rider, show "Unassigned"
             $isDoorDelivery = $shipment->delivery_speed === 'direct' ||
                 ($shipment->delivery_speed === 'indirect' &&
                  in_array($shipment->indirect_delivery_mode, ['door_to_door', 'door_to_drop_point'], true));
 
-            if ($isDoorDelivery && !$shipment->rider_id) {
+            if ($isDoorDelivery && ! $shipment->rider_id) {
                 return 'Unassigned';
             }
 
@@ -789,19 +789,19 @@ class DashboardController extends Controller
                     }
 
                     // Check rider collection deposit
-                    if (!$isDeposited && $shipment->relationLoaded('riderCollection') && $shipment->riderCollection) {
+                    if (! $isDeposited && $shipment->relationLoaded('riderCollection') && $shipment->riderCollection) {
                         $isDeposited = $shipment->riderCollection->rider_deposited_at !== null ||
                                      $shipment->riderCollection->settled_at !== null;
                     }
 
                     // Check car driver collection deposit
-                    if (!$isDeposited && $shipment->relationLoaded('carDriverCollection') && $shipment->carDriverCollection) {
+                    if (! $isDeposited && $shipment->relationLoaded('carDriverCollection') && $shipment->carDriverCollection) {
                         $isDeposited = $shipment->carDriverCollection->rider_deposited_at !== null ||
                                      $shipment->carDriverCollection->settled_at !== null;
                     }
 
                     // Check drop point keeper collection deposit
-                    if (!$isDeposited && $shipment->relationLoaded('dropPointKeeperCollection') && $shipment->dropPointKeeperCollection) {
+                    if (! $isDeposited && $shipment->relationLoaded('dropPointKeeperCollection') && $shipment->dropPointKeeperCollection) {
                         $isDeposited = $shipment->dropPointKeeperCollection->rider_deposited_at !== null ||
                                      $shipment->dropPointKeeperCollection->settled_at !== null;
                     }
@@ -824,7 +824,7 @@ class DashboardController extends Controller
 
     private function resolveEmployeeRoleMeta(?User $user): array
     {
-        if (!$user) {
+        if (! $user) {
             return ['label' => 'Unassigned', 'key' => 'unassigned'];
         }
 
@@ -841,10 +841,10 @@ class DashboardController extends Controller
     private function formatSize($shipment): string
     {
         if ($shipment->custom_length && $shipment->custom_width && $shipment->custom_height) {
-            return sprintf('%s (%s × %s × %s cm)', ucfirst((string)($shipment->size ?? 'Custom')), (string)$shipment->custom_length, (string)$shipment->custom_width, (string)$shipment->custom_height);
+            return sprintf('%s (%s × %s × %s cm)', ucfirst((string) ($shipment->size ?? 'Custom')), (string) $shipment->custom_length, (string) $shipment->custom_width, (string) $shipment->custom_height);
         }
 
-        return $shipment->size ? ucfirst((string)$shipment->size) : '--';
+        return $shipment->size ? ucfirst((string) $shipment->size) : '--';
     }
 
     /**
@@ -889,9 +889,9 @@ class DashboardController extends Controller
             ->with(['vehicles:id,user_id,type']);
 
         // Filter riders by zone if the current user is a non-superadmin employee with a zone assigned
-        if ($currentUser && !$currentUser->hasRole('superadmin') && $currentUser->platform === 'Admin Portal') {
+        if ($currentUser && ! $currentUser->hasRole('superadmin') && $currentUser->platform === 'Admin Portal') {
             $zoneIds = $currentUser->getAssignedZoneIds();
-            if (!empty($zoneIds)) {
+            if (! empty($zoneIds)) {
                 $query->where(function ($query) use ($zoneIds) {
                     $query->whereIn('zone_id', $zoneIds);
 
@@ -926,7 +926,7 @@ class DashboardController extends Controller
 
                 return [
                     'id' => $user->id,
-                    'code' => $user->employee_id ?: ('MP-' . str_pad((string) $user->id, 3, '0', STR_PAD_LEFT)),
+                    'code' => $user->employee_id ?: ('MP-'.str_pad((string) $user->id, 3, '0', STR_PAD_LEFT)),
                     'name' => $user->name,
                     'zone_id' => $user->zone_id,
                     'zone_ids' => $user->zone_ids ?? [],
@@ -971,9 +971,9 @@ class DashboardController extends Controller
             });
 
         // Filter by zone if applicable
-        if ($currentUser && !$currentUser->hasRole('superadmin') && $currentUser->platform === 'Admin Portal') {
+        if ($currentUser && ! $currentUser->hasRole('superadmin') && $currentUser->platform === 'Admin Portal') {
             $zoneIds = $currentUser->getAssignedZoneIds();
-            if (!empty($zoneIds)) {
+            if (! empty($zoneIds)) {
                 $query->whereIn('zone_id', $zoneIds);
             }
         }
@@ -1017,9 +1017,9 @@ class DashboardController extends Controller
             ]);
 
         // Filter by zone if applicable
-        if ($currentUser && !$currentUser->hasRole('superadmin') && $currentUser->platform === 'Admin Portal') {
+        if ($currentUser && ! $currentUser->hasRole('superadmin') && $currentUser->platform === 'Admin Portal') {
             $zoneIds = $currentUser->getAssignedZoneIds();
-            if (!empty($zoneIds)) {
+            if (! empty($zoneIds)) {
                 $query->whereIn('zone_id', $zoneIds);
             }
         }
@@ -1041,12 +1041,13 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || !$user->can('admin.access')) {
+        if (! $user || ! $user->can('admin.access')) {
             abort(401);
         }
 
         return response()->json($this->getStatistics());
     }
+
     /**
      * Assign a rider to a shipment.
      */
@@ -1054,7 +1055,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('shipments.assign'))) {
+        if (! $user || (! $user->can('shipments.assign'))) {
             abort(401);
         }
 
@@ -1086,7 +1087,7 @@ class DashboardController extends Controller
             strtolower(ShipmentStatus::ASSIGNED->value),
         ];
 
-        if ($normalizedStatus && !in_array($normalizedStatus, $allowedStatuses, true)) {
+        if ($normalizedStatus && ! in_array($normalizedStatus, $allowedStatuses, true)) {
             return redirect()->route('admin.dashboard')->with('error', __('cannotReassignThisShipmentAfterPickupHasStarted'));
         }
 
@@ -1096,11 +1097,11 @@ class DashboardController extends Controller
             ->whereHas('roles', fn ($q) => $q->where('name', 'rider'))
             ->first();
 
-        if (!$rider) {
+        if (! $rider) {
             return redirect()->route('admin.dashboard')->with('error', __('selectedPickupRiderIsNotARider'));
         }
 
-        if (!$isDoorToDoor && $shipment->rider_id && (int) $shipment->rider_id === (int) $rider->id) {
+        if (! $isDoorToDoor && $shipment->rider_id && (int) $shipment->rider_id === (int) $rider->id) {
             return redirect()->route('admin.dashboard')->with('error', __('thisShipmentIsAlreadyAssignedToTheSelectedRider'));
         }
 
@@ -1117,7 +1118,7 @@ class DashboardController extends Controller
                 DeliveryStage::PICKUP->value
             );
 
-            if (!$codCheck['can_accept']) {
+            if (! $codCheck['can_accept']) {
                 return back()->withErrors(['rider' => $codCheck['reason']]);
             }
         }
@@ -1136,6 +1137,7 @@ class DashboardController extends Controller
         foreach ($openPickupAssignments as $openAssignment) {
             if ((int) $openAssignment->user_id === (int) $rider->id) {
                 $existingPickupAssignment = $openAssignment;
+
                 continue;
             }
 
@@ -1143,7 +1145,7 @@ class DashboardController extends Controller
             $suffix = 'Unassigned by admin for reassignment';
             $openAssignment->update([
                 'completed_at' => now(),
-                'notes' => $notes ? $notes . "\n\n" . $suffix : $suffix,
+                'notes' => $notes ? $notes."\n\n".$suffix : $suffix,
             ]);
         }
 
@@ -1153,7 +1155,7 @@ class DashboardController extends Controller
 
         if ($existingPickupAssignment) {
             $assignment = $existingPickupAssignment;
-            if (!$assignment->started_at) {
+            if (! $assignment->started_at) {
                 $trackingService->startAssignment($assignment);
                 $assignment->refresh();
             }
@@ -1189,7 +1191,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('shipments.assign')) {
+        if (! $user || ! $user->can('shipments.assign')) {
             abort(401);
         }
 
@@ -1198,7 +1200,7 @@ class DashboardController extends Controller
         $isDropPointToDoor = $shipment->delivery_speed === 'indirect'
             && $shipment->indirect_delivery_mode === 'drop_point_to_door';
 
-        if (!$isDoorToDoor && !$isDropPointToDoor) {
+        if (! $isDoorToDoor && ! $isDropPointToDoor) {
             return redirect()->route('admin.dashboard')->with('error', __('deliveryRiderCanOnlyBeAssignedForDoorToDoorOrDropPointToDoorShipments'));
         }
 
@@ -1227,7 +1229,7 @@ class DashboardController extends Controller
             ->whereHas('roles', fn ($q) => $q->where('name', 'rider'))
             ->first();
 
-        if (!$deliveryRider) {
+        if (! $deliveryRider) {
             return redirect()->route('admin.dashboard')->with('error', __('selectedDeliveryRiderIsNotAValidRider'));
         }
 
@@ -1246,13 +1248,14 @@ class DashboardController extends Controller
         foreach ($openFinalAssignments as $openAssignment) {
             if ((int) $openAssignment->user_id === (int) $deliveryRider->id) {
                 $existingFinalAssignment = $openAssignment;
+
                 continue;
             }
             $notes = trim((string) $openAssignment->notes);
             $suffix = 'Unassigned by admin for reassignment';
             $openAssignment->update([
                 'completed_at' => now(),
-                'notes' => $notes ? $notes . "\n\n" . $suffix : $suffix,
+                'notes' => $notes ? $notes."\n\n".$suffix : $suffix,
             ]);
         }
 
@@ -1260,7 +1263,7 @@ class DashboardController extends Controller
         $shipment->save();
 
         if ($existingFinalAssignment) {
-            if (!$existingFinalAssignment->started_at) {
+            if (! $existingFinalAssignment->started_at) {
                 $trackingService->startAssignment($existingFinalAssignment);
             }
         } else {
@@ -1286,7 +1289,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('shipments.assign')) {
+        if (! $user || ! $user->can('shipments.assign')) {
             abort(401);
         }
 
@@ -1295,11 +1298,11 @@ class DashboardController extends Controller
         $isDropPointToDoor = $shipment->delivery_speed === 'indirect'
             && $shipment->indirect_delivery_mode === 'drop_point_to_door';
 
-        if (!$isDoorToDoor && !$isDropPointToDoor) {
+        if (! $isDoorToDoor && ! $isDropPointToDoor) {
             return redirect()->route('admin.dashboard')->with('error', __('thisActionIsOnlyAvailableForDoorToDoorOrDropPointToDoorShipments'));
         }
 
-        if (!$shipment->delivery_rider_id) {
+        if (! $shipment->delivery_rider_id) {
             return redirect()->route('admin.dashboard')->with('error', __('noDeliveryRiderIsAssignedToThisShipment'));
         }
 
@@ -1314,7 +1317,7 @@ class DashboardController extends Controller
             $suffix = 'Unassigned by admin';
             $assignment->update([
                 'completed_at' => now(),
-                'notes' => $notes ? $notes . "\n\n" . $suffix : $suffix,
+                'notes' => $notes ? $notes."\n\n".$suffix : $suffix,
             ]);
         }
 
@@ -1331,7 +1334,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('shipments.assign'))) {
+        if (! $user || (! $user->can('shipments.assign'))) {
             abort(401);
         }
 
@@ -1343,7 +1346,7 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard')->with('error', __('cannotUnassignDropPointDeliveriesFromRidersTheseShipmentsMustBeHandledByDropPointKeepers'));
         }
 
-        if (!$shipment->rider_id) {
+        if (! $shipment->rider_id) {
             return redirect()->route('admin.dashboard')->with('error', __('thisShipmentIsAlreadyUnassigned'));
         }
 
@@ -1353,7 +1356,7 @@ class DashboardController extends Controller
             strtolower(ShipmentStatus::PENDING->value),
             strtolower(ShipmentStatus::ASSIGNED->value),
         ];
-        if ($normalizedStatus && !in_array($normalizedStatus, $allowedStatuses, true)) {
+        if ($normalizedStatus && ! in_array($normalizedStatus, $allowedStatuses, true)) {
             return redirect()->route('admin.dashboard')->with('error', __('cannotUnassignThisShipmentAfterPickupHasStarted'));
         }
 
@@ -1370,7 +1373,7 @@ class DashboardController extends Controller
             $suffix = 'Unassigned by admin';
             $assignment->update([
                 'completed_at' => now(),
-                'notes' => $notes ? $notes . "\n\n" . $suffix : $suffix,
+                'notes' => $notes ? $notes."\n\n".$suffix : $suffix,
             ]);
         }
 
@@ -1390,7 +1393,7 @@ class DashboardController extends Controller
                 $suffix = 'Unassigned by admin';
                 $assignment->update([
                     'completed_at' => now(),
-                    'notes' => $notes ? $notes . "\n\n" . $suffix : $suffix,
+                    'notes' => $notes ? $notes."\n\n".$suffix : $suffix,
                 ]);
             }
 
@@ -1420,7 +1423,7 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('shipments.manage') && !$user->can('shipments.tracking'))) {
+        if (! $user || (! $user->can('shipments.manage') && ! $user->can('shipments.tracking'))) {
             abort(401);
         }
 
@@ -1441,13 +1444,13 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             abort(401);
         }
 
         $redirectTo = AdminRouteResolver::firstAccessibleRouteFor($user);
 
-        if (!$redirectTo) {
+        if (! $redirectTo) {
             abort(401);
         }
 

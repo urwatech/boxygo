@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Customer;
 
 use App\Contracts\ShipmentServiceInterface;
 use App\Http\Controllers\Controller;
-use App\Models\WalletTransaction;
 use App\Services\WalletService;
 use App\Support\ShipmentPaymentHelper;
 use Illuminate\Http\Request;
@@ -20,8 +19,6 @@ class WalletController extends Controller
 
     /**
      * Display the customer wallet page.
-     *
-     * @return Response
      */
     public function index(Request $request): Response
     {

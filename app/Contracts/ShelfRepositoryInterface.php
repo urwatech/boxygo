@@ -3,7 +3,6 @@
 namespace App\Contracts;
 
 use App\Models\Shelf;
-use App\Models\User;
 use Illuminate\Support\Collection;
 use Interfaces\BaseRepositoryInterface;
 

@@ -26,10 +26,10 @@ class OrderNumberService
      */
     public function generateOrderNumber(string $bookingType = 'shipment'): string
     {
-        if($bookingType === 'return') {
+        if ($bookingType === 'return') {
             $orderType = 'R'; // R for Return
         } else {
-             $orderType = 'N'; // N for Normal
+            $orderType = 'N'; // N for Normal
         }
         $today = Carbon::today();
 
@@ -40,7 +40,7 @@ class OrderNumberService
         $dailySerial = $this->getDailySerialNumber($today);
 
         // Format: N + 4-digit serial + 4-digit date suffix
-        $orderNumber = $orderType . $dailySerial . $dateSuffix;
+        $orderNumber = $orderType.$dailySerial.$dateSuffix;
 
         return $orderNumber;
     }
@@ -49,7 +49,7 @@ class OrderNumberService
      * Get the next daily serial number for today
      * This uses database locking to ensure uniqueness in concurrent requests
      *
-     * @param Carbon $date The date to get the serial for
+     * @param  Carbon  $date  The date to get the serial for
      * @return string 4-digit zero-padded serial number
      */
     private function getDailySerialNumber(Carbon $date): string
@@ -74,14 +74,14 @@ class OrderNumberService
             }
 
             // Return as 4-digit zero-padded string
-            return str_pad((string)$nextSerial, 4, '0', STR_PAD_LEFT);
+            return str_pad((string) $nextSerial, 4, '0', STR_PAD_LEFT);
         });
     }
 
     /**
      * Parse an order number to extract its components
      *
-     * @param string $orderNumber The order number to parse
+     * @param  string  $orderNumber  The order number to parse
      * @return array{type: string, serial: string, date_suffix: string}
      */
     public function parseOrderNumber(string $orderNumber): array
@@ -101,7 +101,7 @@ class OrderNumberService
      * Get the approximate date from an order number
      * Note: This is approximate because we only have the last 4 digits
      *
-     * @param string $orderNumber The order number
+     * @param  string  $orderNumber  The order number
      * @return Carbon|null The approximate date, or null if cannot determine
      */
     public function getDateFromOrderNumber(string $orderNumber): ?Carbon

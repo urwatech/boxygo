@@ -63,27 +63,27 @@ class UserResource extends JsonResource
             // Uploaded documents
             'documents' => [
                 'driving_license' => [
-                    'uploaded' => !empty($this->driving_license),
+                    'uploaded' => ! empty($this->driving_license),
                     'url' => media_url($this->driving_license),
                     'filename' => $this->driving_license ? basename($this->driving_license) : null,
                 ],
                 'id_card_front' => [
-                    'uploaded' => !empty($this->id_card_front),
+                    'uploaded' => ! empty($this->id_card_front),
                     'url' => media_url($this->id_card_front),
                     'filename' => $this->id_card_front ? basename($this->id_card_front) : null,
                 ],
                 'id_card_back' => [
-                    'uploaded' => !empty($this->id_card_back),
+                    'uploaded' => ! empty($this->id_card_back),
                     'url' => media_url($this->id_card_back),
                     'filename' => $this->id_card_back ? basename($this->id_card_back) : null,
                 ],
                 'passport' => [
-                    'uploaded' => !empty($this->passport),
+                    'uploaded' => ! empty($this->passport),
                     'url' => media_url($this->passport),
                     'filename' => $this->passport ? basename($this->passport) : null,
                 ],
                 'idp' => [
-                    'uploaded' => !empty($this->idp),
+                    'uploaded' => ! empty($this->idp),
                     'url' => media_url($this->idp),
                     'filename' => $this->idp ? basename($this->idp) : null,
                 ],
@@ -94,6 +94,7 @@ class UserResource extends JsonResource
                 in_array($this->roles->first()?->name, ['rider', 'car_driver', 'drop_point_keeper']),
                 function () {
                     $stats = $this->getMileageStats();
+
                     return [
                         'total_km' => $stats['total_km'],
                         'total_miles' => $stats['total_miles'],

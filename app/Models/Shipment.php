@@ -158,11 +158,13 @@ class Shipment extends Model
     public function getPhotosAttribute($value)
     {
         $photos = json_decode($value, true) ?: [];
+
         return array_map(function ($photo) {
             // If already a full URL, return as is
             if (filter_var($photo, FILTER_VALIDATE_URL)) {
                 return $photo;
             }
+
             // Convert relative path to full URL
             return asset($photo);
         }, $photos);
@@ -174,11 +176,13 @@ class Shipment extends Model
     public function getAdditionalDocsAttribute($value)
     {
         $docs = json_decode($value, true) ?: [];
+
         return array_map(function ($doc) {
             // If already a full URL, return as is
             if (filter_var($doc, FILTER_VALIDATE_URL)) {
                 return $doc;
             }
+
             // Convert relative path to full URL
             return asset($doc);
         }, $docs);
@@ -187,11 +191,13 @@ class Shipment extends Model
     public function getReturnImagesAttribute($value)
     {
         $images = json_decode($value, true) ?: [];
+
         return array_map(function ($image) {
             // If already a full URL, return as is
             if (filter_var($image, FILTER_VALIDATE_URL)) {
                 return $image;
             }
+
             // Convert relative path to full URL
             return asset($image);
         }, $images);
@@ -200,16 +206,16 @@ class Shipment extends Model
     public function requiresReceiverPaymentConfirmation(): bool
     {
         $acceptReturns = (bool) $this->accept_returns;
-        $rdfPayer = strtolower((string)($this->return_delivery_fee_payer ?? ''));
-        $rdfStatus = strtolower((string)($this->rdf_payment_status ?? 'pending'));
+        $rdfPayer = strtolower((string) ($this->return_delivery_fee_payer ?? ''));
+        $rdfStatus = strtolower((string) ($this->rdf_payment_status ?? 'pending'));
 
         $rdfRequired = $acceptReturns &&
                        $rdfPayer === 'receiver' &&
                        $rdfStatus !== 'paid';
 
-        $deliveryPayer = strtolower((string)($this->delivery_fee_payer ?? ''));
-        $paymentMethod = strtolower((string)($this->payment_method ?? ''));
-        $paymentStatus = strtolower((string)($this->payment_status ?? 'pending'));
+        $deliveryPayer = strtolower((string) ($this->delivery_fee_payer ?? ''));
+        $paymentMethod = strtolower((string) ($this->payment_method ?? ''));
+        $paymentStatus = strtolower((string) ($this->payment_status ?? 'pending'));
 
         $deliveryFeeRequired = $deliveryPayer === 'receiver' &&
                                $paymentMethod === 'online' &&
@@ -271,6 +277,7 @@ class Shipment extends Model
     {
         return $this->belongsTo(Parcel::class, 'size_id');
     }
+
     public function directStatus()
     {
         return $this->hasOne(ShipmentStatusDirect::class);
@@ -308,9 +315,9 @@ class Shipment extends Model
     public function currentAssignment(): HasOne
     {
         return $this->hasOne(ShipmentAssignment::class)
-                    ->whereNotNull('started_at')
-                    ->whereNull('completed_at')
-                    ->latestOfMany('assigned_at');
+            ->whereNotNull('started_at')
+            ->whereNull('completed_at')
+            ->latestOfMany('assigned_at');
     }
 
     /**
@@ -319,7 +326,7 @@ class Shipment extends Model
     public function latestStatusHistory(): HasOne
     {
         return $this->hasOne(ShipmentStatusHistory::class)
-                    ->latestOfMany('created_at');
+            ->latestOfMany('created_at');
     }
 
     /**
@@ -328,7 +335,7 @@ class Shipment extends Model
     public function assignmentsTimeline(): HasMany
     {
         return $this->hasMany(ShipmentAssignment::class)
-                    ->orderBy('assigned_at', 'asc');
+            ->orderBy('assigned_at', 'asc');
     }
 
     /**
@@ -337,7 +344,7 @@ class Shipment extends Model
     public function statusTimeline(): HasMany
     {
         return $this->hasMany(ShipmentStatusHistory::class)
-                    ->orderBy('created_at', 'asc');
+            ->orderBy('created_at', 'asc');
     }
 
     /**
@@ -354,8 +361,8 @@ class Shipment extends Model
     public function riderCollection(): HasOne
     {
         return $this->hasOne(PaymentTransaction::class)
-                    ->where('transaction_type', 'rider_collection')
-                    ->latestOfMany();
+            ->where('transaction_type', 'rider_collection')
+            ->latestOfMany();
     }
 
     /**
@@ -364,8 +371,8 @@ class Shipment extends Model
     public function carDriverCollection(): HasOne
     {
         return $this->hasOne(PaymentTransaction::class)
-                    ->where('transaction_type', 'car_driver_collection')
-                    ->latestOfMany();
+            ->where('transaction_type', 'car_driver_collection')
+            ->latestOfMany();
     }
 
     /**
@@ -374,8 +381,8 @@ class Shipment extends Model
     public function dropPointKeeperCollection(): HasOne
     {
         return $this->hasOne(PaymentTransaction::class)
-                    ->where('transaction_type', 'drop_point_keeper_collection')
-                    ->latestOfMany();
+            ->where('transaction_type', 'drop_point_keeper_collection')
+            ->latestOfMany();
     }
 
     /**
@@ -384,8 +391,8 @@ class Shipment extends Model
     public function adminSettlement(): HasOne
     {
         return $this->hasOne(PaymentTransaction::class)
-                    ->where('transaction_type', 'admin_settlement')
-                    ->latestOfMany();
+            ->where('transaction_type', 'admin_settlement')
+            ->latestOfMany();
     }
 
     /**
@@ -401,7 +408,7 @@ class Shipment extends Model
         // Add assignments to timeline
         foreach ($assignments as $assignment) {
 
-            $assignedByName = ($assignment->assigned_by_id && (int)$assignment->assigned_by_id === (int)$assignment->user_id)
+            $assignedByName = ($assignment->assigned_by_id && (int) $assignment->assigned_by_id === (int) $assignment->user_id)
                 ? 'Self'
                 : ($assignment->assignedBy->name ?? 'System');
 
@@ -422,7 +429,7 @@ class Shipment extends Model
             // Add a separate event when a user completes their individual delivery part
             // Exclude final delivery stage from individual delivery tracking
             $isFinalDelivery = $assignment->stage === \App\Enums\DeliveryStage::FINAL_DELIVERY->value;
-            if ($assignment->completed_at && $assignedByName === 'Self' && !$isFinalDelivery) {
+            if ($assignment->completed_at && $assignedByName === 'Self' && ! $isFinalDelivery) {
                 $timeline[] = [
                     'type' => 'individual_delivery',
                     'timestamp' => $assignment->completed_at,
@@ -503,8 +510,8 @@ class Shipment extends Model
     public function activeAssignments(): HasMany
     {
         return $this->hasMany(ShipmentAssignment::class)
-                    ->whereNotNull('started_at')
-                    ->whereNull('completed_at');
+            ->whereNotNull('started_at')
+            ->whereNull('completed_at');
     }
 
     /**
@@ -513,7 +520,7 @@ class Shipment extends Model
     public function pendingAssignments(): HasMany
     {
         return $this->hasMany(ShipmentAssignment::class)
-                    ->whereNull('started_at');
+            ->whereNull('started_at');
     }
 
     /**
@@ -522,14 +529,14 @@ class Shipment extends Model
     public function completedAssignments(): HasMany
     {
         return $this->hasMany(ShipmentAssignment::class)
-                    ->whereNotNull('completed_at');
+            ->whereNotNull('completed_at');
     }
 
     /**
      * Scope to filter shipments by zone
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param int|array $zoneId
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  int|array  $zoneId
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeInZone($query, $zoneId)
@@ -537,6 +544,7 @@ class Shipment extends Model
         if (is_array($zoneId)) {
             return $query->whereIn('zone_id', $zoneId);
         }
+
         return $query->where('zone_id', $zoneId);
     }
 
@@ -544,8 +552,7 @@ class Shipment extends Model
      * Scope to filter shipments accessible by a user based on their zone
      * For web platform employees (Admin Portal), filter by their assigned zone
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param \App\Models\User $user
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeForUser($query, User $user)
@@ -558,7 +565,7 @@ class Shipment extends Model
         // If user has a zone_id and is on Admin Portal, filter by zone
         if ($user->platform === 'Admin Portal') {
             $zoneIds = $user->getAssignedZoneIds();
-            if (!empty($zoneIds)) {
+            if (! empty($zoneIds)) {
                 return $query->whereIn('zone_id', $zoneIds);
             }
         }
@@ -574,8 +581,7 @@ class Shipment extends Model
     /**
      * Scope to filter shipments by multiple zones
      *
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param array $zoneIds
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeInZones($query, array $zoneIds)

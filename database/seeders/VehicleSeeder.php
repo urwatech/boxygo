@@ -19,10 +19,11 @@ class VehicleSeeder extends Seeder
         // If no riders exist, skip vehicle creation
         if ($riders->isEmpty()) {
             $this->command->warn('⚠️  No riders found. Skipping vehicle creation.');
+
             return;
         }
 
-        $this->command->info('Creating vehicles for ' . $riders->count() . ' riders...');
+        $this->command->info('Creating vehicles for '.$riders->count().' riders...');
 
         // Create different types of vehicles with various statuses
         $vehicleCount = 0;

@@ -26,10 +26,10 @@ class RegisterController extends Controller
     public function store(RegisterRequest $request): RedirectResponse
     {
         $user = $this->authService->registerCustomer($request->validated());
-        if($request->shipmentId){
+        if ($request->shipmentId) {
             $shipment = Shipment::where('order_number', $request->shipmentId)->first();
- 
-            if($shipment && $shipment->receiver_id == null){
+
+            if ($shipment && $shipment->receiver_id == null) {
                 $shipment->receiver_id = $user->id;
                 $shipment->save();
             }
@@ -52,6 +52,7 @@ class RegisterController extends Controller
     public function showVerify(Request $request): Response
     {
         $email = $request->query('email');
+
         return Inertia::render('Customer/Auth/Verify', [
             'email' => $email,
         ]);

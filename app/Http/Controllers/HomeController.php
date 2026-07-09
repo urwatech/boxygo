@@ -8,8 +8,6 @@ class HomeController extends Controller
 {
     /**
      * Redirect to the customer login page.
-     *
-     * @return RedirectResponse
      */
     public function index(): RedirectResponse
     {

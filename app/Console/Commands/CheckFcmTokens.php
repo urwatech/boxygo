@@ -58,9 +58,9 @@ class CheckFcmTokens extends Command
 
         $this->table(
             ['Device Type', 'Count'],
-            $deviceStats->map(fn($stat) => [
+            $deviceStats->map(fn ($stat) => [
                 $stat->device_type ?? 'Unknown',
-                $stat->count
+                $stat->count,
             ])
         );
 
@@ -71,14 +71,14 @@ class CheckFcmTokens extends Command
         $roleStats = User::whereNotNull('fcm_token')
             ->with('roles')
             ->get()
-            ->groupBy(function($user) {
+            ->groupBy(function ($user) {
                 return $user->roles->pluck('name')->first() ?? 'No Role';
             })
-            ->map(fn($users) => $users->count());
+            ->map(fn ($users) => $users->count());
 
         $this->table(
             ['Role', 'Count'],
-            $roleStats->map(fn($count, $role) => [$role, $count])
+            $roleStats->map(fn ($count, $role) => [$role, $count])
         );
 
         $this->newLine();
@@ -100,12 +100,12 @@ class CheckFcmTokens extends Command
 
             $this->table(
                 ['ID', 'Name', 'Device', 'Token (truncated)', 'Last Updated'],
-                $sampleUsers->map(fn($u) => [
+                $sampleUsers->map(fn ($u) => [
                     $u->id,
                     $u->name,
                     $u->device_type ?? 'N/A',
-                    substr($u->fcm_token, 0, 30) . '...',
-                    $u->updated_at->diffForHumans()
+                    substr($u->fcm_token, 0, 30).'...',
+                    $u->updated_at->diffForHumans(),
                 ])
             );
         }

@@ -12,9 +12,7 @@ use Illuminate\Http\Request;
 
 class VehicleController extends Controller
 {
-    public function __construct(private VehicleService $vehicleService)
-    {
-    }
+    public function __construct(private VehicleService $vehicleService) {}
 
     public function index(Request $request): JsonResponse
     {

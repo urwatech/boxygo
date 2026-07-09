@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Log;
 class MtnSmsService
 {
     private string $baseUrl;
+
     private string $secret;
+
     private ?string $accessToken = null;
 
     public function __construct()
@@ -39,10 +41,11 @@ class MtnSmsService
                 'X-SIGNATURE' => $signature,
                 'Content-Type' => 'application/json',
             ])->withBody($loginBody, 'application/json')
-              ->post($this->baseUrl . '/api/auth/login');
+                ->post($this->baseUrl.'/api/auth/login');
 
             if ($response->successful()) {
                 $this->accessToken = $response->json('data.tokens.access_token');
+
                 return $this->accessToken;
             }
 
@@ -67,6 +70,7 @@ class MtnSmsService
                 'phone' => $phone,
                 'type' => $type,
             ]);
+
             return false;
         }
 
@@ -86,8 +90,9 @@ class MtnSmsService
     public function sendNow(string $phone, string $message, string $type = 'general'): bool
     {
         $token = $this->authenticate();
-        if (!$token) {
+        if (! $token) {
             Log::error('MTN SMS: Cannot send, authentication failed', ['phone' => $phone]);
+
             return false;
         }
 
@@ -97,8 +102,8 @@ class MtnSmsService
             $response = Http::asMultipart()
                 ->withHeaders([
                     'X-SIGNATURE' => $signature,
-                    'Authorization' => 'Bearer ' . $token,
-                ])->post($this->baseUrl . '/api/sms/send', [
+                    'Authorization' => 'Bearer '.$token,
+                ])->post($this->baseUrl.'/api/sms/send', [
                     ['name' => 'phone', 'contents' => $phone],
                     ['name' => 'message', 'contents' => $message],
                     ['name' => 'type', 'contents' => $type],
@@ -109,6 +114,7 @@ class MtnSmsService
                     'phone' => $phone,
                     'type' => $type,
                 ]);
+
                 return true;
             }
 
@@ -136,7 +142,7 @@ class MtnSmsService
 
         // Also replace {{placeholder}} syntax used in JSON translation files
         foreach ($replace as $placeholder => $value) {
-            $message = str_replace('{{' . $placeholder . '}}', (string) $value, $message);
+            $message = str_replace('{{'.$placeholder.'}}', (string) $value, $message);
         }
 
         return $this->send($phone, $message, $type);
@@ -150,7 +156,7 @@ class MtnSmsService
         $message = __($translationKey, $replace, $locale);
 
         foreach ($replace as $placeholder => $value) {
-            $message = str_replace('{{' . $placeholder . '}}', (string) $value, $message);
+            $message = str_replace('{{'.$placeholder.'}}', (string) $value, $message);
         }
 
         return $this->sendNow($phone, $message, $type);

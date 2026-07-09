@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Contracts\UserServiceInterface;
 use App\Models\User;
 use App\Repositories\UserRepository;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * Service layer for user-related logic.
@@ -23,10 +23,6 @@ class UserService extends AbstractService implements UserServiceInterface
 
     /**
      * Attempt to authenticate a user with the given credentials.
-     *
-     * @param array $credentials
-     * @param bool $remember
-     * @return bool
      */
     public function attemptLogin(array $credentials, bool $remember = false): bool
     {
@@ -37,8 +33,6 @@ class UserService extends AbstractService implements UserServiceInterface
 
     /**
      * Log the user out of the application.
-     *
-     * @return void
      */
     public function logout(): void
     {

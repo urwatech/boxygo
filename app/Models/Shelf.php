@@ -17,7 +17,7 @@ class Shelf extends Model
         'occupied_slots',
         'drop_point_id',
         'is_active',
-        'warehouse_id'
+        'warehouse_id',
     ];
 
     protected $casts = [

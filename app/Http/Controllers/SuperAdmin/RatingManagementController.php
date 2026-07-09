@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ShipmentReview;
 use App\Support\SortHelper;
 use Illuminate\Http\Request;
+use Illuminate\Http\StreamedResponse;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Http\StreamedResponse;
 
 class RatingManagementController extends Controller
 {
@@ -21,12 +21,12 @@ class RatingManagementController extends Controller
         $stars = $request->input('stars');
         $sortBy = trim((string) $request->query('sort_by', 'created_at'));
         $sortDir = SortHelper::direction($request->query('sort_dir'), 'desc');
-        
+
         $query = ShipmentReview::with(['reviewer', 'employee', 'shipment'])
             ->when($search, function ($q) use ($search) {
                 $q->whereHas('employee', function ($eq) use ($search) {
                     $eq->where('name', 'like', "%{$search}%")
-                       ->orWhere('phone_number', 'like', "%{$search}%");
+                        ->orWhere('phone_number', 'like', "%{$search}%");
                 })->orWhereHas('reviewer', function ($rq) use ($search) {
                     $rq->where('name', 'like', "%{$search}%");
                 })->orWhereHas('shipment', function ($sq) use ($search) {
@@ -66,7 +66,7 @@ class RatingManagementController extends Controller
             ->when($search, function ($q) use ($search) {
                 $q->whereHas('employee', function ($eq) use ($search) {
                     $eq->where('name', 'like', "%{$search}%")
-                       ->orWhere('phone_number', 'like', "%{$search}%");
+                        ->orWhere('phone_number', 'like', "%{$search}%");
                 })->orWhereHas('reviewer', function ($rq) use ($search) {
                     $rq->where('name', 'like', "%{$search}%");
                 })->orWhereHas('shipment', function ($sq) use ($search) {
@@ -82,14 +82,14 @@ class RatingManagementController extends Controller
         $headers = [
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
             'Content-type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename=delivery_ratings_' . now()->format('Y-m-d') . '.csv',
+            'Content-Disposition' => 'attachment; filename=delivery_ratings_'.now()->format('Y-m-d').'.csv',
             'Expires' => '0',
             'Pragma' => 'public',
         ];
 
         $callback = function () use ($query) {
             $file = fopen('php://output', 'w');
-            
+
             // Add UTF-8 BOM for Excel
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 

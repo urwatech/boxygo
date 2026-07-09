@@ -1,15 +1,13 @@
 <?php
- 
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\Parcels;
 use App\Http\Controllers\Controller;
-use App\Models\City;
 use App\Models\CityShipmentPrice;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use InvalidArgumentException;
- 
+
 class ShipmentPriceController extends Controller
 {
     public function __construct() {}
@@ -24,10 +22,10 @@ class ShipmentPriceController extends Controller
             'Damascus' => 'Damascus City',
             // Add any future spelling discrepancies here
         ];
- 
+
         return $map[$cityName] ?? $cityName;
     }
- 
+
     public function calculate(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -44,19 +42,19 @@ class ShipmentPriceController extends Controller
 
         $sizeId = $validated['size_id'];
         $parcel = $sizeId ? \App\Models\Parcel::find($sizeId) : null;
- 
+
         // Find Zones
         $pickupZone = \App\Services\ZoneHelper::findZoneByCoordinates($validated['handover_latitude'], $validated['handover_longitude']);
         $dropOffZone = \App\Services\ZoneHelper::findZoneByCoordinates($validated['delivery_latitude'], $validated['delivery_longitude']);
 
-        if (!$pickupZone || !$dropOffZone) {
+        if (! $pickupZone || ! $dropOffZone) {
             return response()->json([
                 'success' => true,
-                'data' => null
+                'data' => null,
             ]);
         }
 
-        if (!$parcel) {
+        if (! $parcel) {
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -66,7 +64,7 @@ class ShipmentPriceController extends Controller
                     'total' => 0,
                     'sender_price' => 0,
                     'reciever_price' => 0,
-                    'service_fee' => 0
+                    'service_fee' => 0,
                 ],
             ]);
         }
@@ -74,43 +72,43 @@ class ShipmentPriceController extends Controller
         $data = null;
 
         // 1. Direct Delivery Flow
-        if (!$forceIndirect && $validated['from_city_id'] == $validated['to_city_id']) {
+        if (! $forceIndirect && $validated['from_city_id'] == $validated['to_city_id']) {
             $senderPrice = CityShipmentPrice::where('sender_sub_district_id', $pickupZone->sub_district_name)->first();
             if ($parcel->name == Parcels::BAG_1->value) {
                 $data = [
                     'type' => 'direct',
                     'total' => $senderPrice->price1 ?? 0,
-                    'service_fee' => $pickupZone->direct_srv_fees ?? 0
+                    'service_fee' => $pickupZone->direct_srv_fees ?? 0,
                 ];
-            } else if ($parcel->name == Parcels::BAG_2->value) {
+            } elseif ($parcel->name == Parcels::BAG_2->value) {
                 $data = [
                     'type' => 'direct',
                     'total' => $senderPrice->price2 ?? 0,
-                    'service_fee' => $pickupZone->direct_srv_fees ?? 0
+                    'service_fee' => $pickupZone->direct_srv_fees ?? 0,
                 ];
-            } else if ($parcel->name == Parcels::BAG_3->value) {
+            } elseif ($parcel->name == Parcels::BAG_3->value) {
                 $data = [
                     'type' => 'direct',
                     'total' => $senderPrice->price3 ?? 0,
-                    'service_fee' => $pickupZone->direct_srv_fees ?? 0
+                    'service_fee' => $pickupZone->direct_srv_fees ?? 0,
                 ];
-            } else if ($parcel->name == Parcels::BAG_4->value) {
+            } elseif ($parcel->name == Parcels::BAG_4->value) {
                 $data = [
                     'type' => 'direct',
                     'total' => $senderPrice->price4 ?? 0,
-                    'service_fee' => $pickupZone->direct_srv_fees ?? 0
+                    'service_fee' => $pickupZone->direct_srv_fees ?? 0,
                 ];
-            } else if ($parcel->name == Parcels::BAG_5->value) {
+            } elseif ($parcel->name == Parcels::BAG_5->value) {
                 $data = [
                     'type' => 'direct',
                     'total' => $senderPrice->price5 ?? 0,
-                    'service_fee' => $pickupZone->direct_srv_fees ?? 0
+                    'service_fee' => $pickupZone->direct_srv_fees ?? 0,
                 ];
             } else {
                 $data = [
                     'type' => 'direct',
                     'total' => $senderPrice->price6 ?? 0,
-                    'service_fee' => $pickupZone->direct_srv_fees ?? 0
+                    'service_fee' => $pickupZone->direct_srv_fees ?? 0,
                 ];
             }
         }
@@ -143,7 +141,7 @@ class ShipmentPriceController extends Controller
                 'breakdown' => [
                     'sender' => $sender,
                     'receiver' => $receiver,
-                    'formula' => "$sender + $receiver"
+                    'formula' => "$sender + $receiver",
                 ],
 
                 'sender' => [
@@ -161,7 +159,7 @@ class ShipmentPriceController extends Controller
                 ],
             ];
         }
- 
+
         return response()->json([
             'success' => true,
             'data' => $data,

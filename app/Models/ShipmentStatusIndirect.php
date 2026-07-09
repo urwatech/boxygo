@@ -19,4 +19,3 @@ class ShipmentStatusIndirect extends Model
         return $this->belongsTo(Shipment::class);
     }
 }
-

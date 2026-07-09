@@ -21,8 +21,7 @@ class EmployeeInvitation extends Mailable implements ShouldQueue
         public User $employee,
         public string $password,
         public string $loginUrl
-    ) {
-    }
+    ) {}
 
     /**
      * Get the message envelope.

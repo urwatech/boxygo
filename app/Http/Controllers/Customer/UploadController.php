@@ -10,9 +10,6 @@ class UploadController extends Controller
 {
     /**
      * Store a single photo for a booking and return its public URL.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function storePhoto(Request $request): JsonResponse
     {
@@ -26,10 +23,10 @@ class UploadController extends Controller
         $paths = upload_path('customer-uploads', 'parcel-photos');
 
         $extension = $file->getClientOriginalExtension() ?: 'jpg';
-        $filename = uniqid('photo_', true) . '.' . $extension;
+        $filename = uniqid('photo_', true).'.'.$extension;
         $file->move($paths['absolute'], $filename);
 
-        $relative = $paths['relative'] . '/' . $filename;
+        $relative = $paths['relative'].'/'.$filename;
         $url = asset($relative);
 
         return response()->json([
@@ -41,9 +38,6 @@ class UploadController extends Controller
 
     /**
      * Store a single document for a booking and return its public URL.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function storeDocument(Request $request): JsonResponse
     {
@@ -57,10 +51,10 @@ class UploadController extends Controller
         $paths = upload_path('customer-uploads', 'parcel-docs');
 
         $extension = $file->getClientOriginalExtension() ?: 'pdf';
-        $filename = uniqid('doc_', true) . '.' . $extension;
+        $filename = uniqid('doc_', true).'.'.$extension;
         $file->move($paths['absolute'], $filename);
 
-        $relative = $paths['relative'] . '/' . $filename;
+        $relative = $paths['relative'].'/'.$filename;
         $url = asset($relative);
 
         return response()->json([
@@ -70,5 +64,3 @@ class UploadController extends Controller
         ]);
     }
 }
-
-

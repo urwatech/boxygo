@@ -6,19 +6,14 @@ use App\Contracts\CustomerAuthServiceInterface;
 use App\Contracts\RoleServiceInterface;
 use App\Contracts\UserRepositoryInterface;
 use App\Contracts\UserServiceInterface;
-use App\Mail\VerificationCodeMail;
 use App\Models\User;
-use App\Services\MtnSmsService;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use SendGrid;
-use SendGrid\Mail\Mail as SendGridMail;
 use Throwable;
 
 class CustomerAuthService implements CustomerAuthServiceInterface
@@ -32,8 +27,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
         private readonly OtpService $otpService,
         private readonly SendGridEmailService $sendGridEmailService,
         private readonly WalletService $walletService,
-    ) {
-    }
+    ) {}
 
     public function authenticateCustomer(array $credentials, bool $remember = false): User
     {
@@ -45,11 +39,11 @@ class CustomerAuthService implements CustomerAuthServiceInterface
             $digits = preg_replace('/\D+/', '', (string) $loginPhone);
             if ($digits !== '') {
                 $phoneCandidates[] = $digits;
-                $phoneCandidates[] = '+' . $digits;
+                $phoneCandidates[] = '+'.$digits;
                 if (strlen($digits) > 9) {
                     $codeDigits = substr($digits, 0, -9);
                     $subscriberDigits = substr($digits, -9);
-                    $phoneCandidates[] = '+' . $codeDigits . ' ' . $subscriberDigits;
+                    $phoneCandidates[] = '+'.$codeDigits.' '.$subscriberDigits;
                 }
             }
             $phoneCandidates = array_values(array_unique(array_filter($phoneCandidates)));
@@ -63,7 +57,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
             $user = null;
             if ($loginEmail) {
                 $user = $this->users->findByEmail($loginEmail);
-            } elseif (!empty($phoneCandidates)) {
+            } elseif (! empty($phoneCandidates)) {
                 foreach ($phoneCandidates as $candidate) {
                     $user = $this->userService->findByPhoneNumber($candidate);
                     if ($user) {
@@ -72,7 +66,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
                 }
             }
 
-            if (!$user instanceof User) {
+            if (! $user instanceof User) {
                 throw ValidationException::withMessages([
                     'email' => __('We could not find an account with that email address.'),
                 ]);
@@ -90,7 +84,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
 
             if ($loginEmail) {
                 $authenticated = $this->userService->attemptLogin($attemptCredentials, $remember);
-            } elseif (!empty($phoneCandidates)) {
+            } elseif (! empty($phoneCandidates)) {
                 foreach ($phoneCandidates as $candidate) {
                     if ($this->userService->attemptLogin(['phone_number' => $candidate, 'password' => $credentials['password'] ?? null], $remember)) {
                         $authenticated = true;
@@ -99,7 +93,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
                 }
             }
 
-            if (!$authenticated) {
+            if (! $authenticated) {
                 throw ValidationException::withMessages([
                     'email' => __('theProvidedCredentialsDoNotMatchOurRecords'),
                 ]);
@@ -107,7 +101,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
 
             $user = Auth::user();
 
-            if (!$user instanceof User) {
+            if (! $user instanceof User) {
                 $this->userService->logout();
 
                 throw ValidationException::withMessages([
@@ -116,7 +110,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
             }
         }
 
-        if (!$user->hasRole('customer')) {
+        if (! $user->hasRole('customer')) {
             $this->userService->logout();
 
             throw ValidationException::withMessages([
@@ -143,7 +137,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
             ]);
         }
 
-        if (!empty($data['phone_number']) && $this->userService->findByPhoneNumber($data['phone_number'])) {
+        if (! empty($data['phone_number']) && $this->userService->findByPhoneNumber($data['phone_number'])) {
             throw ValidationException::withMessages([
                 'phone_number' => __('This phone number is already registered.'),
             ]);
@@ -162,29 +156,29 @@ class CustomerAuthService implements CustomerAuthServiceInterface
                 ];
 
                 // Add business type if provided
-                if (!empty($data['business_type'])) {
+                if (! empty($data['business_type'])) {
                     $userData['business_type'] = $data['business_type'];
                 }
 
                 // Add business fields if provided
-                if (!empty($data['country'])) {
+                if (! empty($data['country'])) {
                     $userData['country'] = $data['country'];
                 }
 
-                if (!empty($data['city'])) {
+                if (! empty($data['city'])) {
                     $userData['city'] = $data['city'];
                 }
 
-                if (!empty($data['address'])) {
+                if (! empty($data['address'])) {
                     $userData['address'] = $data['address'];
                 }
 
-                if (!empty($data['trade_license_number'])) {
+                if (! empty($data['trade_license_number'])) {
                     $userData['trade_license_number'] = $data['trade_license_number'];
                 }
 
                 // Handle license copy file upload
-                if (!empty($data['license_copy']) && $data['license_copy'] instanceof \Illuminate\Http\UploadedFile) {
+                if (! empty($data['license_copy']) && $data['license_copy'] instanceof \Illuminate\Http\UploadedFile) {
                     $file = $data['license_copy'];
 
                     ['relative' => $relativeDirectory, 'absolute' => $absoluteDirectory] = upload_path('customer-uploads', 'license-copies');
@@ -194,10 +188,10 @@ class CustomerAuthService implements CustomerAuthServiceInterface
                         $extension = $file->extension() ?: 'dat';
                     }
 
-                    $fileName = uniqid('license_', true) . '.' . $extension;
+                    $fileName = uniqid('license_', true).'.'.$extension;
                     $file->move($absoluteDirectory, $fileName);
 
-                    $userData['license_copy'] = $relativeDirectory . '/' . $fileName;
+                    $userData['license_copy'] = $relativeDirectory.'/'.$fileName;
                 }
 
                 $user = $this->users->create($userData);
@@ -206,7 +200,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
                 $this->walletService->getOrCreateWallet($user->id);
 
                 // Ensure receiver role exists
-                if (!$this->roleService->roleExists('receiver')) {
+                if (! $this->roleService->roleExists('receiver')) {
                     $this->roleService->firstOrCreate(
                         ['name' => 'receiver', 'guard_name' => 'web'],
                         ['description' => 'Receiver role for tracking incoming shipments', 'platform' => 'Customer Portal']
@@ -250,7 +244,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
     {
         $user = $this->users->findByEmail($email);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages([
                 'email' => __('We could not find an account with that email address.'),
             ]);
@@ -258,7 +252,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
 
         $otp = $this->otpService->latestActive($user, self::VERIFICATION_TYPE);
 
-        if (!$otp) {
+        if (! $otp) {
             throw ValidationException::withMessages([
                 'code' => __('Verification code expired. Please resend a new code.'),
             ]);
@@ -268,7 +262,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
         $isValidCode = $this->otpService->validateCode($otp, $code) ||
                        (config('app.env') === 'local' && $code === '0000');
 
-        if (!$isValidCode) {
+        if (! $isValidCode) {
             throw ValidationException::withMessages([
                 'code' => __('Invalid verification code.'),
             ]);
@@ -290,7 +284,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
     {
         $user = $this->users->findByEmail($email);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages([
                 'email' => __('We could not find an account with that email address.'),
             ]);
@@ -316,7 +310,7 @@ class CustomerAuthService implements CustomerAuthServiceInterface
             ]);
         }
 
-        if (!empty($user->phone_number)) {
+        if (! empty($user->phone_number)) {
             try {
                 $smsService = app(MtnSmsService::class);
                 $smsService->send(

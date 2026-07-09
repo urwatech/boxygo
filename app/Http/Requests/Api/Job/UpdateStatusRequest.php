@@ -39,12 +39,12 @@ class UpdateStatusRequest extends FormRequest
                     $deliverySpeed = $shipment?->delivery_speed ?? 'direct';
 
                     if ($deliverySpeed === 'direct' && $status === ShipmentStatus::DELIVERED->value) {
-                            return true;
-                        }
+                        return true;
+                    }
 
-                        if ($deliverySpeed === 'indirect' && $status === ShipmentStatus::PICKED_UP_BY_RECEIVER->value) {
-                            return true;
-                        }
+                    if ($deliverySpeed === 'indirect' && $status === ShipmentStatus::PICKED_UP_BY_RECEIVER->value) {
+                        return true;
+                    }
 
                     return false;
                 }),
@@ -68,7 +68,7 @@ class UpdateStatusRequest extends FormRequest
         if (is_string($status)) {
             // If already an exact enum value, keep it; otherwise try slug mapping
             $enumValues = array_map(fn (ShipmentStatus $s) => $s->value, ShipmentStatus::cases());
-            if (!in_array($status, $enumValues, true)) {
+            if (! in_array($status, $enumValues, true)) {
                 $fromSlug = ShipmentStatus::fromSlug($status);
                 if ($fromSlug) {
                     $this->merge(['status' => $fromSlug->value]);

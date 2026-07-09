@@ -24,10 +24,6 @@ class ShipmentRepository implements ShipmentRepositoryInterface
 
     /**
      * Get paginated shipments for a specific user.
-     *
-     * @param int $userId
-     * @param int $perPage
-     * @return LengthAwarePaginator
      */
     public function getUserShipmentsPaginated(int $userId, int $perPage = 10, bool $isNormal = true, bool $isReturned = false, ?string $search = null, ?string $status = null, ?string $sortBy = null, ?string $sortDir = null): LengthAwarePaginator
     {
@@ -47,9 +43,9 @@ class ShipmentRepository implements ShipmentRepositoryInterface
                 },
             ]);
 
-        if ($isNormal && !$isReturned) {
+        if ($isNormal && ! $isReturned) {
             $query->where('booking_type', 'shipment');
-        } elseif (!$isNormal && $isReturned) {
+        } elseif (! $isNormal && $isReturned) {
             $query->where('booking_type', 'return');
         } elseif ($isNormal && $isReturned) {
             $query->whereIn('booking_type', ['shipment', 'return']);
@@ -69,11 +65,11 @@ class ShipmentRepository implements ShipmentRepositoryInterface
         $status = trim((string) request()->input('status', ''));
         $sortBy = trim((string) request()->input('sort_by', 'created_at'));
         $sortDir = trim((string) request()->input('sort_dir', 'desc'));
- 
-        if($status == 'pending'){
+
+        if ($status == 'pending') {
             $status = null;
         }
- 
+
         $query = $this->model
             ->with([
                 'size',
@@ -99,28 +95,28 @@ class ShipmentRepository implements ShipmentRepositoryInterface
             })
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($searchQuery) use ($search) {
-                    $like = '%' . $search . '%';
- 
+                    $like = '%'.$search.'%';
+
                     // Optional column support for environments where barcode_number may not exist.
                     if (Schema::hasColumn('shipments', 'barcode_number')) {
                         $searchQuery->where('barcode_number', 'like', $like);
                     } else {
                         $searchQuery->where('order_number', 'like', $like);
                     }
- 
+
                     $searchQuery
                         ->orWhere('order_number', 'like', $like)
                         ->orWhere('sender_receive_payment_status', 'like', $like)
                         ->orWhere('sender_name', 'like', $like)
                         ->orWhere('receiver_name', 'like', $like);
- 
+
                     // Relationship-based name search, if relationships exist.
                     if (method_exists($this->model, 'user')) {
                         $searchQuery->orWhereHas('user', function ($senderQuery) use ($like) {
                             $senderQuery->where('name', 'like', $like);
                         });
                     }
- 
+
                     if (method_exists($this->model, 'receiver')) {
                         $searchQuery->orWhereHas('receiver', function ($receiverQuery) use ($like) {
                             $receiverQuery->where('name', 'like', $like);
@@ -129,17 +125,17 @@ class ShipmentRepository implements ShipmentRepositoryInterface
                 });
             })
             ->when($status !== '' && strtolower($status) !== 'all', function ($query) use ($status) {
- 
-                if($status == 'rejected'){
+
+                if ($status == 'rejected') {
                     $query->where('componsation_status', 'rejected')->orWhere('status', ShipmentStatus::COMPENSATION_REJECTED->value);
-                }else if($status == 'approved'){
+                } elseif ($status == 'approved') {
                     $query->where('componsation_status', 'approved')->orWhere('status', ShipmentStatus::COMPENSATION_APPROVED->value);
-                }else if($status == 'compensation'){
+                } elseif ($status == 'compensation') {
                     $query->where('componsation_status', 'pending')->orWhere('status', ShipmentStatus::COMPENSATION_REQEUSTED->value);
-                }else{
+                } else {
                     $query->where('sender_receive_payment_status', $status);
- 
-                    if($status == 'pending'){
+
+                    if ($status == 'pending') {
                         $query->orWhere('sender_receive_payment_status', 'pending');
                     }
                 }
@@ -149,21 +145,18 @@ class ShipmentRepository implements ShipmentRepositoryInterface
 
         $shipments = $query->paginate($perPage)
             ->withQueryString();
- 
+
         $shipments->getCollection()->transform(function ($shipment) use ($userId) {
             $shipment->role = $shipment->receiver_id == $userId ? 'receiver' : 'sender';
+
             return $shipment;
         });
- 
+
         return $shipments;
     }
 
     /**
      * Get paginated shipments received by a specific user (matched by userId).
-     *
-     * @param int $userId
-     * @param int $perPage
-     * @return LengthAwarePaginator
      */
     public function getReceivedShipmentsPaginated(int $userId, int $perPage = 10, string $booking_type = 'shipment', ?string $search = null, ?string $status = null, ?string $sortBy = null, ?string $sortDir = null): LengthAwarePaginator
     {
@@ -227,7 +220,7 @@ class ShipmentRepository implements ShipmentRepositoryInterface
             ])
             ->where(function ($q) use ($normalizedPhone, $email) {
                 if ($normalizedPhone) {
-                    $q->orWhere('receiver_phone', 'LIKE', '%' . $normalizedPhone);
+                    $q->orWhere('receiver_phone', 'LIKE', '%'.$normalizedPhone);
                 }
                 if ($email) {
                     $q->orWhere('receiver_email', $email);
@@ -287,7 +280,7 @@ class ShipmentRepository implements ShipmentRepositoryInterface
         }
 
         $query->where(function (Builder $searchQuery) use ($search) {
-            $like = '%' . $search . '%';
+            $like = '%'.$search.'%';
             $columns = [
                 'order_number',
                 'barcode_number',
@@ -314,7 +307,7 @@ class ShipmentRepository implements ShipmentRepositoryInterface
 
             $hasCondition = false;
             foreach ($columns as $column) {
-                if (!Schema::hasColumn('shipments', $column)) {
+                if (! Schema::hasColumn('shipments', $column)) {
                     continue;
                 }
 
@@ -357,7 +350,7 @@ class ShipmentRepository implements ShipmentRepositoryInterface
             return;
         }
 
-        $query->where(function (Builder $statusQuery) use ($statusKey, $status) {
+        $query->where(function (Builder $statusQuery) use ($statusKey) {
             match ($statusKey) {
                 'pending' => $this->whereLowerStatusIn($statusQuery, [
                     ShipmentStatus::PENDING->value,
@@ -414,7 +407,7 @@ class ShipmentRepository implements ShipmentRepositoryInterface
     private function whereLowerStatusIn(Builder $query, array $statuses, bool $includeEmpty = false): void
     {
         $normalizedStatuses = array_values(array_unique(array_filter(array_map(
-            fn($status) => strtolower(trim((string) $status)),
+            fn ($status) => strtolower(trim((string) $status)),
             $statuses
         ))));
 
@@ -428,6 +421,7 @@ class ShipmentRepository implements ShipmentRepositoryInterface
             $query->whereNull('status')
                 ->orWhereRaw("LOWER(TRIM(status)) IN ({$placeholders})", $normalizedStatuses)
                 ->orWhereRaw("TRIM(status) = ''");
+
             return;
         }
 
@@ -451,7 +445,7 @@ class ShipmentRepository implements ShipmentRepositoryInterface
         ];
 
         $statuses = array_map(
-            fn(ShipmentStatus $status) => $status->value,
+            fn (ShipmentStatus $status) => $status->value,
             array_merge(ShipmentStatus::directStatuses(), ShipmentStatus::indirectStatuses(), [
                 ShipmentStatus::PENDING_HANDOVER,
                 ShipmentStatus::INCOMPLETE_COLLECTED,
@@ -463,9 +457,6 @@ class ShipmentRepository implements ShipmentRepositoryInterface
 
     /**
      * Create a new shipment.
-     *
-     * @param array $data
-     * @return Model
      */
     public function create(array $data): Model
     {
@@ -474,9 +465,6 @@ class ShipmentRepository implements ShipmentRepositoryInterface
 
     /**
      * Find a shipment by ID.
-     *
-     * @param int|string $id
-     * @return Model|null
      */
     public function find(int|string $id): ?Model
     {
@@ -486,8 +474,6 @@ class ShipmentRepository implements ShipmentRepositoryInterface
     /**
      * Update a shipment.
      *
-     * @param int|string $id
-     * @param array $data
      * @return \Illuminate\Database\Eloquent\Model|null
      */
     // public function update(int|string $id, array $data): ?\Illuminate\Database\Eloquent\Model
@@ -512,9 +498,6 @@ class ShipmentRepository implements ShipmentRepositoryInterface
 
     /**
      * Delete a shipment.
-     *
-     * @param int|string $id
-     * @return bool
      */
     public function delete(int|string $id): bool
     {
@@ -526,8 +509,6 @@ class ShipmentRepository implements ShipmentRepositoryInterface
     /**
      * Get rider's jobs filtered by status.
      *
-     * @param int $riderId
-     * @param string|null $filter
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getRiderJobs(int $riderId, ?string $filter = 'assigned')
@@ -826,10 +807,6 @@ class ShipmentRepository implements ShipmentRepositoryInterface
 
     /**
      * Find a shipment by ID for a specific rider.
-     *
-     * @param int $shipmentId
-     * @param int $riderId
-     * @return Model|null
      */
     public function findForRider(int $shipmentId, int $riderId): ?Model
     {
@@ -1537,9 +1514,6 @@ class ShipmentRepository implements ShipmentRepositoryInterface
 
     /**
      * Get the latest shipment for a specific user.
-     *
-     * @param int $userId
-     * @return Model|null
      */
     public function getLatestUserShipment(int $userId): ?Model
     {

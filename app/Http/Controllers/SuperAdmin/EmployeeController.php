@@ -4,19 +4,17 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Contracts\EmployeeServiceInterface;
 use App\Contracts\RoleServiceInterface;
+use App\Enums\ShipmentStatus;
 use App\Http\Controllers\Controller;
-use App\Mail\EmployeeInvitation;
 use App\Models\DropPoint;
 use App\Models\Shipment;
-use App\Models\Zone;
-use App\Enums\ShipmentStatus;
 use App\Models\Warehouse;
+use App\Models\Zone;
 use App\Services\MtnSmsService;
 use App\Services\SendGridEmailService;
 use App\Support\SortHelper;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,7 +34,7 @@ class EmployeeController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('employees.view') && !$user->can('employees.create'))) {
+        if (! $user || (! $user->can('employees.view') && ! $user->can('employees.create'))) {
             abort(401);
         }
 
@@ -57,55 +55,55 @@ class EmployeeController extends Controller
 
             $employees = $this->sortEmployees($this->filterEmployees($employees, $search, $status), $sortBy, $sortDir)
                 ->map(function ($employee) {
-                // Convert document paths to fully-qualified URLs regardless of storage backend
-                if ($employee->id_card_front) {
-                    $employee->id_card_front = media_url($employee->id_card_front);
-                }
-                if ($employee->id_card_back) {
-                    $employee->id_card_back = media_url($employee->id_card_back);
-                }
-                if ($employee->driving_license) {
-                    $employee->driving_license = media_url($employee->driving_license);
-                }
-                if ($employee->passport) {
-                    $employee->passport = media_url($employee->passport);
-                }
-                if ($employee->idp) {
-                    $employee->idp = media_url($employee->idp);
-                }
+                    // Convert document paths to fully-qualified URLs regardless of storage backend
+                    if ($employee->id_card_front) {
+                        $employee->id_card_front = media_url($employee->id_card_front);
+                    }
+                    if ($employee->id_card_back) {
+                        $employee->id_card_back = media_url($employee->id_card_back);
+                    }
+                    if ($employee->driving_license) {
+                        $employee->driving_license = media_url($employee->driving_license);
+                    }
+                    if ($employee->passport) {
+                        $employee->passport = media_url($employee->passport);
+                    }
+                    if ($employee->idp) {
+                        $employee->idp = media_url($employee->idp);
+                    }
 
-                if ($employee->avatar_path) {
-                    $employee->avatar_path = media_url($employee->avatar_path);
-                }
+                    if ($employee->avatar_path) {
+                        $employee->avatar_path = media_url($employee->avatar_path);
+                    }
 
-                // Calculate completed jobs and total earnings from shipments where this user is the rider
-                // Use the same definition of "completed" as the rider mobile API so the totals align.
-                $completedStatuses = $this->getCompletionStatuses();
+                    // Calculate completed jobs and total earnings from shipments where this user is the rider
+                    // Use the same definition of "completed" as the rider mobile API so the totals align.
+                    $completedStatuses = $this->getCompletionStatuses();
 
-                $completedShipmentsQuery = Shipment::query()
-                    ->where('rider_id', $employee->id)
-                    ->where(function ($query) use ($completedStatuses) {
-                        $query->whereIn('status', $completedStatuses)
-                            ->orWhereHas('latestStatusHistory', function ($history) use ($completedStatuses) {
-                                $history->whereIn('to_status', $completedStatuses);
-                            });
-                    });
+                    $completedShipmentsQuery = Shipment::query()
+                        ->where('rider_id', $employee->id)
+                        ->where(function ($query) use ($completedStatuses) {
+                            $query->whereIn('status', $completedStatuses)
+                                ->orWhereHas('latestStatusHistory', function ($history) use ($completedStatuses) {
+                                    $history->whereIn('to_status', $completedStatuses);
+                                });
+                        });
 
-                $employee->completed_jobs = (clone $completedShipmentsQuery)->count();
-                $employee->total_earnings = (int) (clone $completedShipmentsQuery)->sum('total_fee');
+                    $employee->completed_jobs = (clone $completedShipmentsQuery)->count();
+                    $employee->total_earnings = (int) (clone $completedShipmentsQuery)->sum('total_fee');
 
-                // Add mileage stats for riders, drivers, and drop point keepers
-                $trackableRoles = ['rider', 'car_driver', 'drop_point_keeper'];
-                $employeeRoles = $employee->roles->pluck('name')->toArray();
+                    // Add mileage stats for riders, drivers, and drop point keepers
+                    $trackableRoles = ['rider', 'car_driver', 'drop_point_keeper'];
+                    $employeeRoles = $employee->roles->pluck('name')->toArray();
 
-                if (!empty(array_intersect($trackableRoles, $employeeRoles))) {
-                    $employee->mileage_stats = $employee->getMileageStats();
-                } else {
-                    $employee->mileage_stats = null;
-                }
+                    if (! empty(array_intersect($trackableRoles, $employeeRoles))) {
+                        $employee->mileage_stats = $employee->getMileageStats();
+                    } else {
+                        $employee->mileage_stats = null;
+                    }
 
-                return $employee;
-            });
+                    return $employee;
+                });
         }
         $statistics = $user->can('employees.view')
             ? $this->employeeService->getEmployeeStatistics()
@@ -198,15 +196,15 @@ class EmployeeController extends Controller
                 ];
 
                 return collect($fields)
-                    ->filter(fn($value) => $value !== null && $value !== '')
-                    ->contains(fn($value) => str_contains(strtolower((string) $value), $needle));
+                    ->filter(fn ($value) => $value !== null && $value !== '')
+                    ->contains(fn ($value) => str_contains(strtolower((string) $value), $needle));
             });
         }
 
         if ($status !== '' && strtolower($status) !== 'all') {
             $normalizedStatus = strtolower($status);
             $employees = $employees->filter(
-                fn($employee) => strtolower(trim((string) $employee->status)) === $normalizedStatus
+                fn ($employee) => strtolower(trim((string) $employee->status)) === $normalizedStatus
             );
         }
 
@@ -220,7 +218,7 @@ class EmployeeController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('employees.create'))) {
+        if (! $user || (! $user->can('employees.create'))) {
             abort(401);
         }
 
@@ -260,7 +258,6 @@ class EmployeeController extends Controller
         $password = $result['password'];
 
         $employee->loadMissing('roles');
-
 
         if (app()->environment('local')) {
             return redirect()->route('admin.employees.index')
@@ -302,7 +299,7 @@ class EmployeeController extends Controller
             }
         } catch (\Exception $e) {
             // Log the error but still show success message for employee creation
-            \Log::error('Failed to send employee invitation email: ' . $e->getMessage());
+            \Log::error('Failed to send employee invitation email: '.$e->getMessage());
 
             return redirect()->route('admin.employees.index')
                 ->with('error', __('employeeCreatedSuccessfullyButFailedToSendInvitationEmailPleaseProvideCredentialsManually'));
@@ -316,13 +313,13 @@ class EmployeeController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('employees.view'))) {
+        if (! $user || (! $user->can('employees.view'))) {
             abort(401);
         }
 
         $employee = $this->employeeService->find($id);
 
-        if (!$employee) {
+        if (! $employee) {
             abort(404, __('employeeNotFound'));
         }
 
@@ -358,13 +355,13 @@ class EmployeeController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('employees.edit'))) {
+        if (! $user || (! $user->can('employees.edit'))) {
             abort(401);
         }
 
         $employee = $this->employeeService->find($id);
 
-        if (!$employee) {
+        if (! $employee) {
             abort(404, __('employeeNotFound'));
         }
 
@@ -417,13 +414,13 @@ class EmployeeController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('employees.edit'))) {
+        if (! $user || (! $user->can('employees.edit'))) {
             abort(401);
         }
 
         $employee = $this->employeeService->find($id);
 
-        if (!$employee) {
+        if (! $employee) {
             abort(404, __('employeeNotFound'));
         }
 
@@ -448,13 +445,13 @@ class EmployeeController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('employees.delete'))) {
+        if (! $user || (! $user->can('employees.delete'))) {
             abort(401);
         }
 
         $employee = $this->employeeService->find($id);
 
-        if (!$employee) {
+        if (! $employee) {
             abort(404, __('employeeNotFound'));
         }
 

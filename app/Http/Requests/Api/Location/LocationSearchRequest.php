@@ -33,7 +33,7 @@ class LocationSearchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q' => ['required', 'string', 'min:3', 'max:120', new RejectSuspiciousText()],
+            'q' => ['required', 'string', 'min:3', 'max:120', new RejectSuspiciousText],
             'country_code' => ['nullable', 'string', 'regex:/^[a-z]{2,3}$/i'],
             'limit' => ['nullable', 'integer', 'min:1', 'max:10'],
         ];

@@ -15,7 +15,7 @@ class CustomerRegisterTest extends TestCase
         User::factory()->create([
             'name' => 'Existing Customer',
             'email' => 'existing@example.com',
-            'phone_number' => '+963-551234567',
+            'phone_number' => '+963 551234567',
         ]);
 
         $response = $this->from(route('customer.register'))

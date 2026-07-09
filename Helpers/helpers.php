@@ -4,7 +4,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
-if (!function_exists('upload_path')) {
+if (! function_exists('upload_path')) {
     /**
      * @param  string  $module  Primary folder inside the assets directory (e.g. "admin-settings").
      * @param  string  $subDirectory  Optional nested folder within the module (e.g. "avatars").
@@ -26,7 +26,7 @@ if (!function_exists('upload_path')) {
         $relativePath = implode('/', $relativeSegments);
         $absolutePath = public_path($relativePath);
 
-        if (!is_dir($absolutePath)) {
+        if (! is_dir($absolutePath)) {
             mkdir($absolutePath, 0755, true);
         }
 
@@ -37,7 +37,7 @@ if (!function_exists('upload_path')) {
     }
 }
 
-if (!function_exists('media_url')) {
+if (! function_exists('media_url')) {
     /**
      * Consistently convert a stored media path (storage disk, public assets, or absolute URL) into a browser-safe URL.
      */
@@ -64,8 +64,10 @@ if (!function_exists('media_url')) {
         if (str_starts_with($normalized, 'storage/')) {
             if (str_starts_with($normalized, 'storage/app/public/')) {
                 $normalized = substr($normalized, strlen('storage/app/public/'));
-                return asset('storage/' . $normalized);
+
+                return asset('storage/'.$normalized);
             }
+
             return asset($normalized);
         }
 
@@ -77,7 +79,7 @@ if (!function_exists('media_url')) {
     }
 }
 
-if (!function_exists('store_public_upload')) {
+if (! function_exists('store_public_upload')) {
     /**
      * Move an uploaded file into the public/assets directory tree for direct serving.
      */
@@ -88,18 +90,18 @@ if (!function_exists('store_public_upload')) {
         $extension = $file->getClientOriginalExtension() ?: $file->extension() ?: 'bin';
 
         if ($fileName === null) {
-            $fileName = uniqid('upload_', true) . '.' . $extension;
-        } elseif (!str_contains($fileName, '.')) {
-            $fileName .= '.' . $extension;
+            $fileName = uniqid('upload_', true).'.'.$extension;
+        } elseif (! str_contains($fileName, '.')) {
+            $fileName .= '.'.$extension;
         }
 
         $file->move($absoluteDir, $fileName);
 
-        return trim($relativeDir . '/' . $fileName, '/');
+        return trim($relativeDir.'/'.$fileName, '/');
     }
 }
 
-if (!function_exists('delete_media_file')) {
+if (! function_exists('delete_media_file')) {
     /**
      * Remove a media file regardless of whether it was stored in public/assets or storage/app/public.
      */
@@ -134,7 +136,7 @@ if (!function_exists('delete_media_file')) {
         }
 
         $publicPath = public_path($normalized);
-        if (!File::exists($publicPath)) {
+        if (! File::exists($publicPath)) {
             $publicPath = public_path($storageRelative);
         }
 

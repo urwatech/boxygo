@@ -2,16 +2,17 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\LocalizedFcm;
 use App\Services\FcmService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use App\Notifications\Concerns\LocalizedFcm;
 
 class ShipmentDeliveredNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
     use LocalizedFcm;
+    use Queueable;
+
     /**
      * Create a new notification instance.
      */
@@ -30,19 +31,16 @@ class ShipmentDeliveredNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-         return ['database', 'fcm'];
+        return ['database', 'fcm'];
     }
 
     /**
      * Send FCM push notification
-     *
-     * @param object $notifiable
-     * @return void
      */
     public function toFcm(object $notifiable): void
     {
         // Only send FCM if user has push notifications enabled and has a token
-        if (!$notifiable->push_notifications || !$notifiable->fcm_token) {
+        if (! $notifiable->push_notifications || ! $notifiable->fcm_token) {
             return;
         }
 
@@ -96,7 +94,7 @@ class ShipmentDeliveredNotification extends Notification implements ShouldQueue
             'tracking_number' => $this->trackingNumber,
             'rider_name' => $this->riderName,
             'delivered_at' => $this->deliveredAt,
-            'role' => $this->role
+            'role' => $this->role,
         ];
     }
 

@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class CitySeeder extends Seeder
 {
@@ -63,16 +62,16 @@ class CitySeeder extends Seeder
             ['governate' => 'Al-Hasakah',  'name' => 'Al-Qamishli',  'short' => 'QAM', 'arabic' => 'القامشلي'],
         ];
 
-       foreach ($cities as $city) {
+        foreach ($cities as $city) {
             $governateId = DB::table('governates')->where('name', $city['governate'])->value('id');
 
             DB::table('cities')->insert([
                 'governate_id' => $governateId,
-                'name'         => $city['name'],
-                'short_code'   => $city['short'],
-                'name_arabic'  => $city['arabic'],
-                'created_at'   => now(),
-                'updated_at'   => now(),
+                'name' => $city['name'],
+                'short_code' => $city['short'],
+                'name_arabic' => $city['arabic'],
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }

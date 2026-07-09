@@ -9,10 +9,6 @@ interface ShipmentRepositoryInterface
 {
     /**
      * Get paginated shipments for a specific user.
-     *
-     * @param int $userId
-     * @param int $perPage
-     * @return LengthAwarePaginator
      */
     public function getUserShipmentsPaginated(int $userId, int $perPage = 10, bool $isNormal = true, bool $isReturned = false, ?string $search = null, ?string $status = null, ?string $sortBy = null, ?string $sortDir = null): LengthAwarePaginator;
 
@@ -27,42 +23,28 @@ interface ShipmentRepositoryInterface
 
     /**
      * Create a new shipment.
-     *
-     * @param array $data
-     * @return Model
      */
     public function create(array $data): Model;
 
     /**
      * Find a shipment by ID.
-     *
-     * @param int|string $id
-     * @return Model|null
      */
     public function find(int|string $id): ?Model;
 
     /**
      * Update a shipment.
-     *
-     * @param int|string $id
-     * @param array $data
-     * @return bool
      */
     public function update(int|string $id, array $data): bool;
 
     /**
      * Delete a shipment.
-     *
-     * @param int|string $id
-     * @return bool
      */
     public function delete(int|string $id): bool;
 
     /**
      * Get rider's jobs filtered by status.
      *
-     * @param int $riderId
-     * @param string|null $filter 'assigned', 'completed', 'all'
+     * @param  string|null  $filter  'assigned', 'completed', 'all'
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getRiderJobs(int $riderId, ?string $filter = 'assigned');
@@ -74,10 +56,6 @@ interface ShipmentRepositoryInterface
 
     /**
      * Find a shipment by ID for a specific rider.
-     *
-     * @param int $shipmentId
-     * @param int $riderId
-     * @return Model|null
      */
     public function findForRider(int $shipmentId, int $riderId): ?Model;
 
@@ -85,8 +63,8 @@ interface ShipmentRepositoryInterface
      * Get jobs for Drop Point Keeper.
      * Only returns jobs that the keeper has scanned (has an assignment).
      *
-     * @param string|null $filter 'assigned', 'completed', 'all'
-     * @param int|null $userId Filter by user ID (only show jobs scanned by this user)
+     * @param  string|null  $filter  'assigned', 'completed', 'all'
+     * @param  int|null  $userId  Filter by user ID (only show jobs scanned by this user)
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getDropPointKeeperJobs(?string $filter = 'assigned', ?int $userId = null);
@@ -98,9 +76,6 @@ interface ShipmentRepositoryInterface
 
     /**
      * Find a shipment by ID for Drop Point Keeper context.
-     *
-     * @param int $shipmentId
-     * @return Model|null
      */
     public function findForDropPointKeeper(int $shipmentId): ?Model;
 
@@ -108,8 +83,8 @@ interface ShipmentRepositoryInterface
      * Get jobs for Car Driver (transport between drop point and warehouse).
      * Only returns jobs that the driver has scanned (has an assignment).
      *
-     * @param string|null $filter 'assigned', 'completed', 'all'
-     * @param int|null $userId Filter by user ID (only show jobs scanned by this user)
+     * @param  string|null  $filter  'assigned', 'completed', 'all'
+     * @param  int|null  $userId  Filter by user ID (only show jobs scanned by this user)
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getCarDriverJobs(?string $filter = 'assigned', ?int $userId = null);
@@ -121,9 +96,6 @@ interface ShipmentRepositoryInterface
 
     /**
      * Find shipment for Car Driver context (no rider constraint).
-     *
-     * @param int $shipmentId
-     * @return Model|null
      */
     public function findForCarDriver(int $shipmentId): ?Model;
 
@@ -131,8 +103,8 @@ interface ShipmentRepositoryInterface
      * Get jobs for Warehouse Keeper at warehouse stage.
      * Only returns jobs that the keeper has scanned (has an assignment).
      *
-     * @param string|null $filter 'assigned', 'completed', 'all'
-     * @param int|null $userId Filter by user ID (only show jobs scanned by this user)
+     * @param  string|null  $filter  'assigned', 'completed', 'all'
+     * @param  int|null  $userId  Filter by user ID (only show jobs scanned by this user)
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getWarehouseKeeperJobs(?string $filter = 'assigned', ?int $userId = null);
@@ -144,17 +116,11 @@ interface ShipmentRepositoryInterface
 
     /**
      * Find shipment for Warehouse Keeper context.
-     *
-     * @param int $shipmentId
-     * @return Model|null
      */
     public function findForWarehouseKeeper(int $shipmentId): ?Model;
 
     /**
      * Get the latest shipment for a specific user.
-     *
-     * @param int $userId
-     * @return Model|null
      */
     public function getLatestUserShipment(int $userId): ?Model;
 }

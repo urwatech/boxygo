@@ -1,28 +1,26 @@
 <?php
 
 use App\Enums\Role;
-use App\Models\Address;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Customer\FaqController;
-use App\Http\Controllers\Customer\TermsController;
-use App\Http\Controllers\Customer\LoginController;
-use App\Http\Controllers\Customer\UploadController;
 use App\Http\Controllers\Customer\AddressController;
 use App\Http\Controllers\Customer\BookingController;
+use App\Http\Controllers\Customer\DashboardController;
+use App\Http\Controllers\Customer\FaqController;
+use App\Http\Controllers\Customer\ForgotPasswordController;
+use App\Http\Controllers\Customer\LoginController;
+use App\Http\Controllers\Customer\MockPaymentController;
+use App\Http\Controllers\Customer\NotificationController as CustomerNotificationController;
+use App\Http\Controllers\Customer\OnlinePaymentController;
 use App\Http\Controllers\Customer\RegisterController;
+use App\Http\Controllers\Customer\ReviewController as CustomerReviewController;
 use App\Http\Controllers\Customer\SettingsController;
 use App\Http\Controllers\Customer\ShipmentController;
-use App\Http\Controllers\Customer\WalletController;
-use App\Http\Controllers\Customer\DashboardController;
-use App\Http\Controllers\Customer\MockPaymentController;
-use App\Http\Controllers\Customer\ForgotPasswordController;
-use App\Http\Controllers\Customer\ReviewController as CustomerReviewController;
-use App\Http\Controllers\Customer\OnlinePaymentController;
 use App\Http\Controllers\Customer\ShipmentController as CustomerShipmentController;
-use App\Http\Controllers\Customer\NotificationController as CustomerNotificationController;
+use App\Http\Controllers\Customer\TermsController;
+use App\Http\Controllers\Customer\UploadController;
+use App\Http\Controllers\Customer\WalletController;
+use App\Http\Controllers\HomeController;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,33 +32,35 @@ use App\Http\Controllers\Customer\NotificationController as CustomerNotification
 |
 */
 
-
 // Seed Permissiosn of RolesAndPermissionsSeeder
 Route::get('seed-permissions', function () {
     Artisan::call('db:seed', [
         '--class' => 'RolesAndPermissionsSeeder',
-        '--force' => true
+        '--force' => true,
     ]);
+
     return 'Permissions seeded';
 });
 
 Route::get('database-seed', function () {
     Artisan::call('db:seed', [
-        '--force' => true
+        '--force' => true,
     ]);
+
     return 'Permissions seeded';
 });
-
 
 // Migrate
 
 Route::get('migrate', function () {
     Artisan::call('migrate', ['--force' => true]);
+
     return 'Migration completed';
 });
 //
 Route::get('storage-link', function () {
     Artisan::call('storage:link');
+
     return 'Storage link created';
 });
 Route::get('/debug-zone', function () {
@@ -70,14 +70,16 @@ Route::get('/debug-zone', function () {
             'id' => $zone->id,
             'name' => $zone->name,
             'db_raw' => $zone->getAttributes()['drawn_paths'] ?? null,
-            'casted' => $zone->drawn_paths
+            'casted' => $zone->drawn_paths,
         ]);
     }
+
     return response()->json(['error' => 'No zone found']);
 });
 // Cache Clear Route
 Route::get('/cache-clear', function () {
     $exitCode = Artisan::call('optimize:clear');
+
     return 'Cache cleared';
 });
 
@@ -87,7 +89,7 @@ Route::get('/firebase-messaging-sw-config.js', function () {
         static fn ($value) => filled($value)
     );
 
-    $script = 'self.firebaseMessagingConfig = ' . json_encode($config, JSON_UNESCAPED_SLASHES) . ';';
+    $script = 'self.firebaseMessagingConfig = '.json_encode($config, JSON_UNESCAPED_SLASHES).';';
 
     return response($script, 200, [
         'Content-Type' => 'application/javascript; charset=UTF-8',
@@ -100,14 +102,14 @@ Route::get('/test-push-notification/{userId?}', function ($userId = 165) {
     try {
         $user = \App\Models\User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => "User with ID {$userId} not found"
+                'message' => "User with ID {$userId} not found",
             ], 404);
         }
 
-        if (!$user->fcm_token) {
+        if (! $user->fcm_token) {
             return response()->json([
                 'success' => false,
                 'message' => "User {$user->name} (ID: {$userId}) does not have an FCM token",
@@ -116,11 +118,11 @@ Route::get('/test-push-notification/{userId?}', function ($userId = 165) {
                     'name' => $user->name,
                     'email' => $user->email,
                     'push_notifications' => $user->push_notifications,
-                ]
+                ],
             ], 400);
         }
 
-        if (!$user->push_notifications) {
+        if (! $user->push_notifications) {
             return response()->json([
                 'success' => false,
                 'message' => "User {$user->name} (ID: {$userId}) has push notifications disabled",
@@ -128,16 +130,16 @@ Route::get('/test-push-notification/{userId?}', function ($userId = 165) {
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
-                    'fcm_token' => substr($user->fcm_token, 0, 30) . '...',
+                    'fcm_token' => substr($user->fcm_token, 0, 30).'...',
                     'push_notifications' => $user->push_notifications,
-                ]
+                ],
             ], 400);
         }
 
         // Send test notification
         $user->notify(new \App\Notifications\DeliveryAssignedNotification(
-            shipmentId: 'TEST-' . now()->format('YmdHis'),
-            trackingNumber: 'TRK-TEST-' . $userId,
+            shipmentId: 'TEST-'.now()->format('YmdHis'),
+            trackingNumber: 'TRK-TEST-'.$userId,
             assignedBy: 'Test Admin'
         ));
 
@@ -149,7 +151,7 @@ Route::get('/test-push-notification/{userId?}', function ($userId = 165) {
                 'name' => $user->name,
                 'email' => $user->email,
                 'device_type' => $user->device_type,
-                'fcm_token' => substr($user->fcm_token, 0, 30) . '...',
+                'fcm_token' => substr($user->fcm_token, 0, 30).'...',
             ],
             'notification' => [
                 'title' => 'New Delivery Assigned',
@@ -159,14 +161,14 @@ Route::get('/test-push-notification/{userId?}', function ($userId = 165) {
             'next_steps' => [
                 'Check the mobile device for notification',
                 'Check logs: tail -f storage/logs/laravel.log | grep FCM',
-                'If notification not received, check FCM token validity'
-            ]
+                'If notification not received, check FCM token validity',
+            ],
         ]);
     } catch (\Exception $e) {
         \Log::error('Test notification error', [
             'user_id' => $userId,
             'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
+            'trace' => $e->getTraceAsString(),
         ]);
 
         return response()->json([
@@ -174,7 +176,7 @@ Route::get('/test-push-notification/{userId?}', function ($userId = 165) {
             'message' => 'Error sending notification',
             'error' => $e->getMessage(),
             'trace' => config('app.debug') ? $e->getTraceAsString() : null,
-            'help' => 'Check storage/logs/laravel.log for details'
+            'help' => 'Check storage/logs/laravel.log for details',
         ], 500);
     }
 })->name('test.push.notification');
@@ -210,7 +212,7 @@ Route::middleware(['inertia.customer'])->group(function () {
 });
 
 // Customer Protected Routes
-Route::middleware(['auth', 'role:' . Role::CUSTOMER->value, 'inertia.customer'])->group(function () {
+Route::middleware(['auth', 'role:'.Role::CUSTOMER->value, 'inertia.customer'])->group(function () {
     Route::get('/customer/dashboard', [DashboardController::class, 'index'])->name('customer.dashboard');
 
     // Settings
@@ -273,7 +275,6 @@ Route::middleware(['auth', 'role:' . Role::CUSTOMER->value, 'inertia.customer'])
     Route::get('/customer/notifications/unread-count', [CustomerNotificationController::class, 'unreadCount'])->name('customer.notifications.unread_count');
     Route::put('/customer/notifications/{id}/read', [CustomerNotificationController::class, 'markAsRead'])->name('customer.notifications.mark_as_read');
     Route::post('/customer/notifications/read-all', [CustomerNotificationController::class, 'markAllAsRead'])->name('customer.notifications.mark_all_as_read');
-
 
     // Logout
     Route::post('/logout', [LoginController::class, 'destroy'])->name('customer.logout');

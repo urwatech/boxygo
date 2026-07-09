@@ -4,11 +4,11 @@ namespace App\Providers;
 
 use App\Channels\ExtendedDatabaseChannel;
 use App\Channels\FcmChannel;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Notifications\ChannelManager;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -48,7 +48,7 @@ class AppServiceProvider extends ServiceProvider
 
             // Register custom FCM channel
             $service->extend('fcm', function ($app) {
-                return new FcmChannel();
+                return new FcmChannel;
             });
         });
     }

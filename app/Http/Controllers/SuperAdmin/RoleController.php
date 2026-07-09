@@ -16,8 +16,7 @@ class RoleController extends Controller
 {
     public function __construct(
         private readonly RoleServiceInterface $roleService
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of roles.
@@ -26,7 +25,7 @@ class RoleController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('roles.view'))) {
+        if (! $user || (! $user->can('roles.view'))) {
             abort(401);
         }
 
@@ -52,8 +51,8 @@ class RoleController extends Controller
                 ];
 
                 return collect($fields)
-                    ->filter(fn($value) => $value !== null && $value !== '')
-                    ->contains(fn($value) => str_contains(strtolower((string) $value), $needle));
+                    ->filter(fn ($value) => $value !== null && $value !== '')
+                    ->contains(fn ($value) => str_contains(strtolower((string) $value), $needle));
             })->values();
         }
 
@@ -99,7 +98,7 @@ class RoleController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('roles.create'))) {
+        if (! $user || (! $user->can('roles.create'))) {
             abort(401);
         }
 
@@ -117,7 +116,7 @@ class RoleController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('roles.create'))) {
+        if (! $user || (! $user->can('roles.create'))) {
             abort(401);
         }
 
@@ -144,7 +143,7 @@ class RoleController extends Controller
         $role = $this->roleService->create($validated);
 
         // Sync permissions if provided
-        if (!empty($validated['permissions'])) {
+        if (! empty($validated['permissions'])) {
             $this->roleService->syncPermissions($role->id, $validated['permissions']);
         }
 
@@ -159,13 +158,13 @@ class RoleController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('roles.edit'))) {
+        if (! $user || (! $user->can('roles.edit'))) {
             abort(401);
         }
 
         $role = $this->roleService->find($id);
 
-        if (!$role) {
+        if (! $role) {
             abort(404, __('roleNotFound'));
         }
 
@@ -193,13 +192,13 @@ class RoleController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('roles.edit'))) {
+        if (! $user || (! $user->can('roles.edit'))) {
             abort(401);
         }
 
         $role = $this->roleService->find($id);
 
-        if (!$role) {
+        if (! $role) {
             abort(404, __('roleNotFound'));
         }
 
@@ -243,11 +242,11 @@ class RoleController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('roles.delete'))) {
+        if (! $user || (! $user->can('roles.delete'))) {
             abort(401);
         }
 
-        if (!$this->roleService->canDelete($id)) {
+        if (! $this->roleService->canDelete($id)) {
             return back()->withErrors(['error' => __('cannotDeleteAProtectedRole')]);
         }
 

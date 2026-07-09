@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 class AssatexApiService
 {
     protected string $baseUrl;
+
     protected string $apiKey;
 
     public function __construct()
@@ -33,13 +34,14 @@ class AssatexApiService
     public function getZones(): array
     {
         try {
-            // Note: The Postman collection doesn't show pagination parameters for Zones, 
+            // Note: The Postman collection doesn't show pagination parameters for Zones,
             // but we fetch all returned.
             $response = Http::withHeaders($this->getHeaders())
                 ->get("{$this->baseUrl}/api/v1/Zone");
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return $data['list'] ?? [];
             }
 
@@ -47,10 +49,11 @@ class AssatexApiService
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
-            
+
             return [];
         } catch (\Exception $e) {
             Log::error('Assatex API - Exception fetching zones', ['message' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -66,6 +69,7 @@ class AssatexApiService
 
             if ($response->successful()) {
                 $data = $response->json();
+
                 return $data['list'] ?? [];
             }
 
@@ -73,10 +77,11 @@ class AssatexApiService
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
-            
+
             return [];
         } catch (\Exception $e) {
             Log::error('Assatex API - Exception fetching drop points', ['message' => $e->getMessage()]);
+
             return [];
         }
     }
@@ -102,10 +107,11 @@ class AssatexApiService
                 'body' => $response->body(),
                 'offset' => $offset,
             ]);
-            
+
             return [];
         } catch (\Exception $e) {
             Log::error('Assatex API - Exception fetching city shipment prices', ['message' => $e->getMessage()]);
+
             return [];
         }
     }

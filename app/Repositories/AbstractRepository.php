@@ -2,9 +2,9 @@
 
 namespace App\Repositories;
 
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Interfaces\BaseRepositoryInterface;
 
 /**
@@ -63,8 +63,6 @@ abstract class AbstractRepository implements BaseRepositoryInterface
 
     /**
      * Get the model instance.
-     *
-     * @return Model
      */
     public function getModel(): Model
     {

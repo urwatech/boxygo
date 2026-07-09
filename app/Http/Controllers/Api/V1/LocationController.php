@@ -22,7 +22,7 @@ class LocationController extends Controller
         $limit = $validated['limit'] ?? 6;
 
         $apiKey = config('services.google.places_api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return response()->json([
                 'success' => false,
                 'message' => __('googleApiKeyNotConfigured'),
@@ -34,7 +34,7 @@ class LocationController extends Controller
             // Try using Google Geocoding API (more widely available)
             $results = $this->geocodeLocations($query, $countryCode, $apiKey, $limit);
 
-            if (!empty($results)) {
+            if (! empty($results)) {
                 return response()->json([
                     'success' => true,
                     'results' => $results,
@@ -47,7 +47,7 @@ class LocationController extends Controller
                 'results' => [],
             ]);
         } catch (\Exception $e) {
-            \Log::warning('Location search error: ' . $e->getMessage());
+            \Log::warning('Location search error: '.$e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -75,7 +75,7 @@ class LocationController extends Controller
             'language' => 'en',
         ]);
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new \Exception(__('failedToFetchGeocodingResults'));
         }
 

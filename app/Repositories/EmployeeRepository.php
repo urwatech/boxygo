@@ -19,8 +19,6 @@ class EmployeeRepository extends AbstractRepository implements EmployeeRepositor
     /**
      * Get all employees with their relationships.
      * For zone-assigned employees, only show employees from their zone.
-     *
-     * @return Collection
      */
     public function getAllEmployees(): Collection
     {
@@ -30,7 +28,7 @@ class EmployeeRepository extends AbstractRepository implements EmployeeRepositor
 
         // Apply zone filtering for non-superadmin employees
         $currentUser = auth()->user();
-        if ($currentUser && !$currentUser->hasRole('superadmin') && $currentUser->zone_id && $currentUser->platform === 'Admin Portal') {
+        if ($currentUser && ! $currentUser->hasRole('superadmin') && $currentUser->zone_id && $currentUser->platform === 'Admin Portal') {
             $query->where('zone_id', $currentUser->zone_id);
         }
 
@@ -40,9 +38,6 @@ class EmployeeRepository extends AbstractRepository implements EmployeeRepositor
 
     /**
      * Get employees by platform.
-     *
-     * @param string $platform
-     * @return Collection
      */
     public function getByPlatform(string $platform): Collection
     {
@@ -56,9 +51,6 @@ class EmployeeRepository extends AbstractRepository implements EmployeeRepositor
 
     /**
      * Get employees by employment type.
-     *
-     * @param string $employmentType
-     * @return Collection
      */
     public function getByEmploymentType(string $employmentType): Collection
     {
@@ -73,7 +65,6 @@ class EmployeeRepository extends AbstractRepository implements EmployeeRepositor
     /**
      * Find employee by employee_id.
      *
-     * @param string $employeeId
      * @return \Illuminate\Database\Eloquent\Model|null
      */
     public function findByEmployeeId(string $employeeId)

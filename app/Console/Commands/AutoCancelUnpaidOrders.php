@@ -39,7 +39,7 @@ class AutoCancelUnpaidOrders extends Command
                 ShipmentStatus::DELIVERED->value,
                 ShipmentStatus::PICKED_UP_BY_RECEIVER->value,
                 ShipmentStatus::RETURNED->value,
-                ShipmentStatus::FAILED->value
+                ShipmentStatus::FAILED->value,
             ])
             ->where('created_at', '<=', $cutoff)
             ->get();
@@ -48,6 +48,7 @@ class AutoCancelUnpaidOrders extends Command
 
         if ($count === 0) {
             $this->info('No unpaid shipments found to cancel.');
+
             return;
         }
 
@@ -70,15 +71,15 @@ class AutoCancelUnpaidOrders extends Command
                 ]);
 
                 $this->line("Cancelled shipment: {$shipment->order_number}");
-                
+
                 Log::info("Shipment {$shipment->order_number} auto-cancelled due to non-payment.", [
                     'shipment_id' => $shipment->id,
                     'created_at' => $shipment->created_at,
                 ]);
             } catch (\Exception $e) {
-                $this->error("Failed to cancel shipment {$shipment->order_number}: " . $e->getMessage());
+                $this->error("Failed to cancel shipment {$shipment->order_number}: ".$e->getMessage());
                 Log::error("Failed to auto-cancel shipment {$shipment->id}", [
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }

@@ -16,27 +16,27 @@ class InfoController extends Controller
             'sections' => [
                 [
                     'title' => __('servicesProvidedTitle'),
-                    'content' => __('servicesProvidedContent')
+                    'content' => __('servicesProvidedContent'),
                 ],
                 [
                     'title' => __('commonAccountResponsibility'),
-                    'content' => __('accountResponsibilityContent')
+                    'content' => __('accountResponsibilityContent'),
                 ],
                 [
                     'title' => __('paymentsAndChargesTitle'),
-                    'content' => __('paymentsAndChargesContent')
+                    'content' => __('paymentsAndChargesContent'),
                 ],
                 [
                     'title' => __('commonCancellationsRefunds'),
-                    'content' => __('cancellationsAndRefundsContent')
+                    'content' => __('cancellationsAndRefundsContent'),
                 ],
                 [
                     'title' => __('platformManagementTitle'),
-                    'content' => __('platformManagementContent')
+                    'content' => __('platformManagementContent'),
                 ],
                 [
                     'title' => __('disclaimerOfWarrantiesTitle'),
-                    'content' => __('disclaimerOfWarrantiesContent')
+                    'content' => __('disclaimerOfWarrantiesContent'),
                 ],
             ],
         ]);
@@ -50,27 +50,27 @@ class InfoController extends Controller
             'sections' => [
                 [
                     'title' => __('collectionOfPersonalInformationTitle'),
-                    'content' => __('collectionOfPersonalInformationContent')
+                    'content' => __('collectionOfPersonalInformationContent'),
                 ],
                 [
                     'title' => __('useOfPersonalInformationTitle'),
-                    'content' => __('useOfPersonalInformationContent')
+                    'content' => __('useOfPersonalInformationContent'),
                 ],
                 [
                     'title' => __('disclosureOfPersonalInformationTitle'),
-                    'content' => __('disclosureOfPersonalInformationContent')
+                    'content' => __('disclosureOfPersonalInformationContent'),
                 ],
                 [
                     'title' => __('protectionAndRetentionTitle'),
-                    'content' => __('protectionAndRetentionContent')
+                    'content' => __('protectionAndRetentionContent'),
                 ],
                 [
                     'title' => __('childrensPrivacyTitle'),
-                    'content' => __('childrensPrivacyContent')
+                    'content' => __('childrensPrivacyContent'),
                 ],
                 [
                     'title' => __('updatesToThisPolicyTitle'),
-                    'content' => __('updatesToThisPolicyContent')
+                    'content' => __('updatesToThisPolicyContent'),
                 ],
             ],
         ]);
@@ -86,45 +86,45 @@ class InfoController extends Controller
                     'type' => 'phone',
                     'label' => __('commonCallUs'),
                     'value' => '+963 (555) 000 0000',
-                    'description' => __('callUsDescription')
+                    'description' => __('callUsDescription'),
                 ],
                 [
                     'type' => 'email',
                     'label' => __('commonEmailUs'),
                     'value' => 'hello@BoxyGo.com',
-                    'description' => __('emailUsDescription')
+                    'description' => __('emailUsDescription'),
                 ],
             ],
             'top_topics' => [
                 [
                     'question' => __('faqAcceptJobQuestion'),
-                    'answer' => __('howDoIAcceptOrRejectAJobAnswer')
+                    'answer' => __('howDoIAcceptOrRejectAJobAnswer'),
                 ],
                 [
                     'question' => __('faqMarkDeliveredQuestion'),
-                    'answer' => __('howDoIMarkAJobAsDeliveredAnswer')
+                    'answer' => __('howDoIMarkAJobAsDeliveredAnswer'),
                 ],
                 [
                     'question' => __('faqGetPaidQuestion'),
-                    'answer' => __('whenAndHowDoIGetPaidAnswer')
+                    'answer' => __('whenAndHowDoIGetPaidAnswer'),
                 ],
                 [
                     'question' => __('iForgotMyPasswordWhatShouldIDoQuestion'),
-                    'answer' => __('iForgotMyPasswordWhatShouldIDoAnswer')
+                    'answer' => __('iForgotMyPasswordWhatShouldIDoAnswer'),
                 ],
             ],
             'faqs' => [
                 [
                     'question' => __('faqDocumentsRequiredQuestion'),
-                    'answer' => __('whatDocumentsAreRequiredDuringOnboardingAnswer')
+                    'answer' => __('whatDocumentsAreRequiredDuringOnboardingAnswer'),
                 ],
                 [
                     'question' => __('faqSignupQuestion'),
-                    'answer' => __('howDoISignUpAsACourierOrRiderAnswer')
+                    'answer' => __('howDoISignUpAsACourierOrRiderAnswer'),
                 ],
                 [
                     'question' => __('faqRecipientUnavailableQuestion'),
-                    'answer' => __('recipientIsUnavailableWhatShouldIDoAnswer')
+                    'answer' => __('recipientIsUnavailableWhatShouldIDoAnswer'),
                 ],
             ],
         ]);

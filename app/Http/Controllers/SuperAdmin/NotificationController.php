@@ -4,8 +4,8 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Support\SortHelper;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
@@ -26,6 +26,7 @@ class NotificationController extends Controller
             ->when($status !== '' && $status !== 'all', function ($query) use ($status) {
                 if (in_array($status, ['read', 'read_at'], true)) {
                     $query->whereNotNull('read_at');
+
                     return;
                 }
 
@@ -93,7 +94,7 @@ class NotificationController extends Controller
         $user = Auth::user();
         $notification = $user->notifications()->find($id);
 
-        if (!$notification) {
+        if (! $notification) {
             return response()->json(['success' => false, 'message' => __('notFound')], 404);
         }
 

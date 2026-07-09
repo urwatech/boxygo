@@ -56,7 +56,7 @@ class LoginController extends Controller
 
             $redirectTo = $user ? AdminRouteResolver::firstAccessibleRouteFor($user) : null;
 
-            if (!$redirectTo) {
+            if (! $redirectTo) {
                 $this->userService->logout();
 
                 throw ValidationException::withMessages([

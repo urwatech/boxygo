@@ -52,8 +52,9 @@ class helpers
     public static function getTrackShipmentId($shipment_id)
     {
         $fallbackId = $shipment_id ?? '';
+
         return $fallbackId
-            ? 'SHIP-' . str_pad((string)$fallbackId, 8, '0', STR_PAD_LEFT)
+            ? 'SHIP-'.str_pad((string) $fallbackId, 8, '0', STR_PAD_LEFT)
             : '';
     }
 }

@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Contracts\EmployeeServiceInterface;
 use App\Enums\Role;
 use App\Repositories\EmployeeRepository;
-use App\Services\ZoneHelper;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -23,8 +22,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
     /**
      * Get all employees with their roles.
-     *
-     * @return Collection
      */
     public function getAllEmployees(): Collection
     {
@@ -33,9 +30,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
     /**
      * Get employees by platform (Admin Portal / Mobile Application).
-     *
-     * @param string $platform
-     * @return Collection
      */
     public function getEmployeesByPlatform(string $platform): Collection
     {
@@ -44,9 +38,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
     /**
      * Get employees by employment type.
-     *
-     * @param string $employmentType
-     * @return Collection
      */
     public function getEmployeesByEmploymentType(string $employmentType): Collection
     {
@@ -56,8 +47,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
     /**
      * Get employee statistics grouped by role.
      * Statistics are automatically filtered by zone for zone-assigned employees.
-     *
-     * @return array
      */
     public function getEmployeeStatistics(): array
     {
@@ -92,7 +81,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
     /**
      * Onboard a new employee (create user with employee role).
      *
-     * @param array $data
      * @return array Returns employee and generated password
      */
     public function onboardEmployee(array $data): array
@@ -101,7 +89,7 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
         try {
             // Generate employee ID if not provided
-            if (!isset($data['employee_id'])) {
+            if (! isset($data['employee_id'])) {
                 $data['employee_id'] = $this->generateEmployeeId();
             }
 
@@ -113,12 +101,12 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
             $data['member_since'] = $data['member_since'] ?? now();
 
             // Admin Portal employees should be active by default, Mobile App users start as pending
-            if (!isset($data['status'])) {
+            if (! isset($data['status'])) {
                 $data['status'] = ($data['platform'] ?? '') === 'Admin Portal' ? 'active' : 'pending';
             }
 
             // Auto-assign zone if coordinates provided but no zone_id
-            if (!isset($data['zone_id']) && isset($data['latitude']) && isset($data['longitude'])) {
+            if (! isset($data['zone_id']) && isset($data['latitude']) && isset($data['longitude'])) {
                 $zone = ZoneHelper::findZoneByCoordinates($data['latitude'], $data['longitude']);
                 if ($zone) {
                     $data['zone_id'] = $zone->id;
@@ -137,7 +125,7 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
             return [
                 'employee' => $employee,
-                'password' => $plainPassword
+                'password' => $plainPassword,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -147,8 +135,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
     /**
      * Generate a random secure password.
-     *
-     * @return string
      */
     private function generateRandomPassword(): string
     {
@@ -165,7 +151,7 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
         $password .= $special[random_int(0, strlen($special) - 1)];
 
         // Fill the rest with random characters
-        $allChars = $uppercase . $lowercase . $numbers . $special;
+        $allChars = $uppercase.$lowercase.$numbers.$special;
         for ($i = 0; $i < 8; $i++) {
             $password .= $allChars[random_int(0, strlen($allChars) - 1)];
         }
@@ -178,10 +164,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
     /**
      * Update employee information.
-     *
-     * @param int|string $employeeId
-     * @param array $data
-     * @return Model|null
      */
     public function updateEmployee(int|string $employeeId, array $data): ?Model
     {
@@ -190,8 +172,9 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
         try {
             $existingEmployee = $this->repository->find($employeeId);
 
-            if (!$existingEmployee) {
+            if (! $existingEmployee) {
                 DB::rollBack();
+
                 return null;
             }
 
@@ -207,7 +190,7 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
             }
 
             // Auto-assign zone if coordinates changed but no zone_id provided
-            if (!isset($data['zone_id']) && isset($data['latitude']) && isset($data['longitude'])) {
+            if (! isset($data['zone_id']) && isset($data['latitude']) && isset($data['longitude'])) {
                 $zone = ZoneHelper::findZoneByCoordinates($data['latitude'], $data['longitude']);
                 if ($zone) {
                     $data['zone_id'] = $zone->id;
@@ -218,8 +201,9 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
             $originalStatus = $existingEmployee->status;
             $updated = $this->repository->update($employeeId, $data);
 
-            if (!$updated) {
+            if (! $updated) {
                 DB::rollBack();
+
                 return null;
             }
 
@@ -238,6 +222,7 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
             }
 
             DB::commit();
+
             return $employee;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -247,9 +232,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
     /**
      * Get employee by employee_id.
-     *
-     * @param string $employeeId
-     * @return Model|null
      */
     public function findByEmployeeId(string $employeeId): ?Model
     {
@@ -272,10 +254,11 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
             if ($zoneId === null || $zoneId === '') {
                 return null;
             }
-            return (int) $zoneId;
-        }, $zoneIds), static fn($zoneId) => $zoneId !== null));
 
-        if (empty($zoneIds) && !empty($data['zone_id'])) {
+            return (int) $zoneId;
+        }, $zoneIds), static fn ($zoneId) => $zoneId !== null));
+
+        if (empty($zoneIds) && ! empty($data['zone_id'])) {
             $zoneIds = [(int) $data['zone_id']];
         }
 
@@ -291,10 +274,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
     /**
      * Assign role to employee.
-     *
-     * @param int|string $employeeId
-     * @param string $roleName
-     * @return Model|null
      */
     public function assignRole(int|string $employeeId, string $roleName): ?Model
     {
@@ -309,8 +288,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
 
     /**
      * Generate a unique employee ID in format R-001.
-     *
-     * @return string
      */
     private function generateEmployeeId(): string
     {
@@ -331,6 +308,6 @@ class EmployeeService extends AbstractService implements EmployeeServiceInterfac
         }
 
         // Format as R-001, R-002, etc.
-        return 'R-' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+        return 'R-'.str_pad($newNumber, 3, '0', STR_PAD_LEFT);
     }
 }

@@ -12,17 +12,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('shipment_reviews')) {
+        if (! Schema::hasTable('shipment_reviews')) {
             return;
         }
 
-        if (!$this->indexExists('shipment_reviews', 'shipment_reviews_shipment_id_index')) {
+        if (! $this->indexExists('shipment_reviews', 'shipment_reviews_shipment_id_index')) {
             Schema::table('shipment_reviews', function (Blueprint $table) {
                 $table->index('shipment_id');
             });
         }
 
-        if (!$this->indexExists('shipment_reviews', 'shipment_reviews_user_id_index')) {
+        if (! $this->indexExists('shipment_reviews', 'shipment_reviews_user_id_index')) {
             Schema::table('shipment_reviews', function (Blueprint $table) {
                 $table->index('user_id');
             });
@@ -34,25 +34,27 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasColumn('shipment_reviews', 'employee_id')) {
+        if (! Schema::hasColumn('shipment_reviews', 'employee_id')) {
             Schema::table('shipment_reviews', function (Blueprint $table) {
                 $table->unsignedBigInteger('employee_id')->nullable()->after('user_id');
             });
         }
 
-        DB::statement('ALTER TABLE `shipment_reviews` MODIFY `employee_id` BIGINT UNSIGNED NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE `shipment_reviews` MODIFY `employee_id` BIGINT UNSIGNED NULL');
 
-        DB::statement(
-            'UPDATE `shipment_reviews` sr LEFT JOIN `users` u ON u.id = sr.employee_id SET sr.employee_id = NULL WHERE sr.employee_id IS NOT NULL AND u.id IS NULL'
-        );
+            DB::statement(
+                'UPDATE `shipment_reviews` sr LEFT JOIN `users` u ON u.id = sr.employee_id SET sr.employee_id = NULL WHERE sr.employee_id IS NOT NULL AND u.id IS NULL'
+            );
+        }
 
-        if (!$this->foreignKeyExists('shipment_reviews', 'shipment_reviews_employee_id_foreign')) {
+        if (! $this->foreignKeyExists('shipment_reviews', 'shipment_reviews_employee_id_foreign')) {
             Schema::table('shipment_reviews', function (Blueprint $table) {
                 $table->foreign('employee_id')->references('id')->on('users')->cascadeOnDelete();
             });
         }
 
-        if (!$this->indexExists('shipment_reviews', 'shipment_reviews_shipment_id_user_id_employee_id_unique')) {
+        if (! $this->indexExists('shipment_reviews', 'shipment_reviews_shipment_id_user_id_employee_id_unique')) {
             Schema::table('shipment_reviews', function (Blueprint $table) {
                 $table->unique(['shipment_id', 'user_id', 'employee_id']);
             });
@@ -64,7 +66,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        if (!Schema::hasTable('shipment_reviews')) {
+        if (! Schema::hasTable('shipment_reviews')) {
             return;
         }
 
@@ -86,7 +88,7 @@ return new class extends Migration
             });
         }
 
-        if (!$this->indexExists('shipment_reviews', 'shipment_reviews_shipment_id_user_id_unique')) {
+        if (! $this->indexExists('shipment_reviews', 'shipment_reviews_shipment_id_user_id_unique')) {
             Schema::table('shipment_reviews', function (Blueprint $table) {
                 $table->unique(['shipment_id', 'user_id']);
             });
@@ -95,20 +97,13 @@ return new class extends Migration
 
     private function indexExists(string $table, string $indexName): bool
     {
-        $result = DB::selectOne('SHOW INDEX FROM `'.$table.'` WHERE Key_name = ?', [$indexName]);
-
-        return $result !== null;
+        return Schema::hasIndex($table, $indexName);
     }
 
     private function foreignKeyExists(string $table, string $constraintName): bool
     {
-        $databaseName = DB::getDatabaseName();
-
-        $result = DB::selectOne(
-            'SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND CONSTRAINT_TYPE = ? AND CONSTRAINT_NAME = ? LIMIT 1',
-            [$databaseName, $table, 'FOREIGN KEY', $constraintName]
-        );
-
-        return $result !== null;
+        return collect(Schema::getForeignKeys($table))
+            ->pluck('name')
+            ->contains($constraintName);
     }
 };

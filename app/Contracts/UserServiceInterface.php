@@ -12,17 +12,11 @@ interface UserServiceInterface extends BaseServiceInterface
 {
     /**
      * Attempt to authenticate a user with the given credentials.
-     *
-     * @param array $credentials
-     * @param bool $remember
-     * @return bool
      */
     public function attemptLogin(array $credentials, bool $remember = false): bool;
 
     /**
      * Log the user out of the application.
-     *
-     * @return void
      */
     public function logout(): void;
 

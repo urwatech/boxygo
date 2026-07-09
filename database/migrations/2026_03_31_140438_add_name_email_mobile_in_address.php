@@ -12,15 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('addresses', function (Blueprint $table) {
-            if (!Schema::hasColumn('addresses', 'name')) {
+            if (! Schema::hasColumn('addresses', 'name')) {
                 $table->string('name')->nullable()->after('user_id');
             }
 
-            if (!Schema::hasColumn('addresses', 'email')) {
+            if (! Schema::hasColumn('addresses', 'email')) {
                 $table->string('email')->nullable()->after('name');
             }
 
-            if (!Schema::hasColumn('addresses', 'mobile')) {
+            if (! Schema::hasColumn('addresses', 'mobile')) {
                 $table->string('mobile')->nullable()->after('email');
             }
         });
@@ -46,7 +46,7 @@ return new class extends Migration
                 $columns[] = 'mobile';
             }
 
-            if (!empty($columns)) {
+            if (! empty($columns)) {
                 $table->dropColumn($columns);
             }
         });

@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 class MtnPaymentService
 {
     private string $baseUrl;
+
     private string $secret;
+
     private ?string $accessToken = null;
 
     public function __construct()
@@ -35,10 +37,11 @@ class MtnPaymentService
                 'X-SIGNATURE' => $signature,
                 'Content-Type' => 'application/json',
             ])->withBody($loginBody, 'application/json')
-              ->post($this->baseUrl . '/api/auth/login');
+                ->post($this->baseUrl.'/api/auth/login');
 
             if ($response->successful()) {
                 $this->accessToken = $response->json('data.tokens.access_token');
+
                 return $this->accessToken;
             }
 
@@ -59,8 +62,9 @@ class MtnPaymentService
     private function apiRequest(string $method, string $endpoint, array $data = []): ?array
     {
         $token = $this->authenticate();
-        if (!$token) {
+        if (! $token) {
             Log::error('MTN Payment: Cannot make request, authentication failed', ['endpoint' => $endpoint]);
+
             return null;
         }
 
@@ -70,10 +74,10 @@ class MtnPaymentService
 
             $response = Http::withHeaders([
                 'X-SIGNATURE' => $signature,
-                'Authorization' => 'Bearer ' . $token,
+                'Authorization' => 'Bearer '.$token,
                 'Content-Type' => 'application/json',
             ])->withBody($jsonBody, 'application/json')
-              ->{$method}($this->baseUrl . $endpoint);
+                ->{$method}($this->baseUrl.$endpoint);
 
             $result = $response->json();
 

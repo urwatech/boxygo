@@ -11,10 +11,7 @@ class ZoneHelper
      * Check if a point (latitude, longitude) is inside a polygon zone
      * Uses ray-casting algorithm for point-in-polygon test
      *
-     * @param float $latitude
-     * @param float $longitude
-     * @param array $polygon Array of ['lat' => float, 'lng' => float]
-     * @return bool
+     * @param  array  $polygon  Array of ['lat' => float, 'lng' => float]
      */
     public static function isPointInPolygon(float $latitude, float $longitude, array $polygon): bool
     {
@@ -51,11 +48,6 @@ class ZoneHelper
 
     /**
      * Find which zone contains the given coordinates
-     *
-     * @param float $latitude
-     * @param float $longitude
-     * @param bool $onlyActive
-     * @return Zone|null
      */
     public static function findZoneByCoordinates(float $latitude, float $longitude, bool $onlyActive = true): ?Zone
     {
@@ -69,21 +61,21 @@ class ZoneHelper
         }
 
         $zones = $query->where(function ($query) use ($latitude, $longitude) {
-                // If the bounds exist, MUST match bounds
-                $query->where(function ($boundQuery) use ($latitude, $longitude) {
-                    $boundQuery->whereNotNull('bound_min_lat')
-                        ->where('bound_min_lat', '<=', $latitude)
-                        ->where('bound_max_lat', '>=', $latitude)
-                        ->where('bound_min_lng', '<=', $longitude)
-                        ->where('bound_max_lng', '>=', $longitude);
-                })
-                // Fallback: If bounding box wasn't calculated, still evaluate it dynamically in PHP
-                ->orWhereNull('bound_min_lat');
+            // If the bounds exist, MUST match bounds
+            $query->where(function ($boundQuery) use ($latitude, $longitude) {
+                $boundQuery->whereNotNull('bound_min_lat')
+                    ->where('bound_min_lat', '<=', $latitude)
+                    ->where('bound_max_lat', '>=', $latitude)
+                    ->where('bound_min_lng', '<=', $longitude)
+                    ->where('bound_max_lng', '>=', $longitude);
             })
+            // Fallback: If bounding box wasn't calculated, still evaluate it dynamically in PHP
+                ->orWhereNull('bound_min_lat');
+        })
             ->get();
 
         foreach ($zones as $zone) {
-            if (!empty($zone->drawn_paths) && is_array($zone->drawn_paths)) {
+            if (! empty($zone->drawn_paths) && is_array($zone->drawn_paths)) {
                 // Handle nested array structure from database: [[{lat, lng}, ...]]
                 // The drawn_paths can be nested, so we need to check each polygon
                 foreach ($zone->drawn_paths as $polygon) {
@@ -100,9 +92,7 @@ class ZoneHelper
     /**
      * Get all employees within a specific zone
      *
-     * @param int $zoneId
-     * @param string|null $role Filter by role (e.g., 'rider', 'car driver')
-     * @return Collection
+     * @param  string|null  $role  Filter by role (e.g., 'rider', 'car driver')
      */
     public static function getEmployeesInZone(int $zoneId, ?string $role = null): Collection
     {
@@ -120,11 +110,8 @@ class ZoneHelper
     /**
      * Get available employees for a shipment based on pickup location
      *
-     * @param float $pickupLatitude
-     * @param float $pickupLongitude
-     * @param string $role Role needed (rider, car driver, etc.)
-     * @param array $excludeUserIds User IDs to exclude
-     * @return Collection
+     * @param  string  $role  Role needed (rider, car driver, etc.)
+     * @param  array  $excludeUserIds  User IDs to exclude
      */
     public static function getAvailableEmployeesForLocation(
         float $pickupLatitude,
@@ -135,14 +122,14 @@ class ZoneHelper
         // Find the zone containing this location
         $zone = self::findZoneByCoordinates($pickupLatitude, $pickupLongitude);
 
-        if (!$zone) {
+        if (! $zone) {
             // If no zone found, return all employees with the role
             $query = \App\Models\User::query()
                 ->where('platform', 'Mobile App')
                 ->where('status', 'active')
                 ->role($role);
 
-            if (!empty($excludeUserIds)) {
+            if (! empty($excludeUserIds)) {
                 $query->whereNotIn('id', $excludeUserIds);
             }
 
@@ -155,7 +142,7 @@ class ZoneHelper
             ->where('status', 'active')
             ->role($role);
 
-        if (!empty($excludeUserIds)) {
+        if (! empty($excludeUserIds)) {
             $query->whereNotIn('id', $excludeUserIds);
         }
 
@@ -165,10 +152,6 @@ class ZoneHelper
     /**
      * Calculate distance between two coordinates using Haversine formula
      *
-     * @param float $lat1
-     * @param float $lng1
-     * @param float $lat2
-     * @param float $lng2
      * @return float Distance in kilometers
      */
     public static function calculateDistance(float $lat1, float $lng1, float $lat2, float $lng2): float
@@ -189,12 +172,6 @@ class ZoneHelper
 
     /**
      * Find nearest employees to a location within the same zone
-     *
-     * @param float $latitude
-     * @param float $longitude
-     * @param string $role
-     * @param int $limit
-     * @return Collection
      */
     public static function findNearestEmployees(
         float $latitude,
@@ -216,6 +193,7 @@ class ZoneHelper
             } else {
                 $employee->distance = PHP_FLOAT_MAX; // No location set
             }
+
             return $employee;
         });
 
@@ -227,13 +205,10 @@ class ZoneHelper
 
     /**
      * Auto-assign zone to an employee based on their coordinates
-     *
-     * @param \App\Models\User $user
-     * @return Zone|null
      */
     public static function autoAssignZoneToEmployee(\App\Models\User $user): ?Zone
     {
-        if (!$user->latitude || !$user->longitude) {
+        if (! $user->latitude || ! $user->longitude) {
             return null;
         }
 
@@ -249,15 +224,10 @@ class ZoneHelper
 
     /**
      * Validate if a zone assignment is valid for an employee's location
-     *
-     * @param int $zoneId
-     * @param float|null $latitude
-     * @param float|null $longitude
-     * @return bool
      */
     public static function validateZoneAssignment(int $zoneId, ?float $latitude, ?float $longitude): bool
     {
-        if (!$latitude || !$longitude) {
+        if (! $latitude || ! $longitude) {
             return true; // Allow assignment if no coordinates
         }
 
@@ -265,7 +235,7 @@ class ZoneHelper
             ->notDeleted()
             ->find($zoneId);
 
-        if (!$zone || empty($zone->drawn_paths)) {
+        if (! $zone || empty($zone->drawn_paths)) {
             return true; // Allow if zone has no boundaries
         }
 

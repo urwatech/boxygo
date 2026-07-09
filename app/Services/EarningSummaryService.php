@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Contracts\EarningSummaryServiceInterface;
 use App\Helpers\helpers;
 use App\Models\Parcel;
-use App\Models\Shipment;
 use App\Models\PaymentTransaction;
+use App\Models\Shipment;
 use Illuminate\Support\Facades\DB;
 
 class EarningSummaryService implements EarningSummaryServiceInterface
@@ -33,7 +33,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
             ->where('payment_method', 'cash');
 
         // Filter by zone through shipments relationship if applicable
-        if ($user && !$user->hasRole('superadmin') && $user->zone_id && $user->platform === 'Admin Portal') {
+        if ($user && ! $user->hasRole('superadmin') && $user->zone_id && $user->platform === 'Admin Portal') {
             $codQuery->whereHas('shipment', function ($q) use ($user) {
                 $q->where('zone_id', $user->zone_id);
             });
@@ -84,7 +84,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
             ->completed()
             ->whereNull('settled_at');
 
-        if ($user && !$user->hasRole('superadmin') && $user->zone_id && $user->platform === 'Admin Portal') {
+        if ($user && ! $user->hasRole('superadmin') && $user->zone_id && $user->platform === 'Admin Portal') {
             $availableQuery->whereHas('shipment', function ($q) use ($user) {
                 $q->where('zone_id', $user->zone_id);
             });
@@ -98,7 +98,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
             ->whereNull('settled_at')
             ->where('collected_at', '<=', $sevenDaysAgo);
 
-        if ($user && !$user->hasRole('superadmin') && $user->zone_id && $user->platform === 'Admin Portal') {
+        if ($user && ! $user->hasRole('superadmin') && $user->zone_id && $user->platform === 'Admin Portal') {
             $overdueQuery->whereHas('shipment', function ($q) use ($user) {
                 $q->where('zone_id', $user->zone_id);
             });
@@ -134,7 +134,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
     private function formatAmount(float $amount): string
     {
         if ($amount >= 1000) {
-            return number_format($amount / 1000, 1) . 'k';
+            return number_format($amount / 1000, 1).'k';
         }
 
         return number_format($amount, 0);
@@ -192,7 +192,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
             $sizeModel = $sizeRelation instanceof Parcel ? $sizeRelation : null;
 
             $sizeName = $sizeModel?->name;
-            if (!$sizeName) {
+            if (! $sizeName) {
                 $rawSize = $shipment->getAttribute('size');
                 $sizeName = is_string($rawSize) && $rawSize !== '' ? $rawSize : null;
             }
@@ -220,7 +220,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
 
             return [
                 'id' => $shipment->id,
-                'ship_id' => 'MP' . str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
+                'ship_id' => 'MP'.str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
                 'order_number' => $shipment->order_number,
                 'rider' => $shipment->rider?->name ?? 'Unassigned',
                 'rider_role' => $roleMeta['label'],
@@ -263,49 +263,49 @@ class EarningSummaryService implements EarningSummaryServiceInterface
                     : null,
                 'status_history' => $shipment->statusHistory
                     ? $shipment->statusHistory
-                    ->filter(function ($history) use ($shipment) {
-                        // Filter out door delivery statuses for drop point delivery modes
-                        if (
-                            $shipment->delivery_speed === 'indirect' &&
-                            in_array($shipment->indirect_delivery_mode, ['door_to_drop_point', 'drop_point_to_drop_point'], true)
-                        ) {
-                            $doorOnlyStatuses = [
-                                \App\Enums\ShipmentStatus::DISPATCHED_FROM_DROP_POINT_2->value,
-                                \App\Enums\ShipmentStatus::PICKUP_FROM_DROP_POINT_2->value,
-                                \App\Enums\ShipmentStatus::IN_TRANSIT_TO_CUSTOMER->value,
-                            ];
-                            if (in_array($history->to_status, $doorOnlyStatuses, true)) {
-                                return false;
+                        ->filter(function ($history) use ($shipment) {
+                            // Filter out door delivery statuses for drop point delivery modes
+                            if (
+                                $shipment->delivery_speed === 'indirect' &&
+                                in_array($shipment->indirect_delivery_mode, ['door_to_drop_point', 'drop_point_to_drop_point'], true)
+                            ) {
+                                $doorOnlyStatuses = [
+                                    \App\Enums\ShipmentStatus::DISPATCHED_FROM_DROP_POINT_2->value,
+                                    \App\Enums\ShipmentStatus::PICKUP_FROM_DROP_POINT_2->value,
+                                    \App\Enums\ShipmentStatus::IN_TRANSIT_TO_CUSTOMER->value,
+                                ];
+                                if (in_array($history->to_status, $doorOnlyStatuses, true)) {
+                                    return false;
+                                }
                             }
-                        }
 
-                        // Filter out initial pickup statuses for drop_point_to_* modes
-                        if (
-                            $shipment->delivery_speed === 'indirect' &&
-                            in_array($shipment->indirect_delivery_mode, ['drop_point_to_door', 'drop_point_to_drop_point'], true)
-                        ) {
-                            $pickupOnlyStatuses = [
-                                \App\Enums\ShipmentStatus::ASSIGNED->value,
-                                \App\Enums\ShipmentStatus::PICKUP->value,
-                                \App\Enums\ShipmentStatus::IN_TRANSIT->value,
-                                \App\Enums\ShipmentStatus::ARRIVED_AT_DROP_POINT_1->value,
-                            ];
-                            if (in_array($history->to_status, $pickupOnlyStatuses, true)) {
-                                return false;
+                            // Filter out initial pickup statuses for drop_point_to_* modes
+                            if (
+                                $shipment->delivery_speed === 'indirect' &&
+                                in_array($shipment->indirect_delivery_mode, ['drop_point_to_door', 'drop_point_to_drop_point'], true)
+                            ) {
+                                $pickupOnlyStatuses = [
+                                    \App\Enums\ShipmentStatus::ASSIGNED->value,
+                                    \App\Enums\ShipmentStatus::PICKUP->value,
+                                    \App\Enums\ShipmentStatus::IN_TRANSIT->value,
+                                    \App\Enums\ShipmentStatus::ARRIVED_AT_DROP_POINT_1->value,
+                                ];
+                                if (in_array($history->to_status, $pickupOnlyStatuses, true)) {
+                                    return false;
+                                }
                             }
-                        }
 
-                        return true;
-                    })
-                    ->map(static function ($history) {
-                        return [
-                            'to_status' => $history->to_status,
-                            'progress_index' => $history->progress_index,
-                            'created_at' => optional($history->created_at)->toIso8601String(),
-                        ];
-                    })
-                    ->values()
-                    ->all()
+                            return true;
+                        })
+                        ->map(static function ($history) {
+                            return [
+                                'to_status' => $history->to_status,
+                                'progress_index' => $history->progress_index,
+                                'created_at' => optional($history->created_at)->toIso8601String(),
+                            ];
+                        })
+                        ->values()
+                        ->all()
                     : [],
                 'rider_collection' => $shipment->riderCollection ? [
                     'rider_deposited_at' => $shipment->riderCollection->rider_deposited_at,
@@ -327,7 +327,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
                     'collected_by' => $shipment->adminSettlement->collected_by,
                     'status' => $shipment->adminSettlement->status,
                 ] : null,
-                'review' => helpers::getShipmentUsers($shipment->id)
+                'review' => helpers::getShipmentUsers($shipment->id),
             ];
         });
 
@@ -339,6 +339,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
         if ($shipment->delivery_speed === 'direct') {
             return 'Direct/DD';
         }
+
         return 'In-Direct/DP';
     }
 
@@ -366,7 +367,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
     private function resolveVehicleType(Shipment $shipment): string
     {
         $rider = $shipment->rider;
-        if (!$rider) {
+        if (! $rider) {
             return 'Unassigned';
         }
 
@@ -392,10 +393,11 @@ class EarningSummaryService implements EarningSummaryServiceInterface
     {
         // Extract city from address - simple implementation
         // You might want to improve this based on your address format
-        if (!$address) {
+        if (! $address) {
             return 'N/A';
         }
         $parts = explode(',', $address);
+
         return trim(end($parts));
     }
 
@@ -415,12 +417,12 @@ class EarningSummaryService implements EarningSummaryServiceInterface
         }
 
         // For empty or pending status fall back to Pending/Unassigned logic
-        if (!$normalizedStatus || strtolower($normalizedStatus) === 'pending') {
+        if (! $normalizedStatus || strtolower($normalizedStatus) === 'pending') {
             $isDoorDelivery = $shipment->delivery_speed === 'direct' ||
                 ($shipment->delivery_speed === 'indirect'
                     && in_array($shipment->indirect_delivery_mode, ['door_to_door', 'door_to_drop_point'], true));
 
-            if ($isDoorDelivery && !$shipment->rider_id) {
+            if ($isDoorDelivery && ! $shipment->rider_id) {
                 return 'Unassigned';
             }
 
@@ -477,7 +479,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
     private function hasCollectedPayment($shipment): bool
     {
         foreach (['riderCollection', 'carDriverCollection', 'dropPointKeeperCollection'] as $relation) {
-            if (!$shipment->relationLoaded($relation) || !$shipment->{$relation}) {
+            if (! $shipment->relationLoaded($relation) || ! $shipment->{$relation}) {
                 continue;
             }
 
@@ -525,7 +527,7 @@ class EarningSummaryService implements EarningSummaryServiceInterface
 
     private function resolveEmployeeRoleMeta(?\App\Models\User $user): array
     {
-        if (!$user) {
+        if (! $user) {
             return ['label' => 'Unassigned', 'key' => 'unassigned'];
         }
 

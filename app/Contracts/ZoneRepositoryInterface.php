@@ -35,4 +35,3 @@ interface ZoneRepositoryInterface extends BaseRepositoryInterface
      */
     public function countAssignedToWarehouse(): int;
 }
-

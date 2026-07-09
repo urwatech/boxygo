@@ -13,7 +13,7 @@ class DateHelper
      * Note: Excel has a bug where it treats 1900 as a leap year (it wasn't).
      * This implementation replicates Excel's behavior for compatibility.
      *
-     * @param Carbon|null $date The date to convert (defaults to today)
+     * @param  Carbon|null  $date  The date to convert (defaults to today)
      * @return int The Excel serial number
      */
     public static function toExcelSerialDate(?Carbon $date = null): int
@@ -44,7 +44,7 @@ class DateHelper
     /**
      * Get the last 4 digits of the Excel serial date number
      *
-     * @param Carbon|null $date The date to convert (defaults to today)
+     * @param  Carbon|null  $date  The date to convert (defaults to today)
      * @return string The last 4 digits as a zero-padded string
      */
     public static function getExcelDateSuffix(?Carbon $date = null): string
@@ -55,6 +55,6 @@ class DateHelper
         $lastFourDigits = $serialNumber % 10000;
 
         // Return as 4-character string with leading zeros
-        return str_pad((string)$lastFourDigits, 4, '0', STR_PAD_LEFT);
+        return str_pad((string) $lastFourDigits, 4, '0', STR_PAD_LEFT);
     }
 }

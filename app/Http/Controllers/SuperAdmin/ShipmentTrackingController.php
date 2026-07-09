@@ -13,9 +13,7 @@ use Inertia\Response;
 
 class ShipmentTrackingController extends Controller
 {
-    public function __construct(private ShipmentTrackingService $trackingService)
-    {
-    }
+    public function __construct(private ShipmentTrackingService $trackingService) {}
 
     /**
      * Get the complete timeline for a shipment (for admin view).
@@ -24,7 +22,7 @@ class ShipmentTrackingController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('shipments.view') && !$user->can('shipments.manage'))) {
+        if (! $user || (! $user->can('shipments.view') && ! $user->can('shipments.manage'))) {
             abort(401);
         }
 
@@ -60,7 +58,7 @@ class ShipmentTrackingController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('shipments.view') && !$user->can('shipments.manage'))) {
+        if (! $user || (! $user->can('shipments.view') && ! $user->can('shipments.manage'))) {
             abort(401);
         }
 
@@ -74,7 +72,7 @@ class ShipmentTrackingController extends Controller
         return Inertia::render('SuperAdmin/ShipmentTracking', [
             'shipment' => [
                 'id' => $shipment->id,
-                'ship_id' => 'MP' . str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
+                'ship_id' => 'MP'.str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
                 'status' => $shipment->status,
                 'delivery_speed' => $shipment->delivery_speed,
                 'sender_name' => $shipment->sender_name,
@@ -113,7 +111,7 @@ class ShipmentTrackingController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('shipments.view') && !$user->can('shipments.manage'))) {
+        if (! $user || (! $user->can('shipments.view') && ! $user->can('shipments.manage'))) {
             abort(401);
         }
 
@@ -204,7 +202,7 @@ class ShipmentTrackingController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('shipments.view') && !$user->can('shipments.manage'))) {
+        if (! $user || (! $user->can('shipments.view') && ! $user->can('shipments.manage'))) {
             abort(401);
         }
 

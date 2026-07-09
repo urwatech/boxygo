@@ -11,9 +11,7 @@ class PricingService implements PricingServiceInterface
 {
     private ?array $cachedCities = null;
 
-    public function __construct(private readonly PriceCalculator $priceCalculator)
-    {
-    }
+    public function __construct(private readonly PriceCalculator $priceCalculator) {}
 
     public function getCities(): array
     {
@@ -147,7 +145,7 @@ class PricingService implements PricingServiceInterface
                 'updated_at' => $data->updated_at,
             ];
         }));
- 
+
         return $data;
     }
 }

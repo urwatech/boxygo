@@ -42,7 +42,7 @@ class ExpireReturnShipments extends Command
             ]);
         }
 
-        Log::info('Total: ' . count($shipments) . ' Shipments status updated');
+        Log::info('Total: '.count($shipments).' Shipments status updated');
 
         return Command::SUCCESS;
     }

@@ -18,8 +18,6 @@ class RoleRepository extends AbstractRepository implements RoleRepositoryInterfa
 
     /**
      * Get all roles with their relationships.
-     *
-     * @return Collection
      */
     public function getAllWithRelations(): Collection
     {
@@ -31,10 +29,6 @@ class RoleRepository extends AbstractRepository implements RoleRepositoryInterfa
 
     /**
      * Find or create a role by attributes.
-     *
-     * @param array $attributes
-     * @param array $values
-     * @return \Illuminate\Database\Eloquent\Model
      */
     public function firstOrCreate(array $attributes, array $values = []): \Illuminate\Database\Eloquent\Model
     {

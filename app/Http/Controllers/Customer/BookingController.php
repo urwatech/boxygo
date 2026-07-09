@@ -4,26 +4,21 @@ namespace App\Http\Controllers\Customer;
 
 use App\Contracts\ShipmentRepositoryInterface;
 use App\Http\Controllers\Controller;
+use App\Models\Address;
+use App\Models\Parcel;
+use App\Support\FinancialSettings;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Models\Parcel;
-use App\Models\System;
-use App\Support\FinancialSettings;
-use App\Models\Address;
 
 class BookingController extends Controller
 {
     public function __construct(
         private readonly ShipmentRepositoryInterface $shipmentRepository
-    ) {
-    }
+    ) {}
 
     /**
      * Show the create booking form.
-     *
-     * @param Request $request
-     * @return Response
      */
     public function create(Request $request): Response
     {
@@ -66,7 +61,7 @@ class BookingController extends Controller
                 'receiver_phone',
                 'isDeliveryLocationDP',
             ]),
-            fn ($v) => !is_null($v)
+            fn ($v) => ! is_null($v)
         );
 
         // Provide active parcel sizes to make size selection dynamic
@@ -76,6 +71,7 @@ class BookingController extends Controller
             ->get()
             ->map(function (Parcel $p) {
                 $icon = media_url($p->icon_path);
+
                 return [
                     'id' => $p->id,
                     'name' => $p->name,
@@ -176,7 +172,8 @@ class BookingController extends Controller
             'financialSettings' => $this->getFinancialSettings(),
         ]));
     }
-        private function getFinancialSettings(): array
+
+    private function getFinancialSettings(): array
     {
         return FinancialSettings::get();
     }

@@ -71,7 +71,7 @@ class CityController extends Controller
         }
 
         // Fallback: Try name-based lookup if coordinates didn't work and names provided
-        if (!empty($cityName)) {
+        if (! empty($cityName)) {
             return $this->checkByName($request);
         }
 
@@ -139,6 +139,7 @@ class CityController extends Controller
             // Remove common suffixes/prefixes
             $v = preg_replace('/\b(governorate|province|muhafazah|district|subdistrict|municipality)\b/iu', '', $v);
             $v = preg_replace('/\s+/', ' ', $v ?? '');
+
             return trim($v);
         };
 
@@ -150,7 +151,7 @@ class CityController extends Controller
                 $gov = Governate::query()
                     ->whereRaw('LOWER(short_code) = ?', [$stateNorm])
                     ->orWhereRaw('LOWER(name) = ?', [$stateNorm])
-                    ->orWhereRaw('LOWER(name) LIKE ?', ['%' . $stateNorm . '%'])
+                    ->orWhereRaw('LOWER(name) LIKE ?', ['%'.$stateNorm.'%'])
                     ->first();
             }
         }
@@ -164,13 +165,13 @@ class CityController extends Controller
         $city = (clone $query)
             ->where(function ($q) use ($cityName, $cityNorm) {
                 $q->whereRaw('LOWER(name) = ?', [mb_strtolower($cityName)])
-                  ->orWhereRaw('LOWER(short_code) = ?', [mb_strtolower($cityName)])
-                  ->orWhereRaw('LOWER(name) = ?', [$cityNorm])
-                  ->orWhereRaw('LOWER(name) LIKE ?', ['%' . $cityNorm . '%']);
+                    ->orWhereRaw('LOWER(short_code) = ?', [mb_strtolower($cityName)])
+                    ->orWhereRaw('LOWER(name) = ?', [$cityNorm])
+                    ->orWhereRaw('LOWER(name) LIKE ?', ['%'.$cityNorm.'%']);
             })
             ->first();
 
-        if (!$city) {
+        if (! $city) {
             return response()->json([
                 'exists' => false,
                 'data' => null,

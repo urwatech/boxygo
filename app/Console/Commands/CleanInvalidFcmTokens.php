@@ -49,6 +49,7 @@ class CleanInvalidFcmTokens extends Command
 
         if ($users->isEmpty()) {
             $this->warn('No users with FCM tokens found.');
+
             return 0;
         }
 
@@ -79,7 +80,7 @@ class CleanInvalidFcmTokens extends Command
                     $invalidTokens[] = [
                         'user_id' => $user->id,
                         'name' => $user->name,
-                        'token' => substr($user->fcm_token, 0, 30) . '...',
+                        'token' => substr($user->fcm_token, 0, 30).'...',
                         'device_type' => $user->device_type ?? 'Unknown',
                         'last_updated' => $user->updated_at->diffForHumans(),
                     ];
@@ -101,19 +102,19 @@ class CleanInvalidFcmTokens extends Command
         // Results
         $this->info('📊 Results:');
         $this->info("✅ Valid tokens: {$validTokens}");
-        $this->error("❌ Invalid tokens: " . count($invalidTokens));
+        $this->error('❌ Invalid tokens: '.count($invalidTokens));
         if (count($errors) > 0) {
-            $this->warn("⚠️  Errors during testing: " . count($errors));
+            $this->warn('⚠️  Errors during testing: '.count($errors));
         }
 
         $this->newLine();
 
         // Show invalid tokens
-        if (!empty($invalidTokens)) {
+        if (! empty($invalidTokens)) {
             $this->error('Invalid/Expired Tokens Found:');
             $this->table(
                 ['User ID', 'Name', 'Device Type', 'Token (truncated)', 'Last Updated'],
-                array_map(fn($t) => [
+                array_map(fn ($t) => [
                     $t['user_id'],
                     $t['name'],
                     $t['device_type'],
@@ -125,7 +126,7 @@ class CleanInvalidFcmTokens extends Command
             $this->newLine();
 
             if ($isDryRun) {
-                $this->warn('🔍 DRY RUN: Would remove ' . count($invalidTokens) . ' invalid tokens');
+                $this->warn('🔍 DRY RUN: Would remove '.count($invalidTokens).' invalid tokens');
                 $this->info('Run without --dry-run to actually clean them up');
             } else {
                 if ($this->confirm('Do you want to remove these invalid tokens from the database?', true)) {
@@ -134,7 +135,7 @@ class CleanInvalidFcmTokens extends Command
                         'fcm_token' => null,
                         'device_type' => null,
                     ]);
-                    $this->info('✅ Removed ' . count($invalidTokens) . ' invalid tokens');
+                    $this->info('✅ Removed '.count($invalidTokens).' invalid tokens');
                     $this->info('💡 Users will get new tokens when they login again from mobile app');
                 } else {
                     $this->warn('Skipped removing tokens');
@@ -145,12 +146,12 @@ class CleanInvalidFcmTokens extends Command
         }
 
         // Show errors if any
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             $this->newLine();
             $this->warn('⚠️  Errors During Testing:');
             $this->table(
                 ['User ID', 'Name', 'Error'],
-                array_map(fn($e) => [$e['user_id'], $e['name'], $e['error']], $errors)
+                array_map(fn ($e) => [$e['user_id'], $e['name'], $e['error']], $errors)
             );
         }
 
@@ -161,13 +162,14 @@ class CleanInvalidFcmTokens extends Command
     {
         $token = $this->argument('token');
 
-        if (!$token) {
+        if (! $token) {
             $this->error('Please provide a token to test');
+
             return 1;
         }
 
         $this->info('Testing FCM token...');
-        $this->info('Token: ' . substr($token, 0, 50) . '...');
+        $this->info('Token: '.substr($token, 0, 50).'...');
         $this->newLine();
 
         $fcmService = app(FcmService::class);
@@ -187,7 +189,7 @@ class CleanInvalidFcmTokens extends Command
                 $this->info('💡 Check logs for details: tail -f storage/logs/laravel.log | grep FCM');
             }
         } catch (\Exception $e) {
-            $this->error('❌ Error testing token: ' . $e->getMessage());
+            $this->error('❌ Error testing token: '.$e->getMessage());
         }
 
         return 0;

@@ -25,4 +25,3 @@ interface ZoneServiceInterface extends BaseServiceInterface
      */
     public function toggleStatus(int|string $zoneId): bool;
 }
-

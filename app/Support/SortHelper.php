@@ -30,7 +30,7 @@ final class SortHelper
     }
 
     /**
-     * @param array<string, string> $allowed
+     * @param  array<string, string>  $allowed
      */
     public static function column(mixed $sortBy, array $allowed, string $default): string
     {

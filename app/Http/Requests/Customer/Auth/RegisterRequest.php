@@ -36,7 +36,7 @@ class RegisterRequest extends FormRequest
 
         $subscriberDigits = substr($subscriberDigits, 0, 9);
         $formattedPhone = $subscriberDigits !== ''
-            ? trim($phoneCode . ' ' . $subscriberDigits)
+            ? trim($phoneCode.' '.$subscriberDigits)
             : null;
 
         $this->merge([

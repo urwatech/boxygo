@@ -148,7 +148,7 @@ class RolesAndPermissionsSeeder extends Seeder
         foreach ($allPermissions as $permission) {
             $roleService->firstOrCreatePermission([
                 'name' => $permission,
-                'guard_name' => 'web'
+                'guard_name' => 'web',
             ]);
         }
 

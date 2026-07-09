@@ -12,8 +12,6 @@ class TermsController extends Controller
 {
     /**
      * Display the Terms and Conditions page.
-     *
-     * @return Response
      */
     public function index(Request $request): Response
     {

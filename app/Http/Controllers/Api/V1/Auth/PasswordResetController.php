@@ -18,7 +18,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password as PasswordRule;
-use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class PasswordResetController extends Controller
@@ -41,7 +40,7 @@ class PasswordResetController extends Controller
         // Email is already normalized by ForgotPasswordRequest
         $user = $this->userService->findByEmailOrMobile($data['email'], $data['phone_number']);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             return ApiResponse::validationError(
                 ['email' => [__('errorAccountNotFoundByEmail')]],
                 __('userNotFound')
@@ -78,7 +77,7 @@ class PasswordResetController extends Controller
 
         $user = $this->userService->findByEmailOrMobile($validated['email'], $validated['phone_number']);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             return ApiResponse::validationError(
                 ['email' => [__('accountNotFoundByEmailOrMobile')]],
                 __('userNotFound')
@@ -87,7 +86,7 @@ class PasswordResetController extends Controller
 
         $otp = $this->otpService->latestActive($user, self::PASSWORD_RESET_TYPE);
 
-        if (!$otp) {
+        if (! $otp) {
             return ApiResponse::validationError(
                 ['code' => [__('verificationCodeExpiredPleaseRequestANewCode')]],
                 __('codeExpired')
@@ -98,7 +97,7 @@ class PasswordResetController extends Controller
         $isValidCode = $this->otpService->validateCode($otp, $request->input('code')) ||
             (config('app.env') === 'local' && $request->input('code') === '0000');
 
-        if (!$isValidCode) {
+        if (! $isValidCode) {
             return ApiResponse::validationError(
                 ['code' => [__('invalidVerificationCode')]],
                 __('invalidCode')
@@ -128,10 +127,10 @@ class PasswordResetController extends Controller
                 PasswordRule::min(6),
             ],
         ]);
- 
+
         $user = $this->userService->findByEmailOrMobile($data['email'], $data['phone_number']);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             return ApiResponse::validationError(
                 ['email' => [__('errorAccountNotFoundByEmail')]],
                 __('userNotFound')
@@ -146,7 +145,7 @@ class PasswordResetController extends Controller
             ->where('consumed_at', '>=', now()->subMinutes(10))
             ->exists();
 
-        if (!$hasConsumedOtp) {
+        if (! $hasConsumedOtp) {
             return ApiResponse::validationError(
                 ['email' => [__('pleaseVerifyEmailBeforeResettingPassword')]],
                 __('verificationRequired')
@@ -187,7 +186,7 @@ class PasswordResetController extends Controller
 
         $user = $this->userService->findByEmailOrMobile($data['email'], $data['phone_number']);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             return ApiResponse::validationError(
                 ['email' => [__('errorAccountNotFoundByEmail')]],
                 __('userNotFound')
@@ -247,7 +246,7 @@ class PasswordResetController extends Controller
         $user = $request->user();
 
         // Verify current password
-        if (!Hash::check($request->input('current_password'), $user->password)) {
+        if (! Hash::check($request->input('current_password'), $user->password)) {
             return ApiResponse::validationError(
                 ['current_password' => [__('currentPasswordIsIncorrect')]],
                 __('currentPasswordIsIncorrect')

@@ -1,25 +1,25 @@
 <?php
 
 use App\Enums\Role;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SuperAdmin\CodManagementController;
+use App\Http\Controllers\SuperAdmin\CustomerController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
+use App\Http\Controllers\SuperAdmin\DropPointController;
+use App\Http\Controllers\SuperAdmin\EarningSummaryController;
 use App\Http\Controllers\SuperAdmin\EmployeeController;
+use App\Http\Controllers\SuperAdmin\HeatmapController;
 use App\Http\Controllers\SuperAdmin\LoginController;
+use App\Http\Controllers\SuperAdmin\NotificationController;
 use App\Http\Controllers\SuperAdmin\ParcelController;
+use App\Http\Controllers\SuperAdmin\PricingController;
+use App\Http\Controllers\SuperAdmin\RatingManagementController;
 use App\Http\Controllers\SuperAdmin\RoleController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\ShipmentTrackingController;
-use App\Http\Controllers\SuperAdmin\ZoneController;
 use App\Http\Controllers\SuperAdmin\VehicleController;
-use App\Http\Controllers\SuperAdmin\EarningSummaryController;
-use App\Http\Controllers\SuperAdmin\CodManagementController;
-use App\Http\Controllers\SuperAdmin\PricingController;
-use App\Http\Controllers\SuperAdmin\HeatmapController;
 use App\Http\Controllers\SuperAdmin\WarehouseController;
-use App\Http\Controllers\SuperAdmin\RatingManagementController;
-use App\Http\Controllers\SuperAdmin\CustomerController;
-use App\Http\Controllers\SuperAdmin\DropPointController;
-use App\Http\Controllers\SuperAdmin\NotificationController;
+use App\Http\Controllers\SuperAdmin\ZoneController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------

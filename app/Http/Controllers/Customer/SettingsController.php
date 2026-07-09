@@ -89,7 +89,7 @@ class SettingsController extends Controller
                 delete_media_file($user->avatar_path);
             }
 
-            $fileName = 'avatar_' . $user->id . '_' . time();
+            $fileName = 'avatar_'.$user->id.'_'.time();
             $data['avatar_path'] = store_public_upload($avatar, 'customer-uploads', 'avatars', $fileName);
         }
 
@@ -138,7 +138,7 @@ class SettingsController extends Controller
         $user->email_notifications = $request->boolean('email_notifications');
         $user->push_notifications = $request->boolean('push_notifications');
 
-        if (!$user->push_notifications) {
+        if (! $user->push_notifications) {
             $user->fcm_token = null;
             $user->device_type = null;
         }

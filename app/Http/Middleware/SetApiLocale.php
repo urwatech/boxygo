@@ -23,7 +23,7 @@ class SetApiLocale
             $language = $request->user()->language;
         }
 
-        if (!$language) {
+        if (! $language) {
             $language = $request->header('X-Language')
                 ?? $request->header('Accept-Language')
                 ?? $request->input('language')

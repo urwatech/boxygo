@@ -2,12 +2,13 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FcmService
 {
     private string $fcmUrl = 'https://fcm.googleapis.com/v1/projects/';
+
     private ?string $accessToken = null;
 
     /**
@@ -22,15 +23,17 @@ class FcmService
         try {
             $credentialsPath = storage_path('app/firebase-credentials.json');
 
-            if (!file_exists($credentialsPath)) {
-                Log::error('Firebase credentials file not found at: ' . $credentialsPath);
+            if (! file_exists($credentialsPath)) {
+                Log::error('Firebase credentials file not found at: '.$credentialsPath);
+
                 return null;
             }
 
             $credentials = json_decode(file_get_contents($credentialsPath), true);
 
-            if (!$credentials || !isset($credentials['private_key'], $credentials['client_email'])) {
+            if (! $credentials || ! isset($credentials['private_key'], $credentials['client_email'])) {
                 Log::error('Invalid Firebase credentials file');
+
                 return null;
             }
 
@@ -38,7 +41,7 @@ class FcmService
             $now = time();
             $header = base64_encode(json_encode([
                 'alg' => 'RS256',
-                'typ' => 'JWT'
+                'typ' => 'JWT',
             ]));
 
             $payload = base64_encode(json_encode([
@@ -46,32 +49,35 @@ class FcmService
                 'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
                 'aud' => 'https://oauth2.googleapis.com/token',
                 'exp' => $now + 3600,
-                'iat' => $now
+                'iat' => $now,
             ]));
 
-            $signatureInput = $header . '.' . $payload;
+            $signatureInput = $header.'.'.$payload;
             $privateKey = openssl_pkey_get_private($credentials['private_key']);
             openssl_sign($signatureInput, $signature, $privateKey, OPENSSL_ALGO_SHA256);
             $signature = base64_encode($signature);
 
-            $jwt = $signatureInput . '.' . $signature;
+            $jwt = $signatureInput.'.'.$signature;
 
             // Exchange JWT for access token
             $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
                 'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                'assertion' => $jwt
+                'assertion' => $jwt,
             ]);
 
             if ($response->successful()) {
                 $this->accessToken = $response->json()['access_token'];
+
                 return $this->accessToken;
             }
 
             Log::error('Failed to get FCM access token', ['response' => $response->body()]);
+
             return null;
 
         } catch (\Exception $e) {
-            Log::error('Error getting FCM access token: ' . $e->getMessage());
+            Log::error('Error getting FCM access token: '.$e->getMessage());
+
             return null;
         }
     }
@@ -79,12 +85,12 @@ class FcmService
     /**
      * Send push notification to a user's device
      *
-     * @param string $fcmToken The device FCM token
-     * @param string $title Notification title
-     * @param string $body Notification body
-     * @param array $data Additional data payload
-     * @param string $sound Android sound resource name (without extension)
-     * @param string|null $deviceType Device type stored with the FCM token
+     * @param  string  $fcmToken  The device FCM token
+     * @param  string  $title  Notification title
+     * @param  string  $body  Notification body
+     * @param  array  $data  Additional data payload
+     * @param  string  $sound  Android sound resource name (without extension)
+     * @param  string|null  $deviceType  Device type stored with the FCM token
      * @return bool Success status
      */
     public function sendNotification(string $fcmToken, string $title, string $body, array $data = [], string $sound = 'default', ?string $deviceType = null): bool
@@ -92,20 +98,22 @@ class FcmService
         try {
             $accessToken = $this->getAccessToken();
 
-            if (!$accessToken) {
+            if (! $accessToken) {
                 Log::error('Cannot send FCM notification: No access token');
+
                 return false;
             }
 
             $credentials = json_decode(file_get_contents(storage_path('app/firebase-credentials.json')), true);
             $projectId = $credentials['project_id'] ?? null;
 
-            if (!$projectId) {
+            if (! $projectId) {
                 Log::error('Cannot send FCM notification: No project ID');
+
                 return false;
             }
 
-            $url = $this->fcmUrl . $projectId . '/messages:send';
+            $url = $this->fcmUrl.$projectId.'/messages:send';
             $resolvedDeviceType = $this->resolveDeviceType($fcmToken, $deviceType);
 
             $payload = [
@@ -120,16 +128,17 @@ class FcmService
             ];
 
             $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken,
+                'Authorization' => 'Bearer '.$accessToken,
                 'Content-Type' => 'application/json',
             ])->post($url, $payload);
 
             if ($response->successful()) {
                 Log::info('FCM notification sent successfully', [
-                    'token' => substr($fcmToken, 0, 20) . '...',
+                    'token' => substr($fcmToken, 0, 20).'...',
                     'title' => $title,
                     'device_type' => $resolvedDeviceType,
                 ]);
+
                 return true;
             }
 
@@ -140,8 +149,8 @@ class FcmService
             // Handle UNREGISTERED tokens (invalid/expired)
             if ($errorCode === 'UNREGISTERED' || $response->status() === 404) {
                 Log::warning('FCM token is invalid/expired (UNREGISTERED)', [
-                    'token' => substr($fcmToken, 0, 20) . '...',
-                    'action' => 'Token should be removed from database'
+                    'token' => substr($fcmToken, 0, 20).'...',
+                    'action' => 'Token should be removed from database',
                 ]);
 
                 // Automatically remove invalid token from database
@@ -150,17 +159,18 @@ class FcmService
                 Log::error('Failed to send FCM notification', [
                     'status' => $response->status(),
                     'response' => $response->body(),
-                    'error_code' => $errorCode
+                    'error_code' => $errorCode,
                 ]);
             }
 
             return false;
 
         } catch (\Exception $e) {
-            Log::error('Error sending FCM notification: ' . $e->getMessage(), [
+            Log::error('Error sending FCM notification: '.$e->getMessage(), [
                 'exception' => get_class($e),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
@@ -261,11 +271,13 @@ class FcmService
 
             if (is_bool($value)) {
                 $normalized[(string) $key] = $value ? 'true' : 'false';
+
                 continue;
             }
 
             if (is_scalar($value)) {
                 $normalized[(string) $key] = (string) $value;
+
                 continue;
             }
 
@@ -281,8 +293,8 @@ class FcmService
 
     protected function defaultWebUrl(array $data): string
     {
-        if (!empty($data['shipment_id'])) {
-            return '/customer/shipments/' . $data['shipment_id'];
+        if (! empty($data['shipment_id'])) {
+            return '/customer/shipments/'.$data['shipment_id'];
         }
 
         return '/customer/notifications';
@@ -291,10 +303,10 @@ class FcmService
     /**
      * Send notification to multiple devices
      *
-     * @param array $fcmTokens Array of device FCM tokens
-     * @param string $title Notification title
-     * @param string $body Notification body
-     * @param array $data Additional data payload
+     * @param  array  $fcmTokens  Array of device FCM tokens
+     * @param  string  $title  Notification title
+     * @param  string  $body  Notification body
+     * @param  array  $data  Additional data payload
      * @return array Results array with success/failure counts
      */
     public function sendMulticast(array $fcmTokens, string $title, string $body, array $data = [], string $sound = 'default'): array
@@ -302,7 +314,7 @@ class FcmService
         $results = [
             'success' => 0,
             'failure' => 0,
-            'failed_tokens' => []
+            'failed_tokens' => [],
         ];
 
         foreach ($fcmTokens as $token) {
@@ -320,8 +332,7 @@ class FcmService
     /**
      * Remove invalid/expired FCM token from database
      *
-     * @param string $fcmToken The invalid token to remove
-     * @return void
+     * @param  string  $fcmToken  The invalid token to remove
      */
     protected function removeInvalidToken(string $fcmToken): void
     {
@@ -332,17 +343,17 @@ class FcmService
                 ->update([
                     'fcm_token' => null,
                     'device_type' => null,
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]);
 
             if ($affectedRows > 0) {
                 Log::info('Automatically removed invalid FCM token from database', [
-                    'token' => substr($fcmToken, 0, 20) . '...',
-                    'affected_users' => $affectedRows
+                    'token' => substr($fcmToken, 0, 20).'...',
+                    'affected_users' => $affectedRows,
                 ]);
             }
         } catch (\Exception $e) {
-            Log::error('Failed to remove invalid FCM token from database: ' . $e->getMessage());
+            Log::error('Failed to remove invalid FCM token from database: '.$e->getMessage());
         }
     }
 }

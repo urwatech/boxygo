@@ -4,12 +4,16 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
+        if (Schema::hasColumn('shipments', 'payment_method')) {
+            return;
+        }
+
         Schema::table('shipments', function (Blueprint $table) {
             $table->string('payment_method')->default('cash')->after('total_fee');
-            // $table->string('receiver_payment_method')->default('cash')->after('total_fee');
         });
     }
 
@@ -17,7 +21,6 @@ return new class extends Migration {
     {
         Schema::table('shipments', function (Blueprint $table) {
             $table->dropColumn(['payment_method']);
-            // $table->dropColumn(['receiver_payment_method']);
         });
     }
 };

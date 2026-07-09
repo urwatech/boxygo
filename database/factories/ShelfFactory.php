@@ -23,8 +23,8 @@ class ShelfFactory extends Factory
         $occupiedSlots = fake()->numberBetween(0, $capacity);
 
         return [
-            'code' => 'SHF-' . fake()->unique()->bothify('??###'),
-            'location' => fake()->randomElement(['Zone A', 'Zone B', 'Zone C']) . ' - Row ' . fake()->numberBetween(1, 10),
+            'code' => 'SHF-'.fake()->unique()->bothify('??###'),
+            'location' => fake()->randomElement(['Zone A', 'Zone B', 'Zone C']).' - Row '.fake()->numberBetween(1, 10),
             'capacity' => $capacity,
             'occupied_slots' => $occupiedSlots,
             'is_active' => fake()->boolean(90),

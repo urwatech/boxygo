@@ -13,7 +13,7 @@ return new class extends Migration
                 'draft',
                 'pending',
                 'approved',
-                'rejected'
+                'rejected',
             ])->default('draft')->after('sender_payment_status');
             $table->longText('componsation_images')->nullable()->after('componsation_status');
             $table->decimal('componsation_amount', 10, 2)->nullable()->after('componsation_images');

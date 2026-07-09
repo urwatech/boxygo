@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Enums\Role;
+use App\Http\Controllers\Controller;
 use App\Models\City;
 use App\Models\Shelf;
-use App\Models\Zone;
-use Inertia\Inertia;
-use App\Models\Warehouse;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Warehouse;
+use App\Models\Zone;
 use App\Support\SortHelper;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Validator;
+use Inertia\Inertia;
 
 class WarehouseController extends Controller
 {
@@ -87,7 +87,7 @@ class WarehouseController extends Controller
                         'id' => $warehouse->user->id,
                         'name' => $warehouse->user->name,
                         'phone_number' => $warehouse->user->phone_number,
-                        'status' => $warehouse->user->status
+                        'status' => $warehouse->user->status,
                     ] : null,
                     'createdOn' => $warehouse->created_at->format('M d, Y'),
                     'lastUpdate' => $warehouse->updated_at->format('M d, Y'),
@@ -132,7 +132,7 @@ class WarehouseController extends Controller
                 ];
             });
 
-        $warehouseUsers = User::whereHas('roles', fn($query) => $query->where('name', Role::WAREHOUSE_KEEPER->value))->whereNull('warehouse_id')->select(['id', 'name', 'phone_number', 'status'])->orderBy('name')->get();
+        $warehouseUsers = User::whereHas('roles', fn ($query) => $query->where('name', Role::WAREHOUSE_KEEPER->value))->whereNull('warehouse_id')->select(['id', 'name', 'phone_number', 'status'])->orderBy('name')->get();
 
         return Inertia::render('SuperAdmin/Warehouse/Index', [
             'warehouses' => $warehouses,
@@ -214,7 +214,7 @@ class WarehouseController extends Controller
                 User::where('id', $validated['keeper_id'])
                     ->update([
                         'warehouse_id' => $warehouse->id,
-                        'zone_id' => $warehouse->zone_id
+                        'zone_id' => $warehouse->zone_id,
                     ]);
             }
 
@@ -270,7 +270,7 @@ class WarehouseController extends Controller
             $removedCodes = array_diff($existingCodes, $shelfCodes);
 
             // Remove shelves that are no longer in the list
-            if (!empty($removedCodes)) {
+            if (! empty($removedCodes)) {
                 $warehouse->shelves()->whereIn('code', $removedCodes)->delete();
             }
 
@@ -309,12 +309,12 @@ class WarehouseController extends Controller
     private function geocodeAddress(?string $location, ?string $city): ?array
     {
         $apiKey = config('services.google.maps_api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             return null;
         }
 
         $query = trim(implode(', ', array_filter([$location, $city, 'Syria'])));
-        if (!$query || $query === 'Syria') {
+        if (! $query || $query === 'Syria') {
             return null;
         }
 
@@ -326,8 +326,9 @@ class WarehouseController extends Controller
 
             $data = $response->json();
 
-            if (($data['status'] ?? '') === 'OK' && !empty($data['results'])) {
+            if (($data['status'] ?? '') === 'OK' && ! empty($data['results'])) {
                 $loc = $data['results'][0]['geometry']['location'];
+
                 return [
                     'lat' => (float) $loc['lat'],
                     'lng' => (float) $loc['lng'],

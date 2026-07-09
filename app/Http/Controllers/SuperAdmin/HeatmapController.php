@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Shipment;
-use App\Models\DropPoint;
-use App\Models\Warehouse;
 use App\Models\City;
+use App\Models\DropPoint;
+use App\Models\Shipment;
+use App\Models\Warehouse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -19,7 +19,7 @@ class HeatmapController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('heatmap.view')) {
+        if (! $user || ! $user->can('heatmap.view')) {
             abort(401);
         }
 
@@ -126,16 +126,17 @@ class HeatmapController extends Controller
             ->get()
             ->mapWithKeys(function (City $city) {
                 $key = strtolower(trim((string) $city->name));
+
                 return [$key => [
                     'latitude' => $city->latitude !== null ? (float) $city->latitude : null,
                     'longitude' => $city->longitude !== null ? (float) $city->longitude : null,
                 ]];
             });
-            
+
         $cities = City::select(['id', 'governate_id', 'type', 'short_code', 'name', 'latitude', 'longitude'])
             ->orderByDesc('name')
             ->get();
-        
+
         $warehouses = Warehouse::query()
             ->select(['id', 'name', 'code', 'city', 'location', 'latitude', 'longitude'])
             ->get()
@@ -188,7 +189,7 @@ class HeatmapController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('heatmap.view')) {
+        if (! $user || ! $user->can('heatmap.view')) {
             abort(401);
         }
 

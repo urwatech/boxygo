@@ -108,7 +108,7 @@ class PaymentTransaction extends Model
      */
     public function isCollected(): bool
     {
-        return !is_null($this->collected_at);
+        return ! is_null($this->collected_at);
     }
 
     /**
@@ -116,7 +116,7 @@ class PaymentTransaction extends Model
      */
     public function isDeposited(): bool
     {
-        return !is_null($this->rider_deposited_at);
+        return ! is_null($this->rider_deposited_at);
     }
 
     /**
@@ -124,6 +124,6 @@ class PaymentTransaction extends Model
      */
     public function isSettled(): bool
     {
-        return !is_null($this->settled_at);
+        return ! is_null($this->settled_at);
     }
 }

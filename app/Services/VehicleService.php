@@ -65,7 +65,7 @@ class VehicleService extends AbstractService implements VehicleServiceInterface
     {
         $vehicle = $this->find($vehicleId);
 
-        if (!$vehicle) {
+        if (! $vehicle) {
             return false;
         }
 
@@ -76,7 +76,7 @@ class VehicleService extends AbstractService implements VehicleServiceInterface
     {
         $vehicle = $this->find($vehicleId);
 
-        if (!$vehicle) {
+        if (! $vehicle) {
             return false;
         }
 
@@ -87,5 +87,4 @@ class VehicleService extends AbstractService implements VehicleServiceInterface
     {
         return $this->vehicleRepository->distinctTypes();
     }
-
 }

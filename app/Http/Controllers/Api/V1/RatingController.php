@@ -10,9 +10,7 @@ use Illuminate\Http\Request;
 
 class RatingController extends Controller
 {
-    public function __construct(private readonly RatingService $ratingService)
-    {
-    }
+    public function __construct(private readonly RatingService $ratingService) {}
 
     /**
      * Get ratings for the authenticated user (my ratings).

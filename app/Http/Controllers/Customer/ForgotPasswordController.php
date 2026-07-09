@@ -28,8 +28,7 @@ class ForgotPasswordController extends Controller
         private readonly UserRepositoryInterface $users,
         private readonly UserService $userService,
         private readonly SendGridEmailService $sendGridEmailService
-    ) {
-    }
+    ) {}
 
     public function create(): Response
     {
@@ -45,7 +44,7 @@ class ForgotPasswordController extends Controller
 
         $user = $this->userService->findByEmailOrMobile($data['email'], $data['phone_number']);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages([
                 'email' => __('errorAccountNotFoundByEmail'),
             ]);
@@ -60,6 +59,7 @@ class ForgotPasswordController extends Controller
     {
         $email = $request->query('email');
         $mobile = $request->query('phone_number');
+
         return Inertia::render('Customer/Auth/VerifyResetCode', [
             'email' => $email,
             'phone_number' => $mobile,
@@ -76,7 +76,7 @@ class ForgotPasswordController extends Controller
 
         $user = $this->userService->findByEmailOrMobile($data['email'], $data['phone_number']);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages([
                 'email' => __('errorAccountNotFoundByEmail'),
             ]);
@@ -84,7 +84,7 @@ class ForgotPasswordController extends Controller
 
         $otp = $this->otpService->latestActive($user, self::PASSWORD_RESET_TYPE);
 
-        if (!$otp) {
+        if (! $otp) {
             throw ValidationException::withMessages([
                 'code' => __('verificationCodeExpiredPleaseRequestANewCode'),
             ]);
@@ -94,7 +94,7 @@ class ForgotPasswordController extends Controller
         $isValidCode = $this->otpService->validateCode($otp, $data['code']) ||
                        (config('app.env') === 'local' && $data['code'] === '0000');
 
-        if (!$isValidCode) {
+        if (! $isValidCode) {
             throw ValidationException::withMessages([
                 'code' => __('invalidVerificationCode'),
             ]);
@@ -111,6 +111,7 @@ class ForgotPasswordController extends Controller
     public function showReset(Request $request): Response
     {
         $email = $request->query('email');
+
         return Inertia::render('Customer/Auth/SetPassword', [
             'email' => $email,
         ]);
@@ -130,7 +131,7 @@ class ForgotPasswordController extends Controller
 
         $user = $this->userService->findByEmailOrMobile($data['email'], $data['phone_number']);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages([
                 'email' => __('errorAccountNotFoundByEmail'),
             ]);
@@ -144,7 +145,7 @@ class ForgotPasswordController extends Controller
             ->where('consumed_at', '>=', now()->subMinutes(10))
             ->exists();
 
-        if (!$hasConsumedOtp) {
+        if (! $hasConsumedOtp) {
             return redirect()->route('customer.password.request')
                 ->withErrors(['email' => __('pleaseVerifyEmailBeforeResettingPassword')]);
         }
@@ -172,7 +173,7 @@ class ForgotPasswordController extends Controller
 
         $user = $this->userService->findByEmailOrMobile($data['email'], $data['phone_number']);
 
-        if (!$user instanceof User) {
+        if (! $user instanceof User) {
             throw ValidationException::withMessages([
                 'email' => __('errorAccountNotFoundByEmail'),
             ]);

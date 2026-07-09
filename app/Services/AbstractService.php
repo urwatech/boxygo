@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use Interfaces\BaseServiceInterface;
-use Interfaces\BaseRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Interfaces\BaseRepositoryInterface;
+use Interfaces\BaseServiceInterface;
 
 /**
  * Class AbstractService

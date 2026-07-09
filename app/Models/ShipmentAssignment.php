@@ -84,6 +84,7 @@ class ShipmentAssignment extends Model
         if ($this->started_at && $this->completed_at) {
             return $this->started_at->diffInMinutes($this->completed_at);
         }
+
         return null;
     }
 
@@ -93,7 +94,7 @@ class ShipmentAssignment extends Model
     public function scopeActive($query)
     {
         return $query->whereNotNull('started_at')
-                     ->whereNull('completed_at');
+            ->whereNull('completed_at');
     }
 
     /**

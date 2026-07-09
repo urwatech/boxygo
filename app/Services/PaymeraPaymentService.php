@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 class PaymeraPaymentService
 {
     private string $baseUrl;
+
     private string $secret;
+
     private ?string $accessToken = null;
 
     public function __construct()
@@ -35,10 +37,11 @@ class PaymeraPaymentService
                 'X-SIGNATURE' => $signature,
                 'Content-Type' => 'application/json',
             ])->withBody($loginBody, 'application/json')
-              ->post($this->baseUrl . '/api/auth/login');
+                ->post($this->baseUrl.'/api/auth/login');
 
             if ($response->successful()) {
                 $this->accessToken = $response->json('data.tokens.access_token');
+
                 return $this->accessToken;
             }
 
@@ -59,7 +62,7 @@ class PaymeraPaymentService
     private function apiRequest(string $method, string $endpoint, array $data = []): ?array
     {
         $token = $this->authenticate();
-        if (!$token) {
+        if (! $token) {
             return null;
         }
 
@@ -69,10 +72,10 @@ class PaymeraPaymentService
 
             $response = Http::withHeaders([
                 'X-SIGNATURE' => $signature,
-                'Authorization' => 'Bearer ' . $token,
+                'Authorization' => 'Bearer '.$token,
                 'Content-Type' => 'application/json',
             ])->withBody($jsonBody, 'application/json')
-              ->{$method}($this->baseUrl . $endpoint);
+                ->{$method}($this->baseUrl.$endpoint);
 
             return $response->json();
         } catch (\Exception $e) {
@@ -127,7 +130,7 @@ class PaymeraPaymentService
     public function getInvoiceStatus(string $invoice): ?array
     {
         $token = $this->authenticate();
-        if (!$token) {
+        if (! $token) {
             return null;
         }
 
@@ -137,8 +140,8 @@ class PaymeraPaymentService
 
             $response = Http::withHeaders([
                 'X-SIGNATURE' => $signature,
-                'Authorization' => 'Bearer ' . $token,
-            ])->get($this->baseUrl . '/api/paymera/invoice/' . $invoice);
+                'Authorization' => 'Bearer '.$token,
+            ])->get($this->baseUrl.'/api/paymera/invoice/'.$invoice);
 
             return $response->json();
         } catch (\Exception $e) {

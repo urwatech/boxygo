@@ -23,12 +23,12 @@ class SendGridEmailService
     /**
      * Send an email using SendGrid template
      *
-     * @param string $toEmail Recipient email address
-     * @param string $toName Recipient name
-     * @param string $templateId SendGrid template ID
-     * @param array $dynamicData Dynamic template data
-     * @param string|null $fromEmail Override from email (optional)
-     * @param string|null $fromName Override from name (optional)
+     * @param  string  $toEmail  Recipient email address
+     * @param  string  $toName  Recipient name
+     * @param  string  $templateId  SendGrid template ID
+     * @param  array  $dynamicData  Dynamic template data
+     * @param  string|null  $fromEmail  Override from email (optional)
+     * @param  string|null  $fromName  Override from name (optional)
      * @return bool Success status
      */
     public function sendTemplateEmail(
@@ -44,6 +44,7 @@ class SendGridEmailService
                 'to' => $toEmail,
                 'template_id' => $templateId,
             ]);
+
             return false;
         }
 
@@ -75,13 +76,14 @@ class SendGridEmailService
         ?string $fromEmail = null,
         ?string $fromName = null
     ): bool {
-        if (!$this->sendgrid) {
+        if (! $this->sendgrid) {
             Log::error('SendGrid is not configured. Please set SENDGRID_API_KEY in your environment.');
+
             return false;
         }
 
         try {
-            $email = new SendGridMail();
+            $email = new SendGridMail;
 
             // Set from address
             $email->setFrom(
@@ -96,7 +98,7 @@ class SendGridEmailService
             $email->setTemplateId($templateId);
 
             // Add dynamic template data
-            if (!empty($dynamicData)) {
+            if (! empty($dynamicData)) {
                 $email->addDynamicTemplateDatas($dynamicData);
             }
 
@@ -128,6 +130,7 @@ class SendGridEmailService
                     'response_headers' => $responseHeaders,
                     'dynamic_data' => $dynamicData,
                 ]);
+
                 return false;
             }
 
@@ -144,17 +147,13 @@ class SendGridEmailService
                 'exception_line' => $exception->getLine(),
                 'trace' => $exception->getTraceAsString(),
             ]);
+
             return false;
         }
     }
 
     /**
      * Send verification code email
-     *
-     * @param string $toEmail
-     * @param string $toName
-     * @param string $code
-     * @return bool
      */
     public function sendVerificationCode(string $toEmail, string $toName, string $code): bool
     {
@@ -173,11 +172,6 @@ class SendGridEmailService
 
     /**
      * Send password reset code email
-     *
-     * @param string $toEmail
-     * @param string $toName
-     * @param string $code
-     * @return bool
      */
     public function sendPasswordResetCode(string $toEmail, string $toName, string $code): bool
     {
@@ -197,13 +191,7 @@ class SendGridEmailService
     /**
      * Send employee invitation email with login credentials
      *
-     * @param string $toEmail
-     * @param string $toName
-     * @param string $password
-     * @param string $loginUrl
-     * @param string|null $employeeId
-     * @param string|null $role
-     * @return bool
+     * @param  string  $loginUrl
      */
     public function sendEmployeeInvitation(
         string $toEmail,
@@ -231,10 +219,6 @@ class SendGridEmailService
 
     /**
      * Send welcome email to new user
-     *
-     * @param string $toEmail
-     * @param string $toName
-     * @return bool
      */
     public function sendWelcomeEmail(string $toEmail, string $toName): bool
     {
@@ -253,13 +237,6 @@ class SendGridEmailService
 
     /**
      * Send shipment verification code email
-     *
-     * @param string $toEmail
-     * @param string $toName
-     * @param string $verificationCode
-     * @param int $shipmentId
-     * @param string|null $receiverName
-     * @return bool
      */
     public function sendShipmentVerificationCode(
         string $toEmail,

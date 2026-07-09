@@ -7,13 +7,13 @@ use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\RegistrationController;
 use App\Http\Controllers\Api\V1\CityController;
 use App\Http\Controllers\Api\V1\InfoController;
-use App\Http\Controllers\Api\V1\LocationController;
-use App\Http\Controllers\Api\V1\ShipmentPriceController;
 use App\Http\Controllers\Api\V1\JobController;
+use App\Http\Controllers\Api\V1\LocationController;
 use App\Http\Controllers\Api\V1\MileageController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\RatingController;
 use App\Http\Controllers\Api\V1\ShelfController;
+use App\Http\Controllers\Api\V1\ShipmentPriceController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VehicleController;
 use App\Http\Controllers\Api\V1\ZoneController;
@@ -40,7 +40,7 @@ Route::prefix('v1')->group(function () {
     // Check if coordinates fall within any active zone
     Route::get('zones/check', [ZoneController::class, 'check']);
 
-    //Test Wallet
+    // Test Wallet
     Route::post('update-wallet', [UserController::class, 'updateWalletTest']);
 
     // Location search endpoints
@@ -70,7 +70,7 @@ Route::prefix('v1')->group(function () {
         Route::post('shipments/calculate-price', [ShipmentPriceController::class, 'calculate']);
 
         // Shelf management routes (restricted to drop point keeper and warehouse keeper roles)
-        Route::prefix('shelves')->middleware(['role:' . Role::DROP_POINT_KEEPER->value . '|' . Role::WAREHOUSE_KEEPER->value])->group(function () {
+        Route::prefix('shelves')->middleware(['role:'.Role::DROP_POINT_KEEPER->value.'|'.Role::WAREHOUSE_KEEPER->value])->group(function () {
             Route::get('/', [ShelfController::class, 'index']);
             Route::post('/assign', [ShelfController::class, 'assign']);
         });
@@ -107,11 +107,11 @@ Route::prefix('v1')->group(function () {
 
 Route::get('/debug-damascus-price', function () {
     $mappedName = 'Damascus City';
+
     return [
-        'prices_from_damascus' => \App\Models\CityShipmentPrice::where('sender_sub_district_name', 'LIKE', '%' . $mappedName . '%')
-            ->where('receiver_sub_district_name', 'LIKE', '%' . $mappedName . '%')
+        'prices_from_damascus' => \App\Models\CityShipmentPrice::where('sender_sub_district_name', 'LIKE', '%'.$mappedName.'%')
+            ->where('receiver_sub_district_name', 'LIKE', '%'.$mappedName.'%')
             ->get(),
         'damascus_city_model' => \App\Models\City::where('name', 'Damascus')->first(),
     ];
 });
-

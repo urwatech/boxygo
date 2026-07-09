@@ -15,14 +15,13 @@ class EarningSummaryController extends Controller
     public function __construct(
         private readonly EarningSummaryService $earningSummaryService,
         private readonly WalletService $walletService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): Response
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('earnings.view') && !$user->can('earnings.manage'))) {
+        if (! $user || (! $user->can('earnings.view') && ! $user->can('earnings.manage'))) {
             abort(401);
         }
         $perPage = (int) ($request->integer('per_page') ?: 10);
@@ -47,7 +46,8 @@ class EarningSummaryController extends Controller
         ]);
     }
 
-    public function getTransactions(Request $request, $walletId){
+    public function getTransactions(Request $request, $walletId)
+    {
         $perPage = (int) ($request->integer('per_page') ?: 10);
         $perPage = $perPage > 0 && $perPage <= 100 ? $perPage : 10;
         $search = trim((string) $request->query('search', ''));

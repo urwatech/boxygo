@@ -12,14 +12,13 @@ class PricingController extends Controller
 {
     public function __construct(
         private readonly PricingService $pricingService
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): Response
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('pricing.view') && !$user->can('pricing.manage'))) {
+        if (! $user || (! $user->can('pricing.view') && ! $user->can('pricing.manage'))) {
             abort(401);
         }
 
@@ -48,7 +47,7 @@ class PricingController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('pricing.view') && !$user->can('pricing.manage'))) {
+        if (! $user || (! $user->can('pricing.view') && ! $user->can('pricing.manage'))) {
             abort(401);
         }
 

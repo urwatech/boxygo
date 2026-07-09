@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->json('metadata')->nullable();
             $table->timestamps();
-            
+
             $table->index(['wallet_id', 'created_at']);
         });
     }

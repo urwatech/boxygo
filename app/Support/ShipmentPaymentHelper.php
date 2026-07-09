@@ -8,6 +8,7 @@ class ShipmentPaymentHelper
 {
     /**
      * Cache for system settings to avoid N+1 queries during bulk shipment processing.
+     *
      * @var array
      */
     private static $settingsCache = [];
@@ -17,9 +18,10 @@ class ShipmentPaymentHelper
      */
     private static function getSystemSetting(string $key)
     {
-        if (!array_key_exists($key, self::$settingsCache)) {
+        if (! array_key_exists($key, self::$settingsCache)) {
             self::$settingsCache[$key] = \App\Models\System::where('key', $key)->value('value');
         }
+
         return self::$settingsCache[$key];
     }
 
@@ -36,7 +38,7 @@ class ShipmentPaymentHelper
         }
 
         // If insurance is not opted in, return 0
-        if (!$shipment->insurance || strtolower(trim($shipment->insurance)) !== 'yes') {
+        if (! $shipment->insurance || strtolower(trim($shipment->insurance)) !== 'yes') {
             return 0.0;
         }
 
@@ -90,6 +92,7 @@ class ShipmentPaymentHelper
         // If financial settings specify percentage type
         if ($vatType && strtolower(trim($vatType)) === 'percentage' && $vatValue !== null) {
             $numericValue = is_numeric($vatValue) ? (float) $vatValue : (float) str_replace('%', '', $vatValue);
+
             return round($baseAmount * ($numericValue / 100), 2);
         }
 
@@ -108,7 +111,7 @@ class ShipmentPaymentHelper
                 ? (float) str_replace('%', '', $rateString) / 100
                 : (float) $rateString;
         }
-        if (!is_finite($rate)) {
+        if (! is_finite($rate)) {
             $rate = 0.05;
         }
 
@@ -118,9 +121,6 @@ class ShipmentPaymentHelper
     /**
      * Calculate payment details for a shipment.
      * Returns a complete payment breakdown including collectable_total.
-     *
-     * @param Shipment $shipment
-     * @return array
      */
     public static function calculatePaymentDetails(Shipment $shipment): array
     {
@@ -156,7 +156,7 @@ class ShipmentPaymentHelper
         $vatAmount = $shipment->vat_amount !== null
             ? (float) $shipment->vat_amount
             : self::calculateVatFromFinancialSettings($shipment, $taxableSubtotal);
-        
+
         // Calculate VAT rate percentage for display
         $vatRatePercentage = $taxableSubtotal > 0 ? round(($vatAmount / $taxableSubtotal) * 100) : 0;
 
@@ -194,25 +194,21 @@ class ShipmentPaymentHelper
 
     /**
      * Get the collectable total amount for a shipment.
-     *
-     * @param Shipment $shipment
-     * @return int
      */
     public static function getCollectableTotal(Shipment $shipment): int
     {
         $details = self::calculatePaymentDetails($shipment);
+
         return $details['collectable_total'] ?? 0;
     }
 
     /**
      * Get goods amount (parcel value) for a shipment.
-     *
-     * @param Shipment $shipment
-     * @return int
      */
     public static function getGoodsAmount(Shipment $shipment): int
     {
         $details = self::calculatePaymentDetails($shipment);
+
         return $details['goods_amount'] ?? 0;
     }
 }

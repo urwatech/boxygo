@@ -800,7 +800,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($oldCodShipments as $shipment) {
             // Only create if transaction doesn't exist
-            if (!$shipment->riderCollection) {
+            if (! $shipment->riderCollection) {
                 PaymentTransaction::factory()
                     ->overdue()
                     ->create([
@@ -917,8 +917,8 @@ class DatabaseSeeder extends Seeder
         // Create notifications for random riders
         foreach ($riders->take(5) as $rider) {
             $rider->notify(new DeliveryAssignedNotification(
-                shipmentId: 'SHIP-' . rand(1000, 9999),
-                trackingNumber: 'TRK-' . rand(100000, 999999)
+                shipmentId: 'SHIP-'.rand(1000, 9999),
+                trackingNumber: 'TRK-'.rand(100000, 999999)
             ));
 
             if (rand(0, 1)) {
@@ -933,7 +933,7 @@ class DatabaseSeeder extends Seeder
 
         // Now that riders exist, create vehicles
         $this->call([
-            VehicleSeeder::class
+            VehicleSeeder::class,
         ]);
 
         $this->command->info('');
@@ -948,20 +948,19 @@ class DatabaseSeeder extends Seeder
         $this->command->info('   Warehouse Keeper:   warehouse@example.com');
         $this->command->info('');
         $this->command->info('📊 Statistics:');
-        $this->command->info('   - Riders:                ' . (1 + $riders->count()));
-        $this->command->info('   - Customers:             ' . (1 + $customers->count()));
-        $this->command->info('   - Shelves:               ' . Shelf::count());
-        $this->command->info('   - Shipments:             ' . Shipment::count());
-        $this->command->info('   - Payment Transactions:  ' . PaymentTransaction::count());
-        $this->command->info('   - Vehicles:              ' . \App\Models\Vehicle::count());
-        $this->command->info('   - Notifications:         ' . \Illuminate\Notifications\DatabaseNotification::count());
+        $this->command->info('   - Riders:                '.(1 + $riders->count()));
+        $this->command->info('   - Customers:             '.(1 + $customers->count()));
+        $this->command->info('   - Shelves:               '.Shelf::count());
+        $this->command->info('   - Shipments:             '.Shipment::count());
+        $this->command->info('   - Payment Transactions:  '.PaymentTransaction::count());
+        $this->command->info('   - Vehicles:              '.\App\Models\Vehicle::count());
+        $this->command->info('   - Notifications:         '.\Illuminate\Notifications\DatabaseNotification::count());
         $this->command->info('');
         $this->command->info('💰 Payment Statistics:');
-        $this->command->info('   - COD Collections:       ' . PaymentTransaction::where('transaction_type', 'rider_collection')->where('payment_method', 'cash')->count());
-        $this->command->info('   - Admin Settlements:     ' . PaymentTransaction::where('transaction_type', 'admin_settlement')->count());
-        $this->command->info('   - Pending Settlements:   ' . PaymentTransaction::whereNull('settled_at')->where('transaction_type', 'rider_collection')->count());
-        $this->command->info('   - Online Payments:       ' . PaymentTransaction::where('payment_method', 'online')->count());
-
+        $this->command->info('   - COD Collections:       '.PaymentTransaction::where('transaction_type', 'rider_collection')->where('payment_method', 'cash')->count());
+        $this->command->info('   - Admin Settlements:     '.PaymentTransaction::where('transaction_type', 'admin_settlement')->count());
+        $this->command->info('   - Pending Settlements:   '.PaymentTransaction::whereNull('settled_at')->where('transaction_type', 'rider_collection')->count());
+        $this->command->info('   - Online Payments:       '.PaymentTransaction::where('payment_method', 'online')->count());
 
         // ==================== CREATE GOVERNATES ====================
         $this->call([

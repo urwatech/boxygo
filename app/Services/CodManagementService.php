@@ -24,9 +24,9 @@ class CodManagementService implements CodManagementServiceInterface
             ->where('payment_method', 'cash')
             ->whereDate('created_at', $today);
 
-        if ($user && !$user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
+        if ($user && ! $user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
             $zoneIds = $user->getAssignedZoneIds();
-            if (!empty($zoneIds)) {
+            if (! empty($zoneIds)) {
                 $todayQuery->whereHas('shipment', function ($q) use ($zoneIds) {
                     $q->whereIn('zone_id', $zoneIds);
                 });
@@ -38,9 +38,9 @@ class CodManagementService implements CodManagementServiceInterface
         $collectedQuery = PaymentTransaction::where('transaction_type', 'admin_settlement')
             ->where('payment_method', 'cash');
 
-        if ($user && !$user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
+        if ($user && ! $user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
             $zoneIds = $user->getAssignedZoneIds();
-            if (!empty($zoneIds)) {
+            if (! empty($zoneIds)) {
                 $collectedQuery->whereHas('shipment', function ($q) use ($zoneIds) {
                     $q->whereIn('zone_id', $zoneIds);
                 });
@@ -54,9 +54,9 @@ class CodManagementService implements CodManagementServiceInterface
             ->where('status', 'completed')
             ->whereNull('settled_at');
 
-        if ($user && !$user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
+        if ($user && ! $user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
             $zoneIds = $user->getAssignedZoneIds();
-            if (!empty($zoneIds)) {
+            if (! empty($zoneIds)) {
                 $receivableQuery->whereHas('shipment', function ($q) use ($zoneIds) {
                     $q->whereIn('zone_id', $zoneIds);
                 });
@@ -72,9 +72,9 @@ class CodManagementService implements CodManagementServiceInterface
             ->whereNull('settled_at')
             ->where('collected_at', '<=', $sevenDaysAgo);
 
-        if ($user && !$user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
+        if ($user && ! $user->hasRole('superadmin') && $user->platform === 'Admin Portal') {
             $zoneIds = $user->getAssignedZoneIds();
-            if (!empty($zoneIds)) {
+            if (! empty($zoneIds)) {
                 $overdueQuery->whereHas('shipment', function ($q) use ($zoneIds) {
                     $q->whereIn('zone_id', $zoneIds);
                 });
@@ -96,7 +96,7 @@ class CodManagementService implements CodManagementServiceInterface
     private function formatAmount(float $amount): string
     {
         if ($amount >= 1000) {
-            return number_format($amount / 1000, 1) . 'k';
+            return number_format($amount / 1000, 1).'k';
         }
 
         return number_format($amount, 0);
@@ -135,14 +135,14 @@ class CodManagementService implements CodManagementServiceInterface
         }
 
         // Apply rider filter (by rider name) if provided
-        $riderName = trim((string)($filters['rider'] ?? ''));
+        $riderName = trim((string) ($filters['rider'] ?? ''));
         if ($riderName !== '' && strtolower($riderName) !== 'all') {
             $query->whereHas('rider', function ($q) use ($riderName) {
                 $q->where('name', $riderName);
             });
         }
 
-        $this->applyCodStatusFilter($query, trim((string)($filters['status'] ?? '')));
+        $this->applyCodStatusFilter($query, trim((string) ($filters['status'] ?? '')));
         $this->applyCodSorting($query, $filters);
 
         $paginator = $query->paginate($perPage);
@@ -155,7 +155,7 @@ class CodManagementService implements CodManagementServiceInterface
             $hasAdminSettlement = $shipment->adminSettlement && $shipment->adminSettlement->isSettled();
 
             $ordersDelivered = ($isDelivered || $hasAdminSettlement) ? 1 : 0;
-            $ordersPending = !in_array($shipment->status, ['delivered', 'Delivered', 'cancelled', 'Pending Handover', 'Picked up by Receiver']) && !$hasAdminSettlement ? 1 : 0;
+            $ordersPending = ! in_array($shipment->status, ['delivered', 'Delivered', 'cancelled', 'Pending Handover', 'Picked up by Receiver']) && ! $hasAdminSettlement ? 1 : 0;
 
             // Get the employee who collected the COD amount
             $collector = $this->getPaymentCollector($shipment);
@@ -171,8 +171,8 @@ class CodManagementService implements CodManagementServiceInterface
                 'member_since' => $collector['member_since'],
                 'orders_delivered' => $ordersDelivered,
                 'orders_pending' => $ordersPending,
-                'good_amount' => 'SYP ' . number_format($shipment->parcel_amount ?? 0, 0),
-                'shipment_amount' => 'SYP ' . number_format($shipment->total_fee ?? 0, 0),
+                'good_amount' => 'SYP '.number_format($shipment->parcel_amount ?? 0, 0),
+                'shipment_amount' => 'SYP '.number_format($shipment->total_fee ?? 0, 0),
                 'status' => $this->determineCodStatusFromShipment($shipment),
             ];
         });
@@ -275,13 +275,13 @@ class CodManagementService implements CodManagementServiceInterface
             ->where('id', $shipmentId)
             ->first();
 
-        if (!$shipment) {
+        if (! $shipment) {
             throw new \Exception('Shipment not found or is not a COD shipment.');
         }
 
         // Validate shipment must be delivered before collecting payment
-        if ($shipment->status !== 'delivered' && !in_array($shipment->status, ['Delivered', 'Picked up by Receiver', 'Pending Handover'])) {
-            throw new \Exception('Cannot mark as collected. Shipment must be delivered first. Current status: ' . $shipment->status);
+        if ($shipment->status !== 'delivered' && ! in_array($shipment->status, ['Delivered', 'Picked up by Receiver', 'Pending Handover'])) {
+            throw new \Exception('Cannot mark as collected. Shipment must be delivered first. Current status: '.$shipment->status);
         }
 
         // Find the collection transaction (rider, car driver, or drop point keeper)
@@ -292,18 +292,18 @@ class CodManagementService implements CodManagementServiceInterface
             ->latest('collected_at')
             ->first();
 
-        if (!$collectionTransaction) {
+        if (! $collectionTransaction) {
             throw new \Exception('Payment has not been collected from customer yet. No collection record exists.');
         }
 
         // Validate collector has deposited the money to admin
-        if (!$collectionTransaction->rider_deposited_at) {
+        if (! $collectionTransaction->rider_deposited_at) {
             throw new \Exception('Cannot mark as collected. The collector has not deposited the payment to admin yet. The collector must physically hand over the cash before it can be marked as collected.');
         }
 
         // Check if already settled with admin
         if ($collectionTransaction->settled_at) {
-            throw new \Exception('Payment has already been settled with admin on ' . $collectionTransaction->settled_at?->format('Y-m-d H:i:s') . '.');
+            throw new \Exception('Payment has already been settled with admin on '.$collectionTransaction->settled_at?->format('Y-m-d H:i:s').'.');
         }
 
         // Get the collector's user ID from the transaction
@@ -325,7 +325,7 @@ class CodManagementService implements CodManagementServiceInterface
             'status' => 'completed',
             'settled_at' => now(),
             'collected_by' => auth()->user()?->id,
-            'notes' => 'Cash collected from ' . str_replace('_', ' ', $collectionTransaction->transaction_type) . ' by admin',
+            'notes' => 'Cash collected from '.str_replace('_', ' ', $collectionTransaction->transaction_type).' by admin',
         ]);
 
         // Update collection transaction record
@@ -410,12 +410,12 @@ class CodManagementService implements CodManagementServiceInterface
 
         // Only show this specific shipment, not all rider shipments
         $shipments = collect([[
-            'ship_id' => 'MP' . str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
+            'ship_id' => 'MP'.str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
             'order_number' => $shipment->order_number,
             'sender' => $shipment->sender_name ?? $shipment->user?->name ?? 'N/A',
             'receiver' => $shipment->receiver_name ?? 'N/A',
             'shipment_type' => $this->getShipmentType($shipment),
-            'shipment_payment' => 'SYP ' . number_format($shipment->parcel_amount ?? 0, 0),
+            'shipment_payment' => 'SYP '.number_format($shipment->parcel_amount ?? 0, 0),
         ]]);
 
         // Stats for this specific shipment only
@@ -440,7 +440,7 @@ class CodManagementService implements CodManagementServiceInterface
         $collector = $this->getPaymentCollector($shipment);
 
         return [
-            'ship_id' => 'MP' . str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
+            'ship_id' => 'MP'.str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
             'order_number' => $shipment->order_number,
             'date' => $shipment->created_at->format('Y-m-d'),
             'rider' => $collector['name'],
@@ -457,8 +457,8 @@ class CodManagementService implements CodManagementServiceInterface
             'pickup_address' => $shipment->pickup_address ?? 'N/A',
             'delivery_address' => $shipment->delivery_address ?? 'N/A',
             'shipment_type' => $this->getShipmentType($shipment),
-            'parcel_amount' => 'SYP ' . number_format($shipment->parcel_amount ?? 0, 0),
-            'total_fee' => 'SYP ' . number_format($collectableTotal, 0),
+            'parcel_amount' => 'SYP '.number_format($shipment->parcel_amount ?? 0, 0),
+            'total_fee' => 'SYP '.number_format($collectableTotal, 0),
             'collectable_total' => $collectableTotal,
             'payment' => $paymentDetails,
             'status' => $shipment->status,
@@ -494,6 +494,7 @@ class CodManagementService implements CodManagementServiceInterface
             if ($collectionTransaction->collected_at->lte($sevenDaysAgo)) {
                 return 'overdue';
             }
+
             return 'collected';
         }
 
@@ -526,7 +527,7 @@ class CodManagementService implements CodManagementServiceInterface
             : $shipment->paymentTransactions()->with('rider')->get();
 
         $collectionTransaction = $transactions
-            ->filter(fn($transaction) => in_array(
+            ->filter(fn ($transaction) => in_array(
                 $transaction->transaction_type,
                 ['rider_collection', 'car_driver_collection', 'drop_point_keeper_collection'],
                 true

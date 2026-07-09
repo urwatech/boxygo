@@ -31,6 +31,7 @@ class FetchCityCoordinates extends Command
 
         if ($cities->isEmpty()) {
             $this->info('All cities already have coordinates.');
+
             return Command::SUCCESS;
         }
 
@@ -71,13 +72,14 @@ class FetchCityCoordinates extends Command
      */
     private function getCoordinates(?string $cityName, ?string $governateName): ?array
     {
-        if (!$cityName) {
+        if (! $cityName) {
             return null;
         }
 
         $apiKey = config('services.google.maps_api_key');
-        if (!$apiKey) {
+        if (! $apiKey) {
             $this->warn('Google Maps API key not configured. Set GOOGLE_MAPS_API_KEY in .env');
+
             return null;
         }
 
@@ -85,7 +87,7 @@ class FetchCityCoordinates extends Command
         if ($governateName) {
             $query .= ", {$governateName}";
         }
-        $query .= ", Syria";
+        $query .= ', Syria';
 
         try {
             $response = Http::timeout(10)->get('https://maps.googleapis.com/maps/api/geocode/json', [
@@ -95,8 +97,9 @@ class FetchCityCoordinates extends Command
 
             $data = $response->json();
 
-            if ($data['status'] === 'OK' && !empty($data['results'])) {
+            if ($data['status'] === 'OK' && ! empty($data['results'])) {
                 $location = $data['results'][0]['geometry']['location'];
+
                 return [
                     'lat' => (float) $location['lat'],
                     'lon' => (float) $location['lng'],
@@ -105,7 +108,7 @@ class FetchCityCoordinates extends Command
                 $this->warn("API Status: {$data['status']} for {$cityName}");
             }
         } catch (\Exception $e) {
-            $this->warn("API Error for {$cityName}: " . $e->getMessage());
+            $this->warn("API Error for {$cityName}: ".$e->getMessage());
         }
 
         return null;

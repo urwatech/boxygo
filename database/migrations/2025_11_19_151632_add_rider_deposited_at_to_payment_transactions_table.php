@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::table('payment_transactions', function (Blueprint $table) {
             // Add rider_deposited_at column to track when rider marks cash as deposited
             // This is different from settled_at which is when admin confirms collection
-            if (!Schema::hasColumn('payment_transactions', 'rider_deposited_at')) {
+            if (! Schema::hasColumn('payment_transactions', 'rider_deposited_at')) {
                 $table->timestamp('rider_deposited_at')->nullable()->after('collected_at');
             }
         });

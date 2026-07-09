@@ -29,11 +29,11 @@ class VehicleRepository extends AbstractRepository implements VehicleRepositoryI
             });
         }
 
-        if (!empty($filters['status']) && $filters['status'] !== 'All') {
+        if (! empty($filters['status']) && $filters['status'] !== 'All') {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 

@@ -13,14 +13,10 @@ class AddressController extends Controller
 {
     public function __construct(
         private readonly AddressServiceInterface $addressService
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of addresses.
-     *
-     * @param Request $request
-     * @return Response
      */
     public function index(Request $request): Response
     {
@@ -33,9 +29,6 @@ class AddressController extends Controller
 
     /**
      * Store a newly created address.
-     *
-     * @param Request $request
-     * @return RedirectResponse
      */
     public function store(Request $request): RedirectResponse
     {
@@ -47,10 +40,6 @@ class AddressController extends Controller
 
     /**
      * Update the specified address.
-     *
-     * @param Request $request
-     * @param string $address
-     * @return RedirectResponse
      */
     public function update(Request $request, string $address): RedirectResponse
     {
@@ -62,10 +51,6 @@ class AddressController extends Controller
 
     /**
      * Remove the specified address.
-     *
-     * @param Request $request
-     * @param string $address
-     * @return RedirectResponse
      */
     public function destroy(Request $request, string $address): RedirectResponse
     {
@@ -76,9 +61,6 @@ class AddressController extends Controller
 
     /**
      * Validate address data.
-     *
-     * @param Request $request
-     * @return array
      */
     private function validateData(Request $request): array
     {

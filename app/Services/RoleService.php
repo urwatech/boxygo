@@ -21,8 +21,6 @@ class RoleService extends AbstractService implements RoleServiceInterface
 
     /**
      * Get all roles with their relationships.
-     *
-     * @return Collection
      */
     public function getAllWithRelations(): Collection
     {
@@ -31,8 +29,6 @@ class RoleService extends AbstractService implements RoleServiceInterface
 
     /**
      * Get all available permissions for the given guard (default: web).
-     *
-     * @return Collection
      */
     public function getAllPermissions(string $guard = 'web'): Collection
     {
@@ -41,22 +37,19 @@ class RoleService extends AbstractService implements RoleServiceInterface
 
     /**
      * Sync permissions by permission IDs or names to a role.
-     *
-     * @param int|string $roleId
-     * @param array $permissionIds
-     * @return Model|null
      */
     public function syncPermissions(int|string $roleId, array $permissionIds): ?Model
     {
         $role = $this->find($roleId);
 
-        if (!$role) {
+        if (! $role) {
             return null;
         }
 
         // Handle empty array - remove all permissions
         if (empty($permissionIds)) {
             $role->syncPermissions([]);
+
             return $role;
         }
 
@@ -73,22 +66,16 @@ class RoleService extends AbstractService implements RoleServiceInterface
 
     /**
      * Check if a role can be deleted (not protected).
-     * 
-     * @param int|string $roleId
-     * @return bool
      */
     public function canDelete(int|string $roleId): bool
     {
         $role = $this->find($roleId);
-        return $role && !$role->is_protected;
+
+        return $role && ! $role->is_protected;
     }
 
     /**
      * Find or create a role by attributes.
-     *
-     * @param array $attributes
-     * @param array $values
-     * @return Model
      */
     public function firstOrCreate(array $attributes, array $values = []): Model
     {
@@ -101,22 +88,16 @@ class RoleService extends AbstractService implements RoleServiceInterface
 
     /**
      * Create or retrieve a permission safely.
-     * 
-     * @param array $attributes
-     * @return Model
      */
     public function firstOrCreatePermission(array $attributes): Model
     {
         $attributes['guard_name'] = $attributes['guard_name'] ?? 'web';
+
         return Permission::firstOrCreate($attributes);
     }
 
     /**
      * Sync permissions safely using role’s guard name.
-     * 
-     * @param Model $role
-     * @param array $permissions
-     * @return Model
      */
     public function syncPermissionsToRole(Model $role, array $permissions): Model
     {
@@ -124,7 +105,7 @@ class RoleService extends AbstractService implements RoleServiceInterface
 
         // Normalize the permissions array (handles both arrays of names or arrays of arrays)
         $permissionNames = collect($permissions)
-            ->map(fn($p) => is_array($p) ? ($p['name'] ?? null) : $p)
+            ->map(fn ($p) => is_array($p) ? ($p['name'] ?? null) : $p)
             ->filter()
             ->values()
             ->all();

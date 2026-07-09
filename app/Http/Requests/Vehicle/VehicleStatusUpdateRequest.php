@@ -12,7 +12,7 @@ class VehicleStatusUpdateRequest extends FormRequest
     {
         $user = $this->user();
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 

@@ -16,8 +16,7 @@ class LoginController extends Controller
     public function __construct(
         private readonly CustomerAuthServiceInterface $authService,
         private readonly UserServiceInterface $userService
-    ) {
-    }
+    ) {}
 
     /**
      * Display the customer login view.

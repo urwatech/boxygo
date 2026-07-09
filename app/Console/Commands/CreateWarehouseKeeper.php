@@ -31,7 +31,7 @@ class CreateWarehouseKeeper extends Command
         $roleName = Role::WAREHOUSE_KEEPER->value;
         $existingRole = SpatieRole::where('name', $roleName)->where('guard_name', 'web')->first();
 
-        if (!$existingRole) {
+        if (! $existingRole) {
             SpatieRole::create([
                 'name' => $roleName,
                 'guard_name' => 'web',
@@ -45,7 +45,7 @@ class CreateWarehouseKeeper extends Command
             // Update existing role to have Mobile App platform
             $existingRole->platform = Role::WAREHOUSE_KEEPER->platform();
             $existingRole->save();
-            $this->info("Updated role platform to: Mobile App");
+            $this->info('Updated role platform to: Mobile App');
         }
 
         // Delete existing warehouse keeper if exists

@@ -13,10 +13,7 @@ class ApiResponse
     /**
      * Return a success response.
      *
-     * @param mixed $data
-     * @param string|null $message
-     * @param int $statusCode
-     * @return JsonResponse
+     * @param  mixed  $data
      */
     public static function success($data = null, ?string $message = null, int $statusCode = Response::HTTP_OK): JsonResponse
     {
@@ -42,9 +39,7 @@ class ApiResponse
     /**
      * Return a created response (201).
      *
-     * @param mixed $data
-     * @param string|null $message
-     * @return JsonResponse
+     * @param  mixed  $data
      */
     public static function created($data = null, ?string $message = 'Resource created successfully.'): JsonResponse
     {
@@ -53,8 +48,6 @@ class ApiResponse
 
     /**
      * Return a no content response (204).
-     *
-     * @return JsonResponse
      */
     public static function noContent(): JsonResponse
     {
@@ -65,10 +58,6 @@ class ApiResponse
 
     /**
      * Return an error response.
-     *
-     * @param string $message
-     * @param int $statusCode
-     * @return JsonResponse
      */
     public static function error(string $message, int $statusCode = Response::HTTP_BAD_REQUEST): JsonResponse
     {
@@ -82,9 +71,6 @@ class ApiResponse
 
     /**
      * Return a not found response (404).
-     *
-     * @param string $message
-     * @return JsonResponse
      */
     public static function notFound(string $message = 'Resource not found.'): JsonResponse
     {
@@ -93,10 +79,6 @@ class ApiResponse
 
     /**
      * Return a validation error response (422).
-     *
-     * @param array $errors
-     * @param string|null $message
-     * @return JsonResponse
      */
     public static function validationError(array $errors, ?string $message = 'The given data was invalid.'): JsonResponse
     {
@@ -109,9 +91,6 @@ class ApiResponse
 
     /**
      * Return a bad request response (400).
-     *
-     * @param string $message
-     * @return JsonResponse
      */
     public static function badRequest(string $message): JsonResponse
     {
@@ -120,9 +99,6 @@ class ApiResponse
 
     /**
      * Return an unauthorized response (401).
-     *
-     * @param string $message
-     * @return JsonResponse
      */
     public static function unauthorized(string $message = 'Unauthenticated.'): JsonResponse
     {
@@ -131,9 +107,6 @@ class ApiResponse
 
     /**
      * Return a forbidden response (403).
-     *
-     * @param string $message
-     * @return JsonResponse
      */
     public static function forbidden(string $message = 'This action is unauthorized.'): JsonResponse
     {
@@ -142,9 +115,6 @@ class ApiResponse
 
     /**
      * Return a server error response (500).
-     *
-     * @param string $message
-     * @return JsonResponse
      */
     public static function serverError(string $message = 'Internal server error.'): JsonResponse
     {

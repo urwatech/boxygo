@@ -66,6 +66,7 @@ class ShipmentStatusHistory extends Model
         if ($this->isInitial()) {
             return "Status set to {$this->to_status}";
         }
+
         return "Status changed from {$this->from_status} to {$this->to_status}";
     }
 
@@ -88,6 +89,7 @@ class ShipmentStatusHistory extends Model
                 'lng' => (float) $this->longitude,
             ];
         }
+
         return null;
     }
 

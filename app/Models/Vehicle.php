@@ -11,8 +11,11 @@ class Vehicle extends Model
     use HasFactory;
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_PENDING_RENEWAL = 'pending_renewal';
+
     public const STATUS_INACTIVE = 'inactive';
 
     protected $fillable = [

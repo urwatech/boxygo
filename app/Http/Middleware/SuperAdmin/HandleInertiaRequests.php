@@ -40,14 +40,14 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-            'user' => $user ? [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'avatar_url' => media_url($user->avatar_path),
-                'governorate' => $user->governorate,
-                'language' => $user->language ?? 'en',
-            ] : null,
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar_url' => media_url($user->avatar_path),
+                    'governorate' => $user->governorate,
+                    'language' => $user->language ?? 'en',
+                ] : null,
                 'roles' => $user ? $user->getRoleNames()->values()->all() : [],
                 'permissions' => $user ? $user->getAllPermissions()->pluck('name')->values()->all() : [],
             ],

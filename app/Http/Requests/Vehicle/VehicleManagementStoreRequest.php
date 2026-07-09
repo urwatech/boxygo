@@ -13,7 +13,7 @@ class VehicleManagementStoreRequest extends FormRequest
         // return $this->user()?->hasRole('superadmin') ?? false;
         $user = $this->user();
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 

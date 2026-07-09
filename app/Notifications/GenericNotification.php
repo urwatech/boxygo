@@ -2,16 +2,16 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\LocalizedFcm;
 use App\Services\FcmService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use App\Notifications\Concerns\LocalizedFcm;
 
 class GenericNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
     use LocalizedFcm;
+    use Queueable;
 
     public function __construct(
         public readonly string $shipmentId,
@@ -37,7 +37,7 @@ class GenericNotification extends Notification implements ShouldQueue
      */
     public function toFcm(object $notifiable): void
     {
-        if (!$notifiable->push_notifications || !$notifiable->fcm_token) {
+        if (! $notifiable->push_notifications || ! $notifiable->fcm_token) {
             return;
         }
 
@@ -76,7 +76,7 @@ class GenericNotification extends Notification implements ShouldQueue
             'icon' => $this->icon,
             'shipment_id' => $this->shipmentId,
             'tracking_number' => $this->trackingNumber,
-            ...$this->extraData
+            ...$this->extraData,
         ];
     }
 

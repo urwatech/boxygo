@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('cities', function (Blueprint $table) {
-            if (!Schema::hasColumn('cities', 'type')) {
+            if (! Schema::hasColumn('cities', 'type')) {
                 $table->enum('type', ['M', 'CS'])->default('M')->after('governate_id');
             }
         });
@@ -38,4 +38,3 @@ return new class extends Migration
         });
     }
 };
-

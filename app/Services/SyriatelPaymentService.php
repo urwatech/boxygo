@@ -8,7 +8,9 @@ use Illuminate\Support\Facades\Log;
 class SyriatelPaymentService
 {
     private string $baseUrl;
+
     private string $secret;
+
     private ?string $accessToken = null;
 
     public function __construct()
@@ -35,10 +37,11 @@ class SyriatelPaymentService
                 'X-SIGNATURE' => $signature,
                 'Content-Type' => 'application/json',
             ])->withBody($loginBody, 'application/json')
-              ->post($this->baseUrl . '/api/auth/login');
+                ->post($this->baseUrl.'/api/auth/login');
 
             if ($response->successful()) {
                 $this->accessToken = $response->json('data.tokens.access_token');
+
                 return $this->accessToken;
             }
 
@@ -60,8 +63,9 @@ class SyriatelPaymentService
     private function apiRequest(string $endpoint, array $formFields): ?array
     {
         $token = $this->authenticate();
-        if (!$token) {
+        if (! $token) {
             Log::error('Syriatel Payment: Cannot make request, authentication failed', ['endpoint' => $endpoint]);
+
             return null;
         }
 
@@ -77,8 +81,8 @@ class SyriatelPaymentService
             $response = Http::asMultipart()
                 ->withHeaders([
                     'X-SIGNATURE' => $signature,
-                    'Authorization' => 'Bearer ' . $token,
-                ])->post($this->baseUrl . $endpoint, $multipart);
+                    'Authorization' => 'Bearer '.$token,
+                ])->post($this->baseUrl.$endpoint, $multipart);
 
             $result = $response->json();
 

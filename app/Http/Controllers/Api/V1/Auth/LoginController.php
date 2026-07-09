@@ -13,9 +13,6 @@ use App\Services\UserService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpFoundation\Response;
-use Throwable;
 
 class LoginController extends Controller
 {
@@ -23,8 +20,7 @@ class LoginController extends Controller
         private UserService $userService,
         private OtpService $otpService,
         private SendGridEmailService $sendGridEmailService
-    ) {
-    }
+    ) {}
 
     public function store(LoginRequest $request): JsonResponse
     {
@@ -33,13 +29,13 @@ class LoginController extends Controller
         /** @var User|null $user */
         $user = null;
 
-        if (!empty($credentials['email'])) {
+        if (! empty($credentials['email'])) {
             $user = $this->userService->findByEmail($credentials['email']);
-        } elseif (!empty($credentials['phone_number'])) {
+        } elseif (! empty($credentials['phone_number'])) {
             $user = $this->userService->findByPhoneNumber($credentials['phone_number']);
         }
 
-        if (!$user || (!(config('app.env') === 'local' && $credentials['password'] === '123456') && !Hash::check($credentials['password'], $user->password))) {
+        if (! $user || (! (config('app.env') === 'local' && $credentials['password'] === '123456') && ! Hash::check($credentials['password'], $user->password))) {
             return ApiResponse::validationError(
                 ['credentials' => [__('providedCredentialsAreIncorrect')]],
                 __('providedCredentialsAreIncorrect')
@@ -57,7 +53,7 @@ class LoginController extends Controller
         // Check if user has any role with Mobile App platform access
         $hasMobileRole = $user->roles()->where('platform', 'Mobile App')->exists();
 
-        if (!$hasMobileRole) {
+        if (! $hasMobileRole) {
             return ApiResponse::validationError(
                 ['platform' => [__('accountNotAuthorizedForMobileApp')]],
                 __('accountNotAuthorizedForMobileApp')

@@ -19,7 +19,7 @@ class CustomerController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('customers.view') && !$user->can('customers.manage'))) {
+        if (! $user || (! $user->can('customers.view') && ! $user->can('customers.manage'))) {
             abort(401);
         }
 

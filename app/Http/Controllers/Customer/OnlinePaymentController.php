@@ -6,7 +6,7 @@ use App\Contracts\ShipmentServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Shipment;
 use App\Models\User;
-use App\Notifications\ShipmentCreatedNotification;
+use App\Notifications\GenericNotification;
 use App\Services\MtnPaymentService;
 use App\Services\MtnSmsService;
 use App\Services\PaymeraPaymentService;
@@ -16,7 +16,6 @@ use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Notifications\GenericNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -25,9 +24,13 @@ use Illuminate\Support\Str;
 class OnlinePaymentController extends Controller
 {
     private const PAYMENT_TYPE_NEW_SHIPMENT = 'new_shipment';
+
     private const PAYMENT_TYPE_EXISTING_SHIPMENT = 'existing_shipment';
+
     private const PAYMENT_TYPE_RETURN_SHIPMENT = 'return_shipment';
+
     private const PAYER_TYPE_SENDER = 'sender';
+
     private const PAYER_TYPE_RECIEVER = 'reciever';
 
     public function __construct(
@@ -120,7 +123,6 @@ class OnlinePaymentController extends Controller
             $data['reciever_payment_gateway'] = $gateway;
         }
 
-
         $handoverZone = \App\Services\ZoneHelper::findZoneByCoordinates(
             (float) $data['handover_latitude'],
             (float) $data['handover_longitude']
@@ -153,7 +155,7 @@ class OnlinePaymentController extends Controller
 
         $shipment = $this->shipmentService->createShipment($data, $userId);
 
-        $speed = strtolower((string)($data['delivery_speed'] ?? 'direct'));
+        $speed = strtolower((string) ($data['delivery_speed'] ?? 'direct'));
         if (str_starts_with($speed, 'direct')) {
             \App\Models\ShipmentStatusDirect::create([
                 'shipment_id' => $shipment->id,
@@ -245,7 +247,7 @@ class OnlinePaymentController extends Controller
         $holder = data_get($shipment->payment_gateway_response, 'context.payer_type')
             ?? data_get($shipment->payment_gateway_response, 'context.payment_holder');
 
-        if (!$holder) {
+        if (! $holder) {
             return false;
         }
 
@@ -286,7 +288,7 @@ class OnlinePaymentController extends Controller
         $columns = $this->paymentColumnsFor($payerType);
         $invoice = $shipment->{$columns['invoice']} ?? null;
 
-        if ($payerType === self::PAYER_TYPE_RECIEVER && !$invoice && $this->isLegacyReceiverContext($shipment)) {
+        if ($payerType === self::PAYER_TYPE_RECIEVER && ! $invoice && $this->isLegacyReceiverContext($shipment)) {
             return $shipment->payment_invoice_number;
         }
 
@@ -299,7 +301,7 @@ class OnlinePaymentController extends Controller
         $columns = $this->paymentColumnsFor($payerType);
         $gateway = $shipment->{$columns['gateway']} ?? null;
 
-        if ($payerType === self::PAYER_TYPE_RECIEVER && !$gateway && $this->isLegacyReceiverContext($shipment)) {
+        if ($payerType === self::PAYER_TYPE_RECIEVER && ! $gateway && $this->isLegacyReceiverContext($shipment)) {
             return $shipment->payment_gateway;
         }
 
@@ -311,7 +313,7 @@ class OnlinePaymentController extends Controller
         $holder = data_get($gatewayResponse, 'context.payer_type')
             ?? data_get($gatewayResponse, 'context.payment_holder');
 
-        if (!$holder) {
+        if (! $holder) {
             return self::PAYER_TYPE_SENDER;
         }
 
@@ -325,16 +327,16 @@ class OnlinePaymentController extends Controller
         }
 
         $senderContext = data_get($shipment->payment_gateway_response, 'context');
-        if (!empty($senderContext)) {
+        if (! empty($senderContext)) {
             return $this->resolvePayerTypeFromGatewayResponse(['context' => $senderContext]);
         }
 
         $receiverContext = data_get($shipment->reciever_payment_gateway_response, 'context');
-        if (!empty($receiverContext)) {
+        if (! empty($receiverContext)) {
             return $this->resolvePayerTypeFromGatewayResponse(['context' => $receiverContext]);
         }
 
-        if ($shipment->reciever_payment_invoice_number && !$shipment->payment_invoice_number) {
+        if ($shipment->reciever_payment_invoice_number && ! $shipment->payment_invoice_number) {
             return self::PAYER_TYPE_RECIEVER;
         }
 
@@ -432,6 +434,7 @@ class OnlinePaymentController extends Controller
     {
         if ($payerType !== null) {
             $gatewayResponse = $this->getPayerGatewayResponse($shipment, $this->normalizePayerType($payerType));
+
             return (array) data_get($gatewayResponse, 'context', []);
         }
 
@@ -442,7 +445,7 @@ class OnlinePaymentController extends Controller
         }
 
         $receiverContext = (array) data_get($shipment->reciever_payment_gateway_response, 'context', []);
-        if (!empty($receiverContext)) {
+        if (! empty($receiverContext)) {
             return $receiverContext;
         }
 
@@ -745,7 +748,7 @@ class OnlinePaymentController extends Controller
                 }
 
                 $user = $request->user();
-                if (!$user) {
+                if (! $user) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('unauthorized'),
@@ -762,14 +765,14 @@ class OnlinePaymentController extends Controller
 
                 if ($isExistingShipmentPayment) {
                     $shipment = $this->findAuthorizedShipment((int) $data['shipment_id'], $user->id, $data['payer_type']);
-                    if (!$shipment) {
+                    if (! $shipment) {
                         return response()->json([
                             'ok' => false,
                             'message' => __('commonShipmentNotFound'),
                         ], JsonResponse::HTTP_NOT_FOUND);
                     }
 
-                    if (!$this->isAuthorizedPayer($shipment, (int) $user->id, $data['payer_type'])) {
+                    if (! $this->isAuthorizedPayer($shipment, (int) $user->id, $data['payer_type'])) {
                         return response()->json([
                             'ok' => false,
                             'message' => __('youAreNotAllowedToPayThisShipment'),
@@ -805,11 +808,12 @@ class OnlinePaymentController extends Controller
 
                 $invoiceResult = $paymentService->createInvoice($invoiceNumber, $amount, $paymentPhone);
 
-                if (!$invoiceResult || !($invoiceResult['success'] ?? false)) {
+                if (! $invoiceResult || ! ($invoiceResult['success'] ?? false)) {
                     Log::error('MTN Payment: Failed to create invoice', [
                         'shipment_id' => $shipment->id,
                         'result' => $invoiceResult,
                     ]);
+
                     return response()->json([
                         'ok' => false,
                         'message' => $invoiceResult['message'] ?? __('failedToCreatePaymentInvoicePleaseTryAgain'),
@@ -818,16 +822,17 @@ class OnlinePaymentController extends Controller
 
                 $guid = $invoiceResult['data']['local_invoice']['guid']
                     ?? $invoiceResult['data']['mtn_response']['Guid']
-                    ?? ('MP-' . $shipment->id . '-' . Str::random(8));
+                    ?? ('MP-'.$shipment->id.'-'.Str::random(8));
 
                 // Initiate payment (sends OTP)
                 $initiateResult = $paymentService->initiatePayment($invoiceNumber, $paymentPhone, $guid);
 
-                if (!$initiateResult || !($initiateResult['success'] ?? false)) {
+                if (! $initiateResult || ! ($initiateResult['success'] ?? false)) {
                     Log::error('MTN Payment: Failed to initiate payment', [
                         'shipment_id' => $shipment->id,
                         'result' => $initiateResult,
                     ]);
+
                     return response()->json([
                         'ok' => false,
                         'message' => $initiateResult['message'] ?? __('commonPaymentInitiateError'),
@@ -879,6 +884,7 @@ class OnlinePaymentController extends Controller
             })();
             if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 400) {
                 DB::rollBack();
+
                 return $response;
             }
 
@@ -920,7 +926,7 @@ class OnlinePaymentController extends Controller
 
                 $shipment = $this->findAuthorizedShipment((int) $data['shipment_id'], $request->user()->id);
 
-                if (!$shipment) {
+                if (! $shipment) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('commonShipmentNotFound'),
@@ -946,7 +952,7 @@ class OnlinePaymentController extends Controller
                     $data['code']
                 );
 
-                if (!$confirmResult || !($confirmResult['success'] ?? false)) {
+                if (! $confirmResult || ! ($confirmResult['success'] ?? false)) {
                     $errorMessage = $confirmResult['message'] ?? __('paymentConfirmationFailed');
 
                     $errno = $confirmResult['data']['Errno'] ?? $confirmResult['errors']['Errno'] ?? null;
@@ -980,6 +986,7 @@ class OnlinePaymentController extends Controller
             })();
             if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 400) {
                 DB::rollBack();
+
                 return $response;
             }
 
@@ -1031,12 +1038,12 @@ class OnlinePaymentController extends Controller
         }
 
         foreach ([$invoice, $paymentId] as $candidate) {
-            if (!$candidate || !preg_match('/^BG-(\d+)/', (string) $candidate, $matches)) {
+            if (! $candidate || ! preg_match('/^BG-(\d+)/', (string) $candidate, $matches)) {
                 continue;
             }
 
             $shipment = Shipment::find((int) ($matches[1] ?? 0));
-            if (!$shipment) {
+            if (! $shipment) {
                 continue;
             }
 
@@ -1079,7 +1086,7 @@ class OnlinePaymentController extends Controller
 
     private function extractPayerTypeFromPaymeraInvoice(?string $invoice): ?string
     {
-        if (!$invoice) {
+        if (! $invoice) {
             return null;
         }
 
@@ -1109,7 +1116,7 @@ class OnlinePaymentController extends Controller
         return $this->resolvePayerTypeFromShipment($shipment);
     }
 
-    private function redirectAfterPaymera(Shipment $shipment, string $payerType, bool $useShowRouteForNewShipment = false, $paymentStatusPayload)
+    private function redirectAfterPaymera(Shipment $shipment, string $payerType, bool $useShowRouteForNewShipment, $paymentStatusPayload)
     {
         if ($paymentStatusPayload['type'] === 'success') {
             $this->sendShipmentNotifications($shipment, 'Paymera', auth()->user(), 'complete', $payerType);
@@ -1123,10 +1130,12 @@ class OnlinePaymentController extends Controller
                         'shipment' => $shipment->id,
                     ]);
                 }
+
                 return redirect()->route('customer.shipments.receiving_parcels_show', [
                     'shipment' => $shipment->id,
                 ]);
             }
+
             return redirect()->route('customer.shipments.track', [
                 'trackingNumber' => $this->getTrackShipmentId($shipment->id),
             ]);
@@ -1136,6 +1145,7 @@ class OnlinePaymentController extends Controller
             if ($useShowRouteForNewShipment) {
                 return redirect()->route('customer.shipments.show', $shipment->id);
             }
+
             return redirect()->route('customer.shipments.sending_parcels_show', [
                 'shipment' => $shipment->id,
             ]);
@@ -1218,7 +1228,7 @@ class OnlinePaymentController extends Controller
                 }
 
                 $user = $request->user();
-                if (!$user) {
+                if (! $user) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('unauthorized'),
@@ -1226,10 +1236,12 @@ class OnlinePaymentController extends Controller
                 }
 
                 $data = $validator->validated();
+
                 return $this->createPaymeraPayment($data, $user);
             })();
             if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 400) {
                 DB::rollBack();
+
                 return $response;
             }
 
@@ -1251,14 +1263,14 @@ class OnlinePaymentController extends Controller
 
         if ($isExistingShipmentPayment) {
             $shipment = $this->findAuthorizedShipment((int) $data['shipment_id'], $user->id, $data['payer_type']);
-            if (!$shipment) {
+            if (! $shipment) {
                 return response()->json([
                     'ok' => false,
                     'message' => __('commonShipmentNotFound'),
                 ], JsonResponse::HTTP_NOT_FOUND);
             }
 
-            if (!$this->isAuthorizedPayer($shipment, (int) $user->id, $data['payer_type'])) {
+            if (! $this->isAuthorizedPayer($shipment, (int) $user->id, $data['payer_type'])) {
                 return response()->json([
                     'ok' => false,
                     'message' => __('youAreNotAllowedToPayThisShipment'),
@@ -1294,7 +1306,7 @@ class OnlinePaymentController extends Controller
         $callbackUrl = route('customer.payments.paymera.callback', [
             'shipment_id' => $shipment->id,
             'payer_type' => $data['payer_type'],
-            'app' => 'boxygo'
+            'app' => 'boxygo',
         ]);
         $locale = strtolower((string) ($user->language ?? 'en'));
         $lang = $locale === 'ar' ? 'ar' : 'en';
@@ -1306,15 +1318,16 @@ class OnlinePaymentController extends Controller
             callbackUrl: $callbackUrl,
             lang: $lang,
             appUser: (string) $user->id,
-            notes: 'Shipment #' . $shipment->order_number,
+            notes: 'Shipment #'.$shipment->order_number,
             ttl: 60
         );
 
-        if (!$createResult || !($createResult['success'] ?? false)) {
+        if (! $createResult || ! ($createResult['success'] ?? false)) {
             Log::error('Paymera: Failed to create payment', [
                 'shipment_id' => $shipment->id,
                 'result' => $createResult,
             ]);
+
             return response()->json([
                 'ok' => false,
                 'message' => $createResult['message'] ?? __('failedToCreateCardPaymentPleaseTryAgain'),
@@ -1384,7 +1397,7 @@ class OnlinePaymentController extends Controller
                     $request->filled('payer_type') ? (string) $request->input('payer_type') : null
                 );
 
-                if (!$resolved && $request->filled('shipment_id')) {
+                if (! $resolved && $request->filled('shipment_id')) {
                     $shipment = Shipment::find((int) $request->input('shipment_id'));
                     if ($shipment) {
                         $payerType = $this->resolvePayerTypeFromShipment(
@@ -1399,7 +1412,7 @@ class OnlinePaymentController extends Controller
                     }
                 }
 
-                if (!$resolved) {
+                if (! $resolved) {
                     return redirect()->route('home');
                 }
 
@@ -1407,7 +1420,7 @@ class OnlinePaymentController extends Controller
                 $shipment = $resolved['shipment'];
                 $payerType = $resolved['payer_type'];
                 $invoiceToCheck = $resolved['invoice'] ?? null;
-                if (!$invoiceToCheck) {
+                if (! $invoiceToCheck) {
                     return redirect()->route('home');
                 }
 
@@ -1424,10 +1437,10 @@ class OnlinePaymentController extends Controller
                 $gatewayResponse['status_check'] = $statusResult['data'] ?? null;
 
                 $alreadyPaid = $this->isPaymentAlreadyPaidByContext($shipment, $payerType);
-                if ($paymentStatus === 'paid' && !$alreadyPaid) {
+                if ($paymentStatus === 'paid' && ! $alreadyPaid) {
                     $gatewayResponse = $this->applyPostPaymentWalletProcessing($shipment, $gatewayResponse, $payerType);
 
-                    if (!$this->isExistingShipmentPayment($shipment, $payerType)) {
+                    if (! $this->isExistingShipmentPayment($shipment, $payerType)) {
                         $this->shipmentService->autoAssign($shipment->id);
                     }
 
@@ -1446,6 +1459,7 @@ class OnlinePaymentController extends Controller
             })();
             if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 400) {
                 DB::rollBack();
+
                 return $response;
             }
 
@@ -1504,8 +1518,9 @@ class OnlinePaymentController extends Controller
                     );
                 }
 
-                if (!$resolved) {
+                if (! $resolved) {
                     $this->sendShipmentNotifications($shipment, 'Paymera', auth()->user(), 'cancel', $payerType);
+
                     return redirect()->route('customer.shipments.index');
                 }
 
@@ -1517,7 +1532,7 @@ class OnlinePaymentController extends Controller
                 $paymentStatusMessage = null;
 
                 $alreadyPaid = $this->isPaymentAlreadyPaidByContext($shipment, $payerType);
-                if ($invoiceToCheck && !$alreadyPaid) {
+                if ($invoiceToCheck && ! $alreadyPaid) {
                     // Poll Paymera for final status
                     $paymeraService = app(PaymeraPaymentService::class);
                     $statusResult = $paymeraService->getInvoiceStatus($invoiceToCheck);
@@ -1526,10 +1541,10 @@ class OnlinePaymentController extends Controller
                     $gatewayResponse = $this->getPayerGatewayResponse($shipment, $payerType);
                     $gatewayResponse['return_status_check'] = $statusResult['data'] ?? null;
 
-                    if ($paymentStatus === 'paid' && !$alreadyPaid) {
+                    if ($paymentStatus === 'paid' && ! $alreadyPaid) {
                         $gatewayResponse = $this->applyPostPaymentWalletProcessing($shipment, $gatewayResponse, $payerType);
 
-                        if (!$this->isExistingShipmentPayment($shipment, $payerType)) {
+                        if (! $this->isExistingShipmentPayment($shipment, $payerType)) {
                             $this->shipmentService->autoAssign($shipment->id);
                         }
 
@@ -1550,6 +1565,7 @@ class OnlinePaymentController extends Controller
             })();
             if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 400) {
                 DB::rollBack();
+
                 return $response;
             }
 
@@ -1595,7 +1611,7 @@ class OnlinePaymentController extends Controller
                 }
 
                 $user = $request->user();
-                if (!$user) {
+                if (! $user) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('unauthorized'),
@@ -1612,14 +1628,14 @@ class OnlinePaymentController extends Controller
 
                 if ($isExistingShipmentPayment) {
                     $shipment = $this->findAuthorizedShipment((int) $data['shipment_id'], $user->id, $data['payer_type']);
-                    if (!$shipment) {
+                    if (! $shipment) {
                         return response()->json([
                             'ok' => false,
                             'message' => __('commonShipmentNotFound'),
                         ], JsonResponse::HTTP_NOT_FOUND);
                     }
 
-                    if (!$this->isAuthorizedPayer($shipment, (int) $user->id, $data['payer_type'])) {
+                    if (! $this->isAuthorizedPayer($shipment, (int) $user->id, $data['payer_type'])) {
                         return response()->json([
                             'ok' => false,
                             'message' => __('youAreNotAllowedToPayThisShipment'),
@@ -1659,14 +1675,15 @@ class OnlinePaymentController extends Controller
                     $invoiceId,
                     $amount,
                     $paymentPhone,
-                    'Shipment #' . $shipment->order_number
+                    'Shipment #'.$shipment->order_number
                 );
 
-                if (!$startResult || !($startResult['success'] ?? false)) {
+                if (! $startResult || ! ($startResult['success'] ?? false)) {
                     Log::error('Syriatel Payment: Failed to start payment', [
                         'shipment_id' => $shipment->id,
                         'result' => $startResult,
                     ]);
+
                     return response()->json([
                         'ok' => false,
                         'message' => $startResult['message'] ?? __('failedToInitiateSyriatelPaymentPleaseTryAgain'),
@@ -1710,6 +1727,7 @@ class OnlinePaymentController extends Controller
             })();
             if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 400) {
                 DB::rollBack();
+
                 return $response;
             }
 
@@ -1748,7 +1766,7 @@ class OnlinePaymentController extends Controller
 
                 $shipment = $this->findAuthorizedShipment((int) $data['shipment_id'], $request->user()->id);
 
-                if (!$shipment) {
+                if (! $shipment) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('commonShipmentNotFound'),
@@ -1767,7 +1785,7 @@ class OnlinePaymentController extends Controller
                 $paymentService = app(SyriatelPaymentService::class);
                 $confirmResult = $paymentService->confirmPayment($data['invoice'], $data['otp']);
 
-                if (!$confirmResult || !($confirmResult['success'] ?? false)) {
+                if (! $confirmResult || ! ($confirmResult['success'] ?? false)) {
                     $errorMessage = $confirmResult['message'] ?? __('paymentConfirmationFailed');
 
                     $this->sendShipmentNotifications($shipment, 'Syriatel', auth()->user(), 'cancel', $payerType);
@@ -1783,6 +1801,7 @@ class OnlinePaymentController extends Controller
                 $gatewayResponse = $this->applyPostPaymentWalletProcessing($shipment, $gatewayResponse, $payerType);
                 $this->markShipmentPaidByContext($shipment, $gatewayResponse, $payerType);
                 $this->sendShipmentNotifications($shipment, 'Syriatel', auth()->user(), 'complete', $payerType);
+
                 return response()->json([
                     'ok' => true,
                     'shipment_id' => $shipment->id,
@@ -1790,6 +1809,7 @@ class OnlinePaymentController extends Controller
             })();
             if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 400) {
                 DB::rollBack();
+
                 return $response;
             }
 
@@ -1807,7 +1827,7 @@ class OnlinePaymentController extends Controller
         $fallbackId = $trackno ?? '';
 
         return $fallbackId
-            ? 'SHIP-' . str_pad((string) $fallbackId, 8, '0', STR_PAD_LEFT)
+            ? 'SHIP-'.str_pad((string) $fallbackId, 8, '0', STR_PAD_LEFT)
             : '';
     }
 
@@ -1836,7 +1856,7 @@ class OnlinePaymentController extends Controller
 
                 $shipment = $this->findAuthorizedShipment((int) $data['shipment_id'], $request->user()->id);
 
-                if (!$shipment) {
+                if (! $shipment) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('commonShipmentNotFound'),
@@ -1846,7 +1866,7 @@ class OnlinePaymentController extends Controller
                 $paymentService = app(SyriatelPaymentService::class);
                 $resendResult = $paymentService->resendOtp($data['invoice']);
 
-                if (!$resendResult || !($resendResult['success'] ?? false)) {
+                if (! $resendResult || ! ($resendResult['success'] ?? false)) {
                     return response()->json([
                         'ok' => false,
                         'message' => $resendResult['message'] ?? __('failedToResendOtp'),
@@ -1860,6 +1880,7 @@ class OnlinePaymentController extends Controller
             })();
             if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 400) {
                 DB::rollBack();
+
                 return $response;
             }
 
@@ -1895,7 +1916,7 @@ class OnlinePaymentController extends Controller
                 }
 
                 $user = $request->user();
-                if (!$user) {
+                if (! $user) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('unauthorized'),
@@ -1903,7 +1924,7 @@ class OnlinePaymentController extends Controller
                 }
 
                 $shipment = $this->findAuthorizedShipment((int) $request->input('shipment_id'), $user->id);
-                if (!$shipment) {
+                if (! $shipment) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('shipmentOrPaymentNotFound'),
@@ -1914,7 +1935,7 @@ class OnlinePaymentController extends Controller
                     ? $this->normalizePayerType((string) $request->input('payer_type'))
                     : ((int) $shipment->user_id === (int) $user->id ? self::PAYER_TYPE_SENDER : self::PAYER_TYPE_RECIEVER);
 
-                if (!$this->isAuthorizedPayer($shipment, (int) $user->id, $payerType)) {
+                if (! $this->isAuthorizedPayer($shipment, (int) $user->id, $payerType)) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('youAreNotAllowedToCheckThisPaymentStatus'),
@@ -1924,7 +1945,7 @@ class OnlinePaymentController extends Controller
                 $invoiceNumber = $this->getPayerInvoiceNumber($shipment, $payerType);
                 $gateway = $this->getPayerGateway($shipment, $payerType);
 
-                if (!$invoiceNumber || !$gateway) {
+                if (! $invoiceNumber || ! $gateway) {
                     return response()->json([
                         'ok' => false,
                         'message' => __('shipmentOrPaymentNotFound'),
@@ -1952,12 +1973,12 @@ class OnlinePaymentController extends Controller
 
                 $gatewayStatus = strtolower((string) $status);
                 $status = $gatewayStatus;
-                if ($status === 'paid' && !$this->isPaymentAlreadyPaidByContext($shipment, $payerType)) {
+                if ($status === 'paid' && ! $this->isPaymentAlreadyPaidByContext($shipment, $payerType)) {
                     $gatewayResponse = $this->getPayerGatewayResponse($shipment, $payerType);
                     $gatewayResponse['status_check'] = $result['data'] ?? $result;
                     $gatewayResponse = $this->applyPostPaymentWalletProcessing($shipment, $gatewayResponse, $payerType);
                     $this->markShipmentPaidByContext($shipment, $gatewayResponse, $payerType);
-                } elseif (!empty($result)) {
+                } elseif (! empty($result)) {
                     $gatewayResponse = $this->getPayerGatewayResponse($shipment, $payerType);
                     $gatewayResponse['status_check'] = $result['data'] ?? $result;
                     $this->persistPayerGatewayResponse($shipment, $payerType, $gatewayResponse);
@@ -1978,6 +1999,7 @@ class OnlinePaymentController extends Controller
             })();
             if (method_exists($response, 'getStatusCode') && $response->getStatusCode() >= 400) {
                 DB::rollBack();
+
                 return $response;
             }
 

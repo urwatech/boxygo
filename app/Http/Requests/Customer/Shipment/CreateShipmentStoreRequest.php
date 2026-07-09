@@ -46,7 +46,7 @@ class CreateShipmentStoreRequest extends FormRequest
 
             'sender_name' => 'nullable|string',
             'sender_phone' => 'nullable|string',
-            'sender_email'   => 'nullable|email|different:receiver_email',
+            'sender_email' => 'nullable|email|different:receiver_email',
             'sender_landmark' => 'nullable|string',
             'sender_building' => 'nullable|string',
             'receiver_name' => 'nullable|string',

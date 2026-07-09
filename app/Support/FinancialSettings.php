@@ -59,19 +59,19 @@ class FinancialSettings
             }
         }
 
-        if (!isset($stored[self::systemKey('vat_type')])) {
+        if (! isset($stored[self::systemKey('vat_type')])) {
             $defaults['vat_type'] = self::getLegacyValue($stored, 'direct_vat_type')
                 ?? self::getLegacyValue($stored, 'indirect_vat_type')
                 ?? $defaults['vat_type'];
         }
 
-        if (!isset($stored[self::systemKey('vat_value')])) {
+        if (! isset($stored[self::systemKey('vat_value')])) {
             $defaults['vat_value'] = self::getLegacyValue($stored, 'direct_vat_value')
                 ?? self::getLegacyValue($stored, 'indirect_vat_value')
                 ?? $defaults['vat_value'];
         }
 
-        if (!isset($stored[self::systemKey('platform_fee')])) {
+        if (! isset($stored[self::systemKey('platform_fee')])) {
             $legacyPlatformFee = self::getLegacyValue($stored, 'direct_platform_fee')
                 ?? self::getLegacyValue($stored, 'indirect_platform_fee');
             if ($legacyPlatformFee !== null && $legacyPlatformFee !== '') {
@@ -101,6 +101,7 @@ class FinancialSettings
     public static function getVatConfig(): array
     {
         $settings = self::get();
+
         return [
             'vat_type' => $settings['vat_type'],
             'vat_value' => $settings['vat_value'],
@@ -115,6 +116,7 @@ class FinancialSettings
     private static function getLegacyValue($stored, string $field): ?string
     {
         $systemKey = self::systemKey($field);
+
         return isset($stored[$systemKey]) ? $stored[$systemKey]->value : null;
     }
 }

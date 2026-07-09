@@ -13,14 +13,14 @@ class JobResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'tracking_number' => 'SHIP-' . str_pad($this->id, 8, '0', STR_PAD_LEFT),
+            'tracking_number' => 'SHIP-'.str_pad($this->id, 8, '0', STR_PAD_LEFT),
             'order_number' => $this->order_number,
 
             // Barcode information
             'barcode_number' => $this->barcode_number,
             'barcode_rider' => $this->whenLoaded(
                 'barcodeRider',
-                fn() => $this->barcodeRider ? [
+                fn () => $this->barcodeRider ? [
                     'id' => $this->barcodeRider->id,
                     'name' => $this->barcodeRider->name,
                     'phone' => $this->barcodeRider->phone,
@@ -30,7 +30,7 @@ class JobResource extends JsonResource
             // Shelf assignment (for drop point and warehouse keepers)
             'assigned_shelf' => $this->whenLoaded(
                 'shelf',
-                fn() => $this->shelf ? [
+                fn () => $this->shelf ? [
                     'id' => $this->shelf->id,
                     'code' => $this->shelf->code,
                     'location' => $this->shelf->location,
@@ -123,7 +123,7 @@ class JobResource extends JsonResource
             // Related models
             'customer' => $this->whenLoaded(
                 'user',
-                fn() => $this->user ? [
+                fn () => $this->user ? [
                     'id' => $this->user->id,
                     'name' => $this->user->name,
                     'phone' => $this->user->phone,
@@ -132,7 +132,7 @@ class JobResource extends JsonResource
 
             'rider' => $this->whenLoaded(
                 'rider',
-                fn() => $this->rider ? [
+                fn () => $this->rider ? [
                     'id' => $this->rider->id,
                     'name' => $this->rider->name,
                     'phone' => $this->rider->phone,
@@ -141,7 +141,7 @@ class JobResource extends JsonResource
 
             'review' => $this->whenLoaded(
                 'review',
-                fn() => $this->review ? [
+                fn () => $this->review ? [
                     'rating' => $this->review->rating,
                     'comment' => $this->review->comment,
                     'created_at' => $this->review->created_at?->toIso8601String(),
@@ -194,11 +194,12 @@ class JobResource extends JsonResource
         $normalized = trim($normalized, '_');
 
         $translationKey = $translationMap[$normalized] ?? null;
-        if (!$translationKey) {
+        if (! $translationKey) {
             return $consignmentType;
         }
 
         $translated = __($translationKey, [], 'ar');
+
         return $translated === $translationKey ? $consignmentType : $translated;
     }
 
@@ -284,11 +285,12 @@ class JobResource extends JsonResource
     public static function isRequestUserRole(string $role): bool
     {
         $user = request()->user();
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
         $roleNames = array_map('strtolower', $user->getRoleNames()->toArray());
+
         // dd($roleNames, $role);
         return in_array(strtolower($role), $roleNames, true);
     }
@@ -304,6 +306,7 @@ class JobResource extends JsonResource
 
         if ($this->delivery_speed === 'indirect') {
             $previousStatus = $this->getPreviousStatusBeforeCancellation();
+
             return $this->getIndirectPreviousLocation($previousStatus);
         }
 
@@ -315,7 +318,7 @@ class JobResource extends JsonResource
      */
     protected function getPreviousStatusBeforeCancellation(): ?string
     {
-        if (!empty($this->incomplete_status)) {
+        if (! empty($this->incomplete_status)) {
             return $this->incomplete_status;
         }
 
@@ -425,7 +428,7 @@ class JobResource extends JsonResource
     {
         $warehouse = $this->getWarehouseLocation();
 
-        if (!$warehouse) {
+        if (! $warehouse) {
             return $this->getSenderDropoffLocation();
         }
 
@@ -574,7 +577,7 @@ class JobResource extends JsonResource
     /**
      * Get the nearest drop point keeper based on location type.
      *
-     * @param string $locationType 'pickup' for handover location, 'delivery' for delivery location
+     * @param  string  $locationType  'pickup' for handover location, 'delivery' for delivery location
      */
     protected function getNearestDropPointKeeper(string $locationType): ?array
     {
@@ -605,7 +608,7 @@ class JobResource extends JsonResource
             ->orderBy('distance_km', 'asc')
             ->first();
 
-        if (!$keeper) {
+        if (! $keeper) {
             return null;
         }
 
@@ -615,7 +618,7 @@ class JobResource extends JsonResource
             'address' => $keeper->address,
             'latitude' => $keeper->latitude !== null ? (float) $keeper->latitude : null,
             'longitude' => $keeper->longitude !== null ? (float) $keeper->longitude : null,
-            'distance_km' => isset($keeper->distance_km) ? round((float)$keeper->distance_km, 3) : null,
+            'distance_km' => isset($keeper->distance_km) ? round((float) $keeper->distance_km, 3) : null,
         ];
     }
 
@@ -668,6 +671,7 @@ class JobResource extends JsonResource
         // For indirect delivery, determine based on current status
         if ($this->delivery_speed === 'indirect') {
             $currentStatus = $this->getCurrentIndirectStatus();
+
             return $this->getIndirectHandoverUser($currentStatus);
         }
 
@@ -715,6 +719,7 @@ class JobResource extends JsonResource
 
                 if ($warehouseAssignment && $warehouseAssignment->user) {
                     $warehouse = $warehouseAssignment->user;
+
                     return [
                         'id' => $warehouse->id,
                         'name' => $warehouse->name,
@@ -788,6 +793,7 @@ class JobResource extends JsonResource
 
                 if ($warehouseAssignment && $warehouseAssignment->user) {
                     $warehouse = $warehouseAssignment->user;
+
                     return [
                         'id' => $warehouse->id,
                         'name' => $warehouse->name,
@@ -820,6 +826,7 @@ class JobResource extends JsonResource
 
                 if ($keeperAssignment && $keeperAssignment->user) {
                     $keeper = $keeperAssignment->user;
+
                     return [
                         'id' => $keeper->id,
                         'name' => $keeper->name,
@@ -918,8 +925,9 @@ class JobResource extends JsonResource
                     'Dispatched from Warehouse',    // Warehouse keeper dispatched, driver needs to pick up from warehouse
                     'Pickup from Warehouse',        // Driver picking up from warehouse
                 ];
+
                 return 'warehouse';
-            } else if (in_array($currentStatus, $secondLegStatusess, true)) {
+            } elseif (in_array($currentStatus, $secondLegStatusess, true)) {
                 return 'warehouse2';
             }
             if (in_array($currentStatus, $secondLegStatuses, true)) {
@@ -1068,7 +1076,7 @@ class JobResource extends JsonResource
         }
 
         // If no status history found, return Pending (matching ShipmentStatus enum)
-        if (!$status) {
+        if (! $status) {
             return 'Pending';
         }
 
@@ -1089,13 +1097,14 @@ class JobResource extends JsonResource
         $user = request()->user();
 
         // If no user in context, return generic mapping
-        if (!$user) {
+        if (! $user) {
             return $this->getGenericStatusMapping($normalizedStatus);
         }
 
         // Helper for case-insensitive role checks
         $hasRole = function (string $role) use ($user): bool {
             $names = array_map('strtolower', $user->getRoleNames()->toArray());
+
             return in_array(strtolower($role), $names, true);
         };
 
@@ -1410,6 +1419,7 @@ class JobResource extends JsonResource
         // If financial settings specify percentage type
         if ($vatType && strtolower(trim($vatType)) === 'percentage' && $vatValue !== null) {
             $numericValue = is_numeric($vatValue) ? (float) $vatValue : (float) str_replace('%', '', $vatValue);
+
             return round($baseAmount * ($numericValue / 100), 2);
         }
 
@@ -1428,7 +1438,7 @@ class JobResource extends JsonResource
                 ? (float) str_replace('%', '', $rateString) / 100
                 : (float) $rateString;
         }
-        if (!is_finite($rate)) {
+        if (! is_finite($rate)) {
             $rate = 0.05;
         }
 
@@ -1449,7 +1459,7 @@ class JobResource extends JsonResource
 
         $goodsAmount = $this->parcel_amount !== null ? (float) $this->parcel_amount : 0.0;
         $serviceFee = $this->service_fee !== null ? (float) $this->service_fee : 0.0;
-        $insuranceFee =  $this->insurance_fee !== null ? (float) $this->insurance_fee : 0.0;
+        $insuranceFee = $this->insurance_fee !== null ? (float) $this->insurance_fee : 0.0;
         $subtotal = round($shipmentFee + $goodsAmount + $insuranceFee + $serviceFee, 2);
         $taxableSubtotal = round($shipmentFee + $platformFee + $insuranceFee + $serviceFee, 2);
 

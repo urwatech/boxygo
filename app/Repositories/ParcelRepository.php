@@ -23,12 +23,12 @@ class ParcelRepository extends AbstractRepository implements ParcelRepositoryInt
 
         if ($search) {
             $query->where(function ($builder) use ($search) {
-                $builder->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%');
+                $builder->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%');
             });
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 

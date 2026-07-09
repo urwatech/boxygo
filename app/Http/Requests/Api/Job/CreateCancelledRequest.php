@@ -21,7 +21,7 @@ class CreateCancelledRequest extends FormRequest
     {
         return [
             'shipment_id' => 'required|integer|exists:shipments,id',
-            'reason' => 'nullable|string'
+            'reason' => 'nullable|string',
         ];
     }
 

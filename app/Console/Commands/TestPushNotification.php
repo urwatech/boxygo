@@ -40,8 +40,9 @@ class TestPushNotification extends Command
 
             $this->info("Found {$users->count()} users with FCM tokens and push notifications enabled");
 
-            if (!$this->confirm('Do you want to send test notification to all these users?')) {
+            if (! $this->confirm('Do you want to send test notification to all these users?')) {
                 $this->info('Cancelled.');
+
                 return;
             }
 
@@ -82,7 +83,7 @@ class TestPushNotification extends Command
         // Send to specific user
         $userId = $this->argument('user_id');
 
-        if (!$userId) {
+        if (! $userId) {
             // Show users with FCM tokens
             $users = User::whereNotNull('fcm_token')
                 ->where('push_notifications', true)
@@ -91,17 +92,18 @@ class TestPushNotification extends Command
 
             if ($users->isEmpty()) {
                 $this->error('No users found with FCM tokens!');
+
                 return 1;
             }
 
             $this->info('Users with FCM tokens (showing first 10):');
             $this->table(
                 ['ID', 'Name', 'Device Type', 'FCM Token (truncated)'],
-                $users->map(fn($u) => [
+                $users->map(fn ($u) => [
                     $u->id,
                     $u->name,
                     $u->device_type ?? 'N/A',
-                    substr($u->fcm_token, 0, 30) . '...'
+                    substr($u->fcm_token, 0, 30).'...',
                 ])
             );
 
@@ -110,26 +112,28 @@ class TestPushNotification extends Command
 
         $user = User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             $this->error("User with ID {$userId} not found!");
+
             return 1;
         }
 
-        if (!$user->fcm_token) {
+        if (! $user->fcm_token) {
             $this->error("User {$user->name} does not have an FCM token!");
+
             return 1;
         }
 
-        if (!$user->push_notifications) {
+        if (! $user->push_notifications) {
             $this->warn("User {$user->name} has push notifications disabled!");
-            if (!$this->confirm('Send anyway?')) {
+            if (! $this->confirm('Send anyway?')) {
                 return 0;
             }
         }
 
         $this->info("Sending test notification to: {$user->name} (ID: {$user->id})");
-        $this->info("Device type: " . ($user->device_type ?? 'Unknown'));
-        $this->info("FCM Token: " . substr($user->fcm_token, 0, 40) . '...');
+        $this->info('Device type: '.($user->device_type ?? 'Unknown'));
+        $this->info('FCM Token: '.substr($user->fcm_token, 0, 40).'...');
         $this->newLine();
 
         // Test 1: Direct FCM Service
@@ -141,7 +145,7 @@ class TestPushNotification extends Command
             [
                 'type' => 'test',
                 'method' => 'direct',
-                'timestamp' => now()->toDateTimeString()
+                'timestamp' => now()->toDateTimeString(),
             ]
         );
 
@@ -158,12 +162,12 @@ class TestPushNotification extends Command
         try {
             $user->notify(new DeliveryAssignedNotification(
                 shipmentId: 'TEST-123',
-                trackingNumber: 'TEST-TRK-' . now()->format('His'),
+                trackingNumber: 'TEST-TRK-'.now()->format('His'),
                 assignedBy: 'Test Admin'
             ));
             $this->info('✅ Laravel notification sent successfully!');
         } catch (\Exception $e) {
-            $this->error('❌ Failed to send Laravel notification: ' . $e->getMessage());
+            $this->error('❌ Failed to send Laravel notification: '.$e->getMessage());
         }
 
         $this->newLine();

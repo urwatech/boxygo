@@ -2,33 +2,30 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
-use App\Models\User;
-use App\Models\Shipment;
-use App\Models\RiderMileageLog;
-use App\Models\ShipmentAssignment;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Models\ShipmentStatusHistory;
 use App\Enums\Role;
 use App\Enums\ShipmentStatus;
-use App\Notifications\DeliveryAssignedNotification;
+use App\Models\RiderMileageLog;
+use App\Models\Shipment;
+use App\Models\ShipmentAssignment;
+use App\Models\ShipmentStatusHistory;
+use App\Models\User;
 use App\Notifications\CustomerRiderAssignedNotification;
+use App\Notifications\DeliveryAssignedNotification;
 use App\Notifications\DeliveryRiderRequiredNotification;
-use App\Services\MtnSmsService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ShipmentTrackingService
 {
     /**
      * Record a new user assignment for a shipment stage
      *
-     * @param Shipment $shipment The shipment
-     * @param User $user The user being assigned
-     * @param string $role The role (from Role enum: rider, car_driver, drop_point_keeper, warehouse_keeper)
-     * @param string $stage The delivery stage (from DeliveryStage enum)
-     * @param User|null $assignedBy Who made the assignment (null for system)
-     * @param string|null $notes Optional notes
-     * @return ShipmentAssignment
+     * @param  Shipment  $shipment  The shipment
+     * @param  User  $user  The user being assigned
+     * @param  string  $role  The role (from Role enum: rider, car_driver, drop_point_keeper, warehouse_keeper)
+     * @param  string  $stage  The delivery stage (from DeliveryStage enum)
+     * @param  User|null  $assignedBy  Who made the assignment (null for system)
+     * @param  string|null  $notes  Optional notes
      */
     public function assignUser(
         Shipment $shipment,
@@ -46,7 +43,7 @@ class ShipmentTrackingService
             ->orderBy('assigned_at', 'desc')
             ->first();
 
-        if ($existingUnfinished && (int)$existingUnfinished->user_id !== (int)$user->id) {
+        if ($existingUnfinished && (int) $existingUnfinished->user_id !== (int) $user->id) {
             throw new \Exception('This job has already been assigned for this stage and cannot be reassigned to another user.');
         }
 
@@ -69,8 +66,8 @@ class ShipmentTrackingService
                 'user_id' => $user->id,
                 'user_name' => $user->name,
                 'user_email' => $user->email,
-                'has_fcm_token' => !empty($user->fcm_token),
-                'fcm_token_preview' => $user->fcm_token ? substr($user->fcm_token, 0, 30) . '...' : null,
+                'has_fcm_token' => ! empty($user->fcm_token),
+                'fcm_token_preview' => $user->fcm_token ? substr($user->fcm_token, 0, 30).'...' : null,
                 'push_notifications_enabled' => $user->push_notifications,
                 'device_type' => $user->device_type,
                 'assigned_by' => $assignedBy?->name ?? 'System',
@@ -111,7 +108,7 @@ class ShipmentTrackingService
         // Optional: Send SMS to the assigned rider
         if ($sendRiderSms) {
             try {
-                if (!empty($user->phone_number)) {
+                if (! empty($user->phone_number)) {
                     $smsService = app(MtnSmsService::class);
                     $message = sprintf(
                         'New order assigned. Tracking number: %s.',
@@ -186,9 +183,6 @@ class ShipmentTrackingService
 
     /**
      * Mark an assignment as started
-     *
-     * @param ShipmentAssignment $assignment
-     * @return ShipmentAssignment
      */
     public function startAssignment(ShipmentAssignment $assignment): ShipmentAssignment
     {
@@ -202,9 +196,7 @@ class ShipmentTrackingService
     /**
      * Mark an assignment as completed
      *
-     * @param ShipmentAssignment $assignment
-     * @param string|null $notes Optional completion notes
-     * @return ShipmentAssignment
+     * @param  string|null  $notes  Optional completion notes
      */
     public function completeAssignment(ShipmentAssignment $assignment, ?string $notes = null): ShipmentAssignment
     {
@@ -212,7 +204,7 @@ class ShipmentTrackingService
 
         if ($notes) {
             $updateData['notes'] = $assignment->notes
-                ? $assignment->notes . "\n\nCompletion notes: " . $notes
+                ? $assignment->notes."\n\nCompletion notes: ".$notes
                 : $notes;
         }
 
@@ -224,12 +216,11 @@ class ShipmentTrackingService
     /**
      * Record a status change with full audit trail
      *
-     * @param Shipment $shipment The shipment
-     * @param string $newStatus The new status
-     * @param User|null $user Who made the change (null for system)
-     * @param int|null $progressIndex Current progress index
-     * @param array $options Additional options [latitude, longitude, location_name, notes, metadata]
-     * @return ShipmentStatusHistory
+     * @param  Shipment  $shipment  The shipment
+     * @param  string  $newStatus  The new status
+     * @param  User|null  $user  Who made the change (null for system)
+     * @param  int|null  $progressIndex  Current progress index
+     * @param  array  $options  Additional options [latitude, longitude, location_name, notes, metadata]
      */
     public function recordStatusChange(
         Shipment $shipment,
@@ -259,7 +250,7 @@ class ShipmentTrackingService
         if ($updateShipment) {
             $shipment->update(['status' => $newStatus]);
 
-            if($shipment->booking_type == 'return'){
+            if ($shipment->booking_type == 'return') {
                 $shipment->update(['return_status' => $newStatus]);
             }
         }
@@ -274,7 +265,7 @@ class ShipmentTrackingService
         if (
             $newStatus === ShipmentStatus::ARRIVED_AT_DROP_POINT_2->value
             && in_array($shipment->indirect_delivery_mode, ['door_to_door', 'drop_point_to_door'], true)
-            && !$shipment->delivery_rider_id
+            && ! $shipment->delivery_rider_id
         ) {
             $admins = User::whereHas('roles', fn ($q) => $q->where('name', Role::SUPERADMIN->value))->get();
             $notification = new DeliveryRiderRequiredNotification(
@@ -293,10 +284,9 @@ class ShipmentTrackingService
     /**
      * Calculate and log mileage for a rider based on their movement
      *
-     * @param Shipment $shipment The shipment being tracked
-     * @param User $user The rider/driver
-     * @param ShipmentStatusHistory $currentHistory Current status history with GPS coordinates
-     * @return RiderMileageLog|null
+     * @param  Shipment  $shipment  The shipment being tracked
+     * @param  User  $user  The rider/driver
+     * @param  ShipmentStatusHistory  $currentHistory  Current status history with GPS coordinates
      */
     protected function logRiderMileage(
         Shipment $shipment,
@@ -321,7 +311,7 @@ class ShipmentTrackingService
             ->first();
 
         // If no previous location, nothing to calculate
-        if (!$previousHistory) {
+        if (! $previousHistory) {
             return null;
         }
 
@@ -344,12 +334,6 @@ class ShipmentTrackingService
      * Record status change and start assignment in one transaction
      * Useful when scanning parcels or picking up
      *
-     * @param Shipment $shipment
-     * @param User $user
-     * @param string $newStatus
-     * @param string $role
-     * @param string $stage
-     * @param array $options
      * @return array ['assignment' => ShipmentAssignment, 'history' => ShipmentStatusHistory]
      */
     public function assignAndUpdateStatus(
@@ -400,11 +384,8 @@ class ShipmentTrackingService
      * Complete current stage and prepare for next stage
      * Useful for handoffs between users (e.g., drop point keeper to car driver)
      *
-     * @param Shipment $shipment
-     * @param User $completingUser User completing current stage
-     * @param string $newStatus Status after completion
-     * @param array $options
-     * @return ShipmentStatusHistory
+     * @param  User  $completingUser  User completing current stage
+     * @param  string  $newStatus  Status after completion
      */
     public function completeCurrentStage(
         Shipment $shipment,
@@ -448,7 +429,6 @@ class ShipmentTrackingService
     /**
      * Get the current active user(s) for a shipment
      *
-     * @param Shipment $shipment
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getCurrentActiveUsers(Shipment $shipment)
@@ -459,7 +439,6 @@ class ShipmentTrackingService
     /**
      * Get the complete audit trail for a shipment
      *
-     * @param Shipment $shipment
      * @return array Combined timeline of assignments and status changes
      */
     public function getAuditTrail(Shipment $shipment): array
@@ -470,7 +449,6 @@ class ShipmentTrackingService
     /**
      * Get summary of who handled the shipment at each stage
      *
-     * @param Shipment $shipment
      * @return array Stage-wise summary
      */
     public function getStageWiseSummary(Shipment $shipment): array
@@ -483,7 +461,7 @@ class ShipmentTrackingService
         $summary = [];
 
         foreach ($assignments as $assignment) {
-            if (!isset($summary[$assignment->stage])) {
+            if (! isset($summary[$assignment->stage])) {
                 $summary[$assignment->stage] = [];
             }
 
@@ -506,10 +484,6 @@ class ShipmentTrackingService
 
     /**
      * Check if a user has an active assignment for a shipment
-     *
-     * @param Shipment $shipment
-     * @param User $user
-     * @return bool
      */
     public function userHasActiveAssignment(Shipment $shipment, User $user): bool
     {
@@ -520,11 +494,6 @@ class ShipmentTrackingService
 
     /**
      * Get the assignment for a specific user and stage
-     *
-     * @param Shipment $shipment
-     * @param User $user
-     * @param string $stage
-     * @return ShipmentAssignment|null
      */
     public function getAssignmentForUserAndStage(Shipment $shipment, User $user, string $stage): ?ShipmentAssignment
     {

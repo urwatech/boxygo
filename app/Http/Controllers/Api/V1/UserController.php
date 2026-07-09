@@ -3,23 +3,21 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\ShipmentRepositoryInterface;
-use App\Http\ApiResponse;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\User\UpdateProfileRequest;
-use App\Http\Requests\Api\User\UpdateDocumentsRequest;
-use App\Http\Requests\Api\User\UpdateProfilePictureRequest;
-use App\Http\Requests\Api\User\DepositCashRequest;
-use App\Http\Resources\UserResource;
-use App\Http\Resources\JobResource;
-use App\Services\UserService;
 use App\Enums\Role;
 use App\Enums\ShipmentStatus;
+use App\Http\ApiResponse;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\User\DepositCashRequest;
+use App\Http\Requests\Api\User\UpdateDocumentsRequest;
+use App\Http\Requests\Api\User\UpdateProfilePictureRequest;
+use App\Http\Requests\Api\User\UpdateProfileRequest;
+use App\Http\Resources\JobResource;
+use App\Http\Resources\UserResource;
 use App\Models\PaymentTransaction;
 use App\Models\Shipment;
 use App\Models\User;
-use App\Models\WalletTransaction;
+use App\Services\UserService;
 use App\Services\WalletService;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -27,7 +25,7 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    public function __construct(private UserService $userService, private readonly WalletService $walletService, private readonly ShipmentRepositoryInterface $repository,) {}
+    public function __construct(private UserService $userService, private readonly WalletService $walletService, private readonly ShipmentRepositoryInterface $repository) {}
 
     public function me(Request $request): JsonResponse
     {
@@ -87,7 +85,7 @@ class UserController extends Controller
             'amount' => 'required|numeric',
             'status' => 'required|in:completed,held',
             'description' => 'required|string',
-            'user_id' => 'required|exists:users,id'
+            'user_id' => 'required|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -117,27 +115,27 @@ class UserController extends Controller
 
         $documents = [
             'driving_license' => [
-                'uploaded' => !empty($user->driving_license),
+                'uploaded' => ! empty($user->driving_license),
                 'url' => media_url($user->driving_license),
                 'filename' => $user->driving_license ? basename($user->driving_license) : null,
             ],
             'id_card_front' => [
-                'uploaded' => !empty($user->id_card_front),
+                'uploaded' => ! empty($user->id_card_front),
                 'url' => media_url($user->id_card_front),
                 'filename' => $user->id_card_front ? basename($user->id_card_front) : null,
             ],
             'id_card_back' => [
-                'uploaded' => !empty($user->id_card_back),
+                'uploaded' => ! empty($user->id_card_back),
                 'url' => media_url($user->id_card_back),
                 'filename' => $user->id_card_back ? basename($user->id_card_back) : null,
             ],
             'passport' => [
-                'uploaded' => !empty($user->passport),
+                'uploaded' => ! empty($user->passport),
                 'url' => media_url($user->passport),
                 'filename' => $user->passport ? basename($user->passport) : null,
             ],
             'idp' => [
-                'uploaded' => !empty($user->idp),
+                'uploaded' => ! empty($user->idp),
                 'url' => media_url($user->idp),
                 'filename' => $user->idp ? basename($user->idp) : null,
             ],
@@ -190,19 +188,19 @@ class UserController extends Controller
     {
         try {
             $user = $request->user();
-    
+
             $oldAvatar = $user->avatar_path;
-    
+
             // Store new image
             $avatarPath = store_public_upload(
                 $request->file('profile_picture'),
                 'user-uploads',
                 'avatars'
             );
-    
+
             // Update DB
             $user->update([
-                'avatar_path' => $avatarPath
+                'avatar_path' => $avatarPath,
             ]);
 
             if ($oldAvatar) {
@@ -211,22 +209,22 @@ class UserController extends Controller
                 } catch (\Exception $e) {
                     Log::warning('Failed to delete old profile picture', [
                         'user_id' => $user->id,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
-    
+
             return ApiResponse::success(
                 new UserResource($user->fresh()),
                 __('profilePictureUpdatedSuccessfully')
             );
-    
+
         } catch (\Exception $e) {
             Log::error('Profile picture update failed', [
                 'user_id' => optional($request->user())->id,
                 'error' => $e->getMessage(),
             ]);
-    
+
             return ApiResponse::error(
                 __('somethingWentWrongWhileUpdatingProfilePicture'),
                 500
@@ -315,7 +313,7 @@ class UserController extends Controller
             $cashCollectedQuery->whereIn('transaction_type', [
                 'rider_collection',
                 'car_driver_collection',
-                'drop_point_keeper_collection'
+                'drop_point_keeper_collection',
             ]);
         }
 
@@ -415,8 +413,7 @@ class UserController extends Controller
      * For direct shipments: pickup to delivery distance
      * For indirect shipments: only the segments that the user actually traveled
      *
-     * @param \Illuminate\Support\Collection $completedShipments
-     * @return float
+     * @param  \Illuminate\Support\Collection  $completedShipments
      */
     private function calculateTotalMiles($completedShipments): float
     {
@@ -447,9 +444,7 @@ class UserController extends Controller
      * Calculate miles for indirect shipment based on user's completed segments
      * Uses shipment_status_history table to get actual GPS coordinates
      *
-     * @param \App\Models\Shipment $shipment
-     * @param int $userId
-     * @return float
+     * @param  \App\Models\Shipment  $shipment
      */
     private function calculateIndirectShipmentMiles($shipment, int $userId): float
     {
@@ -490,8 +485,7 @@ class UserController extends Controller
      * Get pickup and delivery segments from status history
      * Based on the actual status transitions in shipment_status_history table
      *
-     * @param \Illuminate\Support\Collection $statusHistory
-     * @return array
+     * @param  \Illuminate\Support\Collection  $statusHistory
      */
     private function getSegmentsForUser($statusHistory): array
     {
@@ -638,12 +632,6 @@ class UserController extends Controller
     /**
      * Calculate distance between two GPS coordinates using Haversine formula
      * Returns distance in kilometers
-     *
-     * @param float|null $lat1
-     * @param float|null $lon1
-     * @param float|null $lat2
-     * @param float|null $lon2
-     * @return float
      */
     private function calculateDistanceInKm(?float $lat1, ?float $lon1, ?float $lat2, ?float $lon2): float
     {
@@ -674,6 +662,7 @@ class UserController extends Controller
             // Helper for case-insensitive role checks
             $hasRole = function (User $user, string $role): bool {
                 $names = array_map('strtolower', $user->getRoleNames()->toArray());
+
                 return in_array(strtolower($role), $names, true);
             };
 
@@ -682,11 +671,11 @@ class UserController extends Controller
             // For car drivers and drop point keepers: check payment transaction
             $shipment = \App\Models\Shipment::with(['riderCollection', 'adminSettlement'])
                 ->where('id', $data['shipment_id'])
-                ->where(function($q) {
+                ->where(function ($q) {
                     $q->where('payment_method', 'cash')->orWhere('receiver_payment_method', 'cash');
                 })
                 ->first();
-            if (!$shipment) {
+            if (! $shipment) {
                 return ApiResponse::notFound(__('commonShipmentNotFound'));
             }
 
@@ -721,7 +710,7 @@ class UserController extends Controller
                 return ApiResponse::badRequest(__('onlyRidersCarDriversOrDropPointKeepersCanDepositCash'));
             }
 
-            if (!$paymentTransaction) {
+            if (! $paymentTransaction) {
                 return ApiResponse::notFound(__('youHaveNotCollectedPaymentForThisShipment'));
             }
 
@@ -744,7 +733,7 @@ class UserController extends Controller
             // Depositing means the handover to admin is complete
             $paymentTransaction->update([
                 'rider_deposited_at' => now(),
-                'notes' => ($paymentTransaction->notes ? $paymentTransaction->notes . ' | ' : '') .
+                'notes' => ($paymentTransaction->notes ? $paymentTransaction->notes.' | ' : '').
                     ($data['notes'] ?? __('markedAsDeposited')),
             ]);
 
@@ -758,7 +747,7 @@ class UserController extends Controller
             return ApiResponse::success(
                 [
                     'shipment_id' => $shipment->id,
-                    'ship_id' => 'MP' . str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
+                    'ship_id' => 'MP'.str_pad($shipment->id, 7, '0', STR_PAD_LEFT),
                     'amount' => (int) ($paymentTransaction->amount ?? $shipment->parcel_amount ?? $shipment->total_fee),
                     'status' => 'Delivered',
                     'message' => __('cashDepositedSuccessfullyHandoverComplete'),
@@ -783,7 +772,7 @@ class UserController extends Controller
         $isDriver = in_array(strtolower(Role::RIDER->value), $names, true)
             || in_array(strtolower(Role::CAR_DRIVER->value), $names, true);
 
-        if (!$isDriver) {
+        if (! $isDriver) {
             return ApiResponse::badRequest(__('onlyRidersOrDriversCanQueryNearestDropPointKeepers'));
         }
 
@@ -808,7 +797,7 @@ class UserController extends Controller
             ->orderBy('distance_km', 'asc')
             ->first();
 
-        if (!$keeper) {
+        if (! $keeper) {
             return ApiResponse::notFound(__('noDropPointKeeperWithAValidLocationIsConfigured'));
         }
 

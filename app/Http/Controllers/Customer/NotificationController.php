@@ -50,7 +50,7 @@ class NotificationController extends Controller
                         'read_at' => $notification->read_at,
                         'created_at' => $notification->created_at,
                         'created_at_human' => $notification->created_at->diffForHumans(),
-                        'is_clickable' => !empty($notification->data['shipment_id']),
+                        'is_clickable' => ! empty($notification->data['shipment_id']),
                     ];
                 })->values(),
             ];
@@ -91,7 +91,7 @@ class NotificationController extends Controller
 
         $notification = $user->notifications()->find($id);
 
-        if (!$notification) {
+        if (! $notification) {
             return response()->json([
                 'success' => false,
                 'message' => __('notificationNotFound'),

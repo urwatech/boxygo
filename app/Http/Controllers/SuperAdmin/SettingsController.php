@@ -23,12 +23,12 @@ class SettingsController extends Controller
 
         // Allow access if user has at least one settings permission.
         if (
-            !$user
+            ! $user
             || (
-                !$user->can('settings.manage')
-                && !$user->can('settings.view')
-                && !$user->can('settings.profile')
-                && !$user->can('settings.password')
+                ! $user->can('settings.manage')
+                && ! $user->can('settings.view')
+                && ! $user->can('settings.profile')
+                && ! $user->can('settings.password')
             )
         ) {
             abort(401);
@@ -63,7 +63,7 @@ class SettingsController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('settings.profile')) {
+        if (! $user || ! $user->can('settings.profile')) {
             abort(401);
         }
 
@@ -100,7 +100,7 @@ class SettingsController extends Controller
                 delete_media_file($user->avatar_path);
             }
 
-            $fileName = 'avatar_' . $user->id . '_' . time();
+            $fileName = 'avatar_'.$user->id.'_'.time();
             $data['avatar_path'] = store_public_upload($avatar, 'admin-settings', 'avatars', $fileName);
         }
 
@@ -119,7 +119,7 @@ class SettingsController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('settings.password')) {
+        if (! $user || ! $user->can('settings.password')) {
             abort(401);
         }
 
@@ -142,8 +142,8 @@ class SettingsController extends Controller
         $user = $request->user();
 
         if (
-            !$user
-            || (!$user->can('settings.profile') && !$user->can('settings.financial'))
+            ! $user
+            || (! $user->can('settings.profile') && ! $user->can('settings.financial'))
         ) {
             abort(401);
         }
@@ -182,11 +182,11 @@ class SettingsController extends Controller
         $allowedFields = array_keys(FinancialSettings::defaults());
         $payload = array_intersect_key($normalized, array_flip($allowedFields));
 
-        if (empty($payload) && !$hasDeleteAccountToggle) {
+        if (empty($payload) && ! $hasDeleteAccountToggle) {
             return back();
         }
 
-        if (!empty($payload)) {
+        if (! empty($payload)) {
             FinancialSettings::persist($payload);
         }
 
@@ -202,8 +202,8 @@ class SettingsController extends Controller
         $user = $request->user();
 
         if (
-            !$user
-            || (!$user->can('settings.profile') && !$user->can('settings.manage'))
+            ! $user
+            || (! $user->can('settings.profile') && ! $user->can('settings.manage'))
         ) {
             abort(401);
         }
@@ -227,7 +227,7 @@ class SettingsController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('settings.profile') && !$user->can('settings.password'))) {
+        if (! $user || (! $user->can('settings.profile') && ! $user->can('settings.password'))) {
             abort(401);
         }
 

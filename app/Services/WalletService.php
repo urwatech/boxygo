@@ -1,5 +1,5 @@
 <?php
- 
+
 namespace App\Services;
 
 use App\Enums\Role;
@@ -10,7 +10,7 @@ use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use App\Support\SortHelper;
 use Illuminate\Support\Facades\DB;
- 
+
 class WalletService
 {
     /**
@@ -23,7 +23,7 @@ class WalletService
             ['balance' => 0]
         );
     }
- 
+
     /**
      * Get or create a wallet for a user.
      */
@@ -105,7 +105,7 @@ class WalletService
                 $cashCollectedQuery->whereIn('transaction_type', [
                     'rider_collection',
                     'car_driver_collection',
-                    'drop_point_keeper_collection'
+                    'drop_point_keeper_collection',
                 ]);
             }
 
@@ -115,7 +115,7 @@ class WalletService
                 'id' => $wallet->id,
                 'user_id' => $user->id,
                 'name' => $user->name,
-                'type' => $user->roles()->first()->name == 'customer' ? "Customer" : "Employee",
+                'type' => $user->roles()->first()->name == 'customer' ? 'Customer' : 'Employee',
                 'role' => $user->roles()->first()->name,
                 'balance' => (float) $wallet->balance,
                 'held_balance' => (float) $wallet->held_balance,
@@ -216,22 +216,24 @@ class WalletService
     public function getBalanceDetails(int $userId): array
     {
         $wallet = $this->getOrCreateWallet($userId);
+
         return [
             'total' => (float) $wallet->balance,
             'held' => (float) $wallet->held_balance,
             'available' => (float) ($wallet->balance - $wallet->held_balance),
         ];
     }
- 
+
     /**
      * Get the available balance of a user's wallet.
      */
     public function getBalance(int $userId): float
     {
         $wallet = $this->getOrCreateWallet($userId);
+
         return (float) ($wallet->balance - $wallet->held_balance);
     }
- 
+
     /**
      * Credit an amount to a user's wallet.
      */
@@ -240,12 +242,12 @@ class WalletService
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Credit amount must be positive.');
         }
- 
+
         return DB::transaction(function () use ($userId, $amount, $description, $metadata) {
             $wallet = $this->getOrCreateWallet($userId);
- 
+
             $wallet->increment('balance', $amount);
- 
+
             return $wallet->transactions()->create([
                 'type' => 'credit',
                 'amount' => $amount,
@@ -255,7 +257,7 @@ class WalletService
             ]);
         });
     }
- 
+
     /**
      * Debit an amount from a user's wallet.
      */
@@ -264,17 +266,17 @@ class WalletService
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Debit amount must be positive.');
         }
- 
+
         return DB::transaction(function () use ($userId, $amount, $description, $metadata) {
             $wallet = $this->getOrCreateWallet($userId);
- 
+
             $available = $wallet->balance;
             if ($available < $amount) {
                 throw new \RuntimeException('Insufficient available wallet balance.');
             }
- 
+
             $wallet->decrement('balance', $amount);
- 
+
             return $wallet->transactions()->create([
                 'type' => 'debit',
                 'amount' => $amount,
@@ -284,7 +286,7 @@ class WalletService
             ]);
         });
     }
- 
+
     /**
      * Hold an amount in a user's wallet.
      */
@@ -293,17 +295,17 @@ class WalletService
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Hold amount must be positive.');
         }
- 
+
         return DB::transaction(function () use ($userId, $amount, $description, $metadata) {
             $wallet = $this->getOrCreateWallet($userId);
- 
+
             // $available = $wallet->held_balance;
             // if ($available < $amount) {
             //     throw new \RuntimeException('Insufficient available wallet balance for hold.');
             // }
- 
+
             $wallet->increment('held_balance', $amount);
- 
+
             return $wallet->transactions()->create([
                 'type' => 'debit',
                 'amount' => $amount,
@@ -313,7 +315,7 @@ class WalletService
             ]);
         });
     }
- 
+
     /**
      * Debit and Hold an amount in a user's wallet.
      */
@@ -322,13 +324,13 @@ class WalletService
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Hold amount must be positive.');
         }
- 
+
         return DB::transaction(function () use ($userId, $amount, $description, $metadata) {
             $wallet = $this->getOrCreateWallet($userId);
- 
+
             $wallet->increment('held_balance', $amount);
             $wallet->decrement('balance', $amount);
- 
+
             return $wallet->transactions()->create([
                 'type' => 'debit',
                 'amount' => $amount,
@@ -338,7 +340,7 @@ class WalletService
             ]);
         });
     }
- 
+
     /**
      * Hold an amount in a user's wallet.
      */
@@ -347,12 +349,12 @@ class WalletService
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Hold amount must be positive.');
         }
- 
+
         return DB::transaction(function () use ($userId, $amount, $description, $metadata) {
             $wallet = $this->getOrCreateWallet($userId);
- 
+
             $wallet->increment('held_balance', $amount);
- 
+
             $wallet->transactions()->create([
                 'type' => 'credit',
                 'amount' => $amount,
@@ -360,7 +362,7 @@ class WalletService
                 'description' => $description,
                 'metadata' => $metadata,
             ]);
- 
+
             return $wallet->transactions()->create([
                 'type' => 'debit',
                 'amount' => $amount,
@@ -370,7 +372,7 @@ class WalletService
             ]);
         });
     }
- 
+
     /**
      * Hold an amount in a user's wallet.
      */
@@ -379,18 +381,18 @@ class WalletService
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Hold amount must be positive.');
         }
- 
+
         return DB::transaction(function () use ($userId, $amount, $description, $metadata) {
             $wallet = $this->getOrCreateWallet($userId);
- 
+
             // $available = $wallet->held_balance;
             // if ($available < $amount) {
             //     throw new \RuntimeException('Insufficient available wallet balance for hold.');
             // }
- 
+
             $wallet->increment('held_balance', $amount);
             $wallet->decrement('balance', $amount);
- 
+
             return $wallet->transactions()->create([
                 'type' => 'credit',
                 'amount' => $amount,
@@ -400,7 +402,7 @@ class WalletService
             ]);
         });
     }
- 
+
     /**
      * Release a held amount back to the user's available balance.
      */
@@ -408,21 +410,21 @@ class WalletService
     {
         return DB::transaction(function () use ($transactionId) {
             $transaction = WalletTransaction::lockForUpdate()->find($transactionId);
- 
-            if (!$transaction || $transaction->status !== 'held') {
+
+            if (! $transaction || $transaction->status !== 'held') {
                 return false;
             }
- 
+
             $wallet = Wallet::lockForUpdate()->find($transaction->wallet_id);
- 
+
             $wallet->decrement('held_balance', $transaction->amount);
- 
+
             $transaction->update(['status' => 'released']);
- 
+
             return true;
         });
     }
- 
+
     /**
      * Release a held amount has deduct.
      */
@@ -431,17 +433,17 @@ class WalletService
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Debit amount must be positive.');
         }
- 
+
         return DB::transaction(function () use ($userId, $amount, $description, $metadata) {
             $wallet = $this->getOrCreateWallet($userId);
- 
+
             $available = $wallet->held_balance;
             if ($available < $amount) {
                 throw new \RuntimeException('Insufficient available wallet held balance.');
             }
- 
+
             $wallet->decrement('held_balance', $amount);
- 
+
             $wallet->transactions()->create([
                 'type' => 'debit',
                 'amount' => $amount,
@@ -449,22 +451,22 @@ class WalletService
                 'description' => $description,
                 'metadata' => $metadata,
             ]);
- 
+
             return true;
         });
     }
- 
+
     /**
      * Confirm a held amount (permanent debit).
      */
-    public function pendingHold(int $transactionId = null, int $userId = null, $amount = 0): bool
+    public function pendingHold(?int $transactionId = null, ?int $userId = null, $amount = 0): bool
     {
         if ($userId) {
             return DB::transaction(function () use ($userId) {
                 $wallet = Wallet::lockForUpdate()->where('user_id', $userId)->first();
- 
+
                 $wallet->increament('held_balance', $transaction->amount);
- 
+
                 $wallet->transactions()->create([
                     'type' => 'credit',
                     'amount' => $amount || 0,
@@ -472,35 +474,35 @@ class WalletService
                     'description' => ' - Pending Confirmation',
                     'metadata' => null,
                 ]);
- 
+
                 return true;
             });
         } else {
             return DB::transaction(function () use ($transactionId) {
                 $transaction = WalletTransaction::lockForUpdate()->find($transactionId);
- 
-                if (!$transaction || $transaction->status !== 'held') {
+
+                if (! $transaction || $transaction->status !== 'held') {
                     return false;
                 }
- 
+
                 $wallet = Wallet::lockForUpdate()->find($transaction->wallet_id);
- 
+
                 $wallet->decrement('balance', $transaction->amount);
                 $wallet->decrement('held_balance', $transaction->amount);
- 
+
                 $wallet->transactions()->create([
                     'type' => 'credit',
                     'amount' => $transaction->amount,
                     'status' => 'pending',
-                    'description' => $transaction->description . ' - Pending Confirmation',
+                    'description' => $transaction->description.' - Pending Confirmation',
                     'metadata' => $transaction->metadata,
                 ]);
- 
+
                 return true;
             });
         }
     }
- 
+
     /**
      * Confirm a held amount (permanent debit).
      */
@@ -508,29 +510,29 @@ class WalletService
     {
         return DB::transaction(function () use ($transactionId) {
             $transaction = WalletTransaction::lockForUpdate()->find($transactionId);
- 
-            if (!$transaction || $transaction->status !== 'held') {
+
+            if (! $transaction || $transaction->status !== 'held') {
                 return false;
             }
- 
+
             $wallet = Wallet::lockForUpdate()->find($transaction->wallet_id);
- 
+
             $wallet->decrement('balance', $transaction->amount);
             $wallet->decrement('held_balance', $transaction->amount);
- 
+
             $transaction->update(['status' => 'completed']);
- 
+
             return true;
         });
     }
- 
+
     /**
      * Get transaction history for a user's wallet.
      */
     public function getTransactions(int $userId, int $limit = 50): \Illuminate\Database\Eloquent\Collection
     {
         $wallet = $this->getOrCreateWallet($userId);
+
         return $wallet->transactions()->orderBy('created_at', 'desc')->limit($limit)->get();
     }
 }
- 

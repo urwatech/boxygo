@@ -9,8 +9,6 @@ use InvalidArgumentException;
  *
  * Calculates shipment prices between cities based on governorate and city type.
  * Pricing logic is driven by configuration values in config/pricing.php.
- *
- * @package App\Services
  */
 class PriceCalculator
 {
@@ -18,6 +16,7 @@ class PriceCalculator
      * City type constants
      */
     public const TYPE_MAIN_CITY = 'M';
+
     public const TYPE_COUNTRYSIDE = 'CS';
 
     /**
@@ -48,11 +47,12 @@ class PriceCalculator
      * 3. If both are countryside (CS) but different governorates, add "cs"
      * 4. Always add "inside_city" (base charge)
      *
-     * @param string|int $fromGov Sender's governorate ID or short code
-     * @param string $fromType Sender's city type (M or CS)
-     * @param string|int $toGov Receiver's governorate ID or short code
-     * @param string $toType Receiver's city type (M or CS)
+     * @param  string|int  $fromGov  Sender's governorate ID or short code
+     * @param  string  $fromType  Sender's city type (M or CS)
+     * @param  string|int  $toGov  Receiver's governorate ID or short code
+     * @param  string  $toType  Receiver's city type (M or CS)
      * @return float The calculated shipment price
+     *
      * @throws InvalidArgumentException If invalid parameters provided
      */
     public function calculate(
@@ -102,10 +102,6 @@ class PriceCalculator
     /**
      * Calculate with breakdown showing how the price was calculated
      *
-     * @param string|int $fromGov
-     * @param string $fromType
-     * @param string|int $toGov
-     * @param string $toType
      * @return array ['total' => float, 'breakdown' => array]
      */
     public function calculateWithBreakdown(
@@ -160,7 +156,7 @@ class PriceCalculator
         // Calculate total
         $total = array_sum(
             array_column(
-                array_filter($breakdown, fn($item) => $item['applied']),
+                array_filter($breakdown, fn ($item) => $item['applied']),
                 'amount'
             )
         );
@@ -183,8 +179,6 @@ class PriceCalculator
 
     /**
      * Get pricing configuration
-     *
-     * @return array
      */
     public function getConfig(): array
     {
@@ -201,17 +195,17 @@ class PriceCalculator
         $requiredKeys = ['different_gov', 'm_cs', 'inside_city', 'cs'];
 
         foreach ($requiredKeys as $key) {
-            if (!isset($this->config[$key])) {
+            if (! isset($this->config[$key])) {
                 throw new InvalidArgumentException(
-                    "Missing required pricing configuration key: {$key}. " .
-                    "Please check config/pricing.php"
+                    "Missing required pricing configuration key: {$key}. ".
+                    'Please check config/pricing.php'
                 );
             }
 
-            if (!is_numeric($this->config[$key])) {
+            if (! is_numeric($this->config[$key])) {
                 throw new InvalidArgumentException(
-                    "Pricing configuration key '{$key}' must be numeric. " .
-                    "Please check config/pricing.php"
+                    "Pricing configuration key '{$key}' must be numeric. ".
+                    'Please check config/pricing.php'
                 );
             }
         }
@@ -220,15 +214,13 @@ class PriceCalculator
     /**
      * Validate city type
      *
-     * @param string $type
-     * @param string $paramName
      * @throws InvalidArgumentException
      */
     private function validateCityType(string $type, string $paramName): void
     {
-        if (!in_array($type, self::VALID_TYPES, true)) {
+        if (! in_array($type, self::VALID_TYPES, true)) {
             throw new InvalidArgumentException(
-                "Invalid city type '{$type}' for parameter '{$paramName}'. " .
+                "Invalid city type '{$type}' for parameter '{$paramName}'. ".
                 "Expected 'M' (Main City) or 'CS' (Countryside)."
             );
         }
@@ -237,9 +229,6 @@ class PriceCalculator
     /**
      * Normalize governorate value for comparison
      * Converts to string and trims whitespace
-     *
-     * @param string|int $governorate
-     * @return string
      */
     private function normalizeGovernorate(string|int $governorate): string
     {
@@ -248,9 +237,6 @@ class PriceCalculator
 
     /**
      * Get human-readable label for city type
-     *
-     * @param string $type
-     * @return string
      */
     private function getCityTypeLabel(string $type): string
     {

@@ -17,7 +17,7 @@ trait LocalizedFcm
 
         // Also replace {{placeholder}} syntax used in JSON translation files
         foreach ($replace as $placeholder => $value) {
-            $translated = str_replace('{{' . $placeholder . '}}', (string) $value, $translated);
+            $translated = str_replace('{{'.$placeholder.'}}', (string) $value, $translated);
         }
 
         return $translated;

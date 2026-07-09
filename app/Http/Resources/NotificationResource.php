@@ -14,7 +14,7 @@ class NotificationResource extends JsonResource
     public function toArray(Request $request): array
     {
         // Determine if notification is clickable based on whether it has associated data with a reference
-        $isClickable = !empty($this->data) && (
+        $isClickable = ! empty($this->data) && (
             isset($this->data['shipment_id']) ||
             isset($this->data['job_id']) ||
             isset($this->data['url']) ||

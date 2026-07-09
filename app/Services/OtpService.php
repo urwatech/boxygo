@@ -89,6 +89,7 @@ class OtpService
                 'context' => $callerInfo['context'],
                 'caller' => $callerInfo['caller'],
             ]);
+
             return false;
         }
 
@@ -204,7 +205,7 @@ class OtpService
 
                 return [
                     'context' => $friendlyContext,
-                    'caller' => $callerClass . '::' . $callerMethod,
+                    'caller' => $callerClass.'::'.$callerMethod,
                 ];
             }
         }

@@ -3,21 +3,21 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Contracts\ZoneServiceInterface;
+use App\Enums\Role as RoleEnum;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Jobs\SyncExternalZonesJob;
 use App\Models\Address;
 use App\Models\City;
 use App\Models\CityShipmentPrice;
 use App\Models\DropPoint;
+use App\Models\User;
+use App\Models\Warehouse;
 use App\Models\Zone;
-use App\Enums\Role as RoleEnum;
+use App\Services\AssatexApiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use App\Jobs\SyncExternalZonesJob;
-use App\Models\Warehouse;
-use App\Services\AssatexApiService;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,7 +38,7 @@ class ZoneController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('zones.view'))) {
+        if (! $user || (! $user->can('zones.view'))) {
             abort(401);
         }
 
@@ -46,7 +46,7 @@ class ZoneController extends Controller
         $perPage = $request->integer('per_page', 10);
         $sortBy = trim((string) $request->query('sort_by', 'created_at'));
         $sortDir = trim((string) $request->query('sort_dir', 'desc'));
-        if (in_array(strtolower($sortBy), ['asc', 'desc'], true) && !$request->has('sort_dir')) {
+        if (in_array(strtolower($sortBy), ['asc', 'desc'], true) && ! $request->has('sort_dir')) {
             $sortDir = $sortBy;
             $sortBy = 'city';
         }
@@ -62,7 +62,7 @@ class ZoneController extends Controller
         $cityOptions = City::query()
             ->orderBy('name')
             ->pluck('name')
-            ->map(fn($value) => (string) $value)
+            ->map(fn ($value) => (string) $value)
             ->unique()
             ->values()
             ->all();
@@ -73,10 +73,10 @@ class ZoneController extends Controller
                     ->notDeleted()
                     ->select(['assigned_hub_name'])
                     ->get()
-                    ->flatMap(fn(Zone $zone) => $this->decodeAssignedHubNames($zone->assigned_hub_name))
+                    ->flatMap(fn (Zone $zone) => $this->decodeAssignedHubNames($zone->assigned_hub_name))
                     ->filter()
             )
-            ->map(fn($value) => (string) $value)
+            ->map(fn ($value) => (string) $value)
             ->unique()
             ->values()
             ->all();
@@ -114,8 +114,8 @@ class ZoneController extends Controller
             $cityDropPoints = $dropPointsByCity->get($cityKey, collect())->filter(function (DropPoint $dropPoint) {
                 return filled($dropPoint->name);
             });
-            $hasDirectAvailability = !empty($ridersByZone[$zone->id] ?? []);
-            $hasDoorDelivery = !empty($driversByZone[$zone->id] ?? []);
+            $hasDirectAvailability = ! empty($ridersByZone[$zone->id] ?? []);
+            $hasDoorDelivery = ! empty($driversByZone[$zone->id] ?? []);
             $hasDropPoint = $cityDropPoints->isNotEmpty();
 
             return [
@@ -180,7 +180,7 @@ class ZoneController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('zones.view'))) {
+        if (! $user || (! $user->can('zones.view'))) {
             abort(401);
         }
 
@@ -286,7 +286,7 @@ class ZoneController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('zones.view'))) {
+        if (! $user || (! $user->can('zones.view'))) {
             abort(401);
         }
 
@@ -318,7 +318,7 @@ class ZoneController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('zones.create'))) {
+        if (! $user || (! $user->can('zones.create'))) {
             abort(401);
         }
 
@@ -336,8 +336,8 @@ class ZoneController extends Controller
 
         $assignedHubNamesInput = $request->input('assigned_hub_names', []);
         $assignedNames = collect(is_array($assignedHubNamesInput) ? $assignedHubNamesInput : [])
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (string) $value)
+            ->filter(fn ($value) => filled($value))
+            ->map(fn ($value) => (string) $value)
             ->unique()
             ->values();
 
@@ -372,15 +372,17 @@ class ZoneController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('zones.create') && !$user->can('zones.edit'))) {
+        if (! $user || (! $user->can('zones.create') && ! $user->can('zones.edit'))) {
             abort(401);
         }
 
         try {
             $zones = $apiService->getZones();
+
             return response()->json(['zones' => $zones]);
         } catch (\Exception $e) {
-            Log::error('Failed to preview zones: ' . $e->getMessage());
+            Log::error('Failed to preview zones: '.$e->getMessage());
+
             return response()->json(['error' => __('failedToFetchZonesFromApi')], 500);
         }
     }
@@ -392,11 +394,11 @@ class ZoneController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('zones.view') && !$user->can('zones.edit'))) {
+        if (! $user || (! $user->can('zones.view') && ! $user->can('zones.edit'))) {
             abort(401);
         }
 
-        if (!$zone->ext_id) {
+        if (! $zone->ext_id) {
             return response()->json(['error' => __('thisZoneIsNotLinkedToAnExternalApiSystem')], 404);
         }
 
@@ -404,13 +406,14 @@ class ZoneController extends Controller
             $allZones = $apiService->getZones();
             $matchedZone = collect($allZones)->firstWhere('id', $zone->ext_id);
 
-            if (!$matchedZone) {
+            if (! $matchedZone) {
                 return response()->json(['error' => __('zoneDataCouldNotBeFoundOnTheExternalApi')], 404);
             }
 
             return response()->json(['zone' => $matchedZone]);
         } catch (\Exception $e) {
-            Log::error('Failed to preview single zone: ' . $e->getMessage());
+            Log::error('Failed to preview single zone: '.$e->getMessage());
+
             return response()->json(['error' => __('failedToFetchZoneFromApi')], 500);
         }
     }
@@ -431,9 +434,11 @@ class ZoneController extends Controller
             ], 3600);
 
             SyncExternalZonesJob::dispatch();
+
             return redirect()->back()->with('success', __('zoneSynchronizationHasStartedInTheBackground'));
         } catch (\Exception $e) {
-            Log::error('Failed to trigger zone synchronization: ' . $e->getMessage());
+            Log::error('Failed to trigger zone synchronization: '.$e->getMessage());
+
             return redirect()->back()->with('error', __('failedToStartZoneSynchronization'));
         }
     }
@@ -445,7 +450,7 @@ class ZoneController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('zones.create') && !$user->can('zones.edit'))) {
+        if (! $user || (! $user->can('zones.create') && ! $user->can('zones.edit'))) {
             abort(401);
         }
 
@@ -486,9 +491,9 @@ class ZoneController extends Controller
                     ];
                 }
 
-                $upsertData = array_values(array_filter($upsertData, fn($row) => !empty($row['ext_id'])));
+                $upsertData = array_values(array_filter($upsertData, fn ($row) => ! empty($row['ext_id'])));
 
-                if (!empty($upsertData)) {
+                if (! empty($upsertData)) {
                     CityShipmentPrice::upsert(
                         $upsertData,
                         ['ext_id'],
@@ -518,9 +523,10 @@ class ZoneController extends Controller
 
             return redirect()->back()->with('success', __('zonePricesSynchronizedSuccessfullyRecordsCount', ['count' => $synced]));
         } catch (\Exception $e) {
-            Log::error('Failed to sync zone prices: ' . $e->getMessage(), [
+            Log::error('Failed to sync zone prices: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return redirect()->back()->with('error', __('failedToSyncZonePrices'));
         }
     }
@@ -549,13 +555,13 @@ class ZoneController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('zones.edit'))) {
+        if (! $user || (! $user->can('zones.edit'))) {
             abort(401);
         }
 
         $zone = $this->zoneService->find($id);
 
-        if (!$zone) {
+        if (! $zone) {
             abort(404, __('zoneNotFound'));
         }
 
@@ -573,8 +579,8 @@ class ZoneController extends Controller
 
         $assignedHubNamesInput = $request->input('assigned_hub_names', []);
         $assignedNames = collect(is_array($assignedHubNamesInput) ? $assignedHubNamesInput : [])
-            ->filter(fn($value) => filled($value))
-            ->map(fn($value) => (string) $value)
+            ->filter(fn ($value) => filled($value))
+            ->map(fn ($value) => (string) $value)
             ->unique()
             ->values();
 
@@ -608,13 +614,13 @@ class ZoneController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('zones.status'))) {
+        if (! $user || (! $user->can('zones.status'))) {
             abort(401);
         }
 
         $zone = $this->zoneService->find($id);
 
-        if (!$zone) {
+        if (! $zone) {
             abort(404, __('zoneNotFound'));
         }
 
@@ -663,7 +669,7 @@ class ZoneController extends Controller
 
             if ($riderModel === User::class) {
                 $ridersQuery
-                    ->whereHas('roles', fn($query) => $query->where('name', RoleEnum::RIDER->value))
+                    ->whereHas('roles', fn ($query) => $query->where('name', RoleEnum::RIDER->value))
                     ->select(['id', 'name', 'phone_number', 'zone_id', 'status']);
             }
 
@@ -676,7 +682,7 @@ class ZoneController extends Controller
 
             if ($riderModel === User::class) {
                 $driversQuery
-                    ->whereHas('roles', fn($query) => $query->where('name', RoleEnum::CAR_DRIVER->value))
+                    ->whereHas('roles', fn ($query) => $query->where('name', RoleEnum::CAR_DRIVER->value))
                     ->select(['id', 'name', 'phone_number', 'zone_id', 'status']);
             }
 
@@ -702,7 +708,7 @@ class ZoneController extends Controller
         return response()->json([
             'success' => true,
             'message' => __('zonesFetchSuccessfully'),
-            'data' => $data
+            'data' => $data,
         ]);
     }
 
@@ -713,13 +719,13 @@ class ZoneController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('zones.delete'))) {
+        if (! $user || (! $user->can('zones.delete'))) {
             abort(401);
         }
 
         $zone = $this->zoneService->find($id);
 
-        if (!$zone) {
+        if (! $zone) {
             abort(404, __('zoneNotFound'));
         }
 
@@ -786,7 +792,7 @@ class ZoneController extends Controller
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
             return array_values(
                 array_filter(
-                    array_map(static fn($value) => trim((string) $value), $decoded),
+                    array_map(static fn ($value) => trim((string) $value), $decoded),
                 ),
             );
         }
@@ -795,7 +801,7 @@ class ZoneController extends Controller
 
         return array_values(
             array_filter(
-                array_map(static fn($value) => trim((string) $value), $parts),
+                array_map(static fn ($value) => trim((string) $value), $parts),
             ),
         );
     }
@@ -811,7 +817,7 @@ class ZoneController extends Controller
 
         $values = array_values(
             array_filter(
-                array_map(static fn($value) => (string) $value, $hubNames),
+                array_map(static fn ($value) => (string) $value, $hubNames),
             ),
         );
 
@@ -827,7 +833,7 @@ class ZoneController extends Controller
     /**
      * Map users to their assigned zones for quick lookup.
      *
-     * @param \Illuminate\Support\Collection<int, User> $users
+     * @param  \Illuminate\Support\Collection<int, User>  $users
      * @return array<int, array<int, array{id:int,name:string,zone_id:int,phone_number:string|null,status:string|null}>>
      */
     private function mapUsersToZones($users): array

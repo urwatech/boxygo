@@ -117,6 +117,10 @@ vendor/bin/pint
 - [Zones](docs/ZONE_BLUEPRINT.md)
 - [Model factories](docs/FACTORY_USAGE.md)
 
+## Contributing
+
+Contributions are welcome! Please read the [contributing guide](CONTRIBUTING.md) before opening a pull request. CI runs the test suite (PHP 8.2/8.4), Laravel Pint, and the frontend build on every PR.
+
 ## License
 
 BoxyGo is open-source software licensed under the [MIT license](LICENSE).

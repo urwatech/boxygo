@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\Shipment;
@@ -11,7 +12,6 @@ use App\Notifications\GenericNotification;
 use App\Services\MtnSmsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Enums\Role;
 
 class ReviewController extends Controller
 {
@@ -19,7 +19,7 @@ class ReviewController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (int) $shipment->user_id !== (int) $user->id) {
+        if (! $user || (int) $shipment->user_id !== (int) $user->id) {
             return response()->json(['ok' => false, 'message' => __('unauthorized')], 403);
         }
 
@@ -34,7 +34,7 @@ class ReviewController extends Controller
             'ratings.*.on_time_delivery' => 'nullable',
             'ratings.*.affordability' => 'nullable',
             'ratings.*.comment' => 'nullable|string|max:2000',
-            'ratings.*.drop_point_id' => 'required_if:ratings.*.user_type,' . Role::DROP_POINT_KEEPER->value . '|nullable|integer',
+            'ratings.*.drop_point_id' => 'required_if:ratings.*.user_type,'.Role::DROP_POINT_KEEPER->value.'|nullable|integer',
         ]);
 
         $reviews = [];
@@ -45,7 +45,7 @@ class ReviewController extends Controller
                 [
                     'shipment_id' => $shipment->id,
                     'user_id' => $user->id,
-                    'employee_id' => $ratingData['id']
+                    'employee_id' => $ratingData['id'],
                 ],
                 [
                     'user_type' => $ratingData['roles'] ?? null,
@@ -89,7 +89,7 @@ class ReviewController extends Controller
 
         return response()->json([
             'ok' => true,
-            'reviews' => $reviews
+            'reviews' => $reviews,
         ]);
     }
 
@@ -101,12 +101,12 @@ class ReviewController extends Controller
         $actors = $shipment->assignments()
             ->with('user.roles')
             ->get()
-            ->map(fn($assignment) => $assignment->user)
+            ->map(fn ($assignment) => $assignment->user)
             ->unique('id');
 
         return response()->json([
             'ok' => true,
-            'actors' => UserResource::collection($actors)
+            'actors' => UserResource::collection($actors),
         ]);
     }
 }

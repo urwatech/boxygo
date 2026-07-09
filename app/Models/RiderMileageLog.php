@@ -58,7 +58,7 @@ class RiderMileageLog extends Model
      */
     public function getDurationMinutes(): ?int
     {
-        if (!$this->started_at || !$this->ended_at) {
+        if (! $this->started_at || ! $this->ended_at) {
             return null;
         }
 

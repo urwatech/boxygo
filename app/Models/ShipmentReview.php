@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use App\Enums\Role;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
 
 class ShipmentReview extends Model
 {
@@ -59,7 +59,7 @@ class ShipmentReview extends Model
      */
     public function getRateableTypeAttribute(): ?string
     {
-        if (!$this->employee) {
+        if (! $this->employee) {
             return null;
         }
 
@@ -90,7 +90,7 @@ class ShipmentReview extends Model
             default => null,
         };
 
-        if (!$roleValue) {
+        if (! $roleValue) {
             return $query;
         }
 

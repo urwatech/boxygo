@@ -2,16 +2,15 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\LocalizedFcm;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use App\Notifications\Concerns\LocalizedFcm;
 
 class EarningsUpdateNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
     use LocalizedFcm;
+    use Queueable;
 
     /**
      * Create a new notification instance.

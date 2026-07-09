@@ -27,7 +27,7 @@ class DropPointController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('drop_points.view'))) {
+        if (! $user || (! $user->can('drop_points.view'))) {
             abort(401);
         }
 
@@ -102,7 +102,7 @@ class DropPointController extends Controller
                         'id' => $dropPoint->user->id,
                         'name' => $dropPoint->user->name,
                         'phone_number' => $dropPoint->user->phone_number,
-                        'status' => $dropPoint->user->status
+                        'status' => $dropPoint->user->status,
                     ] : null,
                     'shelves' => $dropPoint->shelves->pluck('code')->toArray(),
                     'created_at' => $dropPoint->created_at?->format('M d, Y'),
@@ -114,7 +114,7 @@ class DropPointController extends Controller
             ->select(['id', 'name', 'icon', 'address', 'city', 'latitude', 'longitude'])
             ->orderBy('name')
             ->get()
-            ->map(fn(DropPoint $dropPoint) => [
+            ->map(fn (DropPoint $dropPoint) => [
                 'id' => $dropPoint->id,
                 'name' => $dropPoint->name,
                 'icon' => $dropPoint->icon,
@@ -142,7 +142,7 @@ class DropPointController extends Controller
                 ];
             });
 
-        $droppointsUsers = User::whereHas('roles', fn($query) => $query->where('name', RoleEnum::DROP_POINT_KEEPER->value))->whereNull('drop_point_id')->select(['id', 'name', 'phone_number', 'status', 'employment_type', 'address'])->orderBy('name')->get();
+        $droppointsUsers = User::whereHas('roles', fn ($query) => $query->where('name', RoleEnum::DROP_POINT_KEEPER->value))->whereNull('drop_point_id')->select(['id', 'name', 'phone_number', 'status', 'employment_type', 'address'])->orderBy('name')->get();
 
         return Inertia::render('SuperAdmin/DropPoints/Index', [
             'dropPoints' => $dropPoints,
@@ -192,15 +192,17 @@ class DropPointController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('drop_points.view') && !$user->can('drop_points.create') && !$user->can('drop_points.edit'))) {
+        if (! $user || (! $user->can('drop_points.view') && ! $user->can('drop_points.create') && ! $user->can('drop_points.edit'))) {
             abort(401);
         }
 
         try {
             $dropPoints = $apiService->getDropPoints();
+
             return response()->json(['dropPoints' => $dropPoints]);
         } catch (\Exception $e) {
-            Log::error('Failed to preview drop points: ' . $e->getMessage());
+            Log::error('Failed to preview drop points: '.$e->getMessage());
+
             return response()->json(['error' => __('failedToFetchDropPointsFromApi')], 500);
         }
     }
@@ -212,7 +214,7 @@ class DropPointController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('drop_points.create') && !$user->can('drop_points.edit'))) {
+        if (! $user || (! $user->can('drop_points.create') && ! $user->can('drop_points.edit'))) {
             abort(401);
         }
 
@@ -274,7 +276,7 @@ class DropPointController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('drop_points.create'))) {
+        if (! $user || (! $user->can('drop_points.create'))) {
             abort(401);
         }
 
@@ -307,7 +309,7 @@ class DropPointController extends Controller
                 User::where('id', $validated['keeper_id'])
                     ->update([
                         'drop_point_id' => $dropPoint->id,
-                        'zone_id' => $dropPoint->zone_id
+                        'zone_id' => $dropPoint->zone_id,
                     ]);
             }
         });
@@ -323,7 +325,7 @@ class DropPointController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('drop_points.edit'))) {
+        if (! $user || (! $user->can('drop_points.edit'))) {
             abort(401);
         }
 
@@ -356,7 +358,7 @@ class DropPointController extends Controller
             $removedCodes = array_diff($existingCodes, $shelfCodes);
 
             // Remove shelves that are no longer in the list
-            if (!empty($removedCodes)) {
+            if (! empty($removedCodes)) {
                 $dropPoint->shelves()->whereIn('code', $removedCodes)->delete();
             }
 
@@ -381,7 +383,7 @@ class DropPointController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('drop_points.delete'))) {
+        if (! $user || (! $user->can('drop_points.delete'))) {
             abort(401);
         }
         User::where('drop_point_id', $dropPoint->id)->update(['drop_point_id' => null, 'zone_id' => null]);
@@ -404,7 +406,7 @@ class DropPointController extends Controller
             ->where('id', $zoneId)
             ->first();
 
-        if (!$zone) {
+        if (! $zone) {
             return response()->json([
                 'success' => false,
                 'message' => __('zoneNotFound'),
@@ -417,7 +419,7 @@ class DropPointController extends Controller
             'name' => $zone->name,
             'city' => $zone->city,
             'drawn_paths' => $zone->drawn_paths ?? [],
-            'status' => $zone->status
+            'status' => $zone->status,
         ];
 
         $riderModel = User::class;
@@ -427,7 +429,7 @@ class DropPointController extends Controller
 
         if ($riderModel === User::class) {
             $ridersQuery
-                ->whereHas('roles', fn($query) => $query->where('name', RoleEnum::RIDER->value))
+                ->whereHas('roles', fn ($query) => $query->where('name', RoleEnum::RIDER->value))
                 ->select(['id', 'name', 'phone_number', 'zone_id', 'status']);
         }
 

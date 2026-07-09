@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Contracts\ShipmentServiceInterface;
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Services\CodManagementService;
+use App\Services\WalletService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Models\User;
-use App\Enums\Role;
-use App\Services\WalletService;
 
 class CodManagementController extends Controller
 {
@@ -26,7 +26,7 @@ class CodManagementController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('cod.view'))) {
+        if (! $user || (! $user->can('cod.view'))) {
             abort(401);
         }
 
@@ -43,7 +43,7 @@ class CodManagementController extends Controller
             ->whereNotNull('name');
 
         // Filter by zone for non-superadmin employees
-        if ($user && !$user->hasRole('superadmin') && $user->zone_id && $user->platform === 'Admin Portal') {
+        if ($user && ! $user->hasRole('superadmin') && $user->zone_id && $user->platform === 'Admin Portal') {
             $riderQuery->where('zone_id', $user->zone_id);
         }
 
@@ -71,7 +71,7 @@ class CodManagementController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('cod.view'))) {
+        if (! $user || (! $user->can('cod.view'))) {
             abort(401);
         }
 
@@ -94,7 +94,7 @@ class CodManagementController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('cod.collect'))) {
+        if (! $user || (! $user->can('cod.collect'))) {
             abort(401);
         }
 
@@ -105,7 +105,7 @@ class CodManagementController extends Controller
         $this->walletService->creditHold(
             $shipment->user_id,
             $shipment->parcel_amount,
-            'COD Payment Hold - ' . $shipment->order_number,
+            'COD Payment Hold - '.$shipment->order_number,
             [
                 'shipment_id' => $shipment->id,
                 'shipment_order_number' => $shipment->order_number,

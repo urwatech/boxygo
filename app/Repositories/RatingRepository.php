@@ -24,7 +24,7 @@ class RatingRepository extends AbstractRepository implements RatingRepositoryInt
             ->where('employee_id', $userId);
 
         // Filter by star rating
-        if (!empty($filters['stars'])) {
+        if (! empty($filters['stars'])) {
             $query->where('rating', (int) $filters['stars']);
         }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api\V1\Auth;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -14,7 +15,7 @@ class LoginTest extends TestCase
     {
         $password = 'Password123!';
 
-        $user = User::factory()->create([
+        $user = $this->makeMobileUser([
             'email' => 'driver@example.com',
             'password' => $password,
             'status' => 'active',
@@ -36,7 +37,7 @@ class LoginTest extends TestCase
     {
         $password = 'Password123!';
 
-        $user = User::factory()->create([
+        $user = $this->makeMobileUser([
             'email' => 'courier@example.com',
             'password' => $password,
             'status' => 'active',
@@ -44,7 +45,7 @@ class LoginTest extends TestCase
         ]);
 
         $response = $this->postJson('/api/v1/auth/login', [
-            'phone_number' => '+1 (987) 654-3210',
+            'phone_number' => '+1 987 654 3210',
             'password' => $password,
         ]);
 
@@ -52,5 +53,22 @@ class LoginTest extends TestCase
             ->assertJsonPath('message', 'Login successful.')
             ->assertJsonPath('data.user.id', $user->id)
             ->assertJsonPath('data.token.token_type', 'Bearer');
+    }
+
+    private function makeMobileUser(array $attributes): User
+    {
+        $role = Role::firstOrCreate(
+            ['name' => 'rider', 'guard_name' => 'web'],
+            [
+                'description' => 'Delivery rider',
+                'platform' => 'Mobile App',
+                'is_protected' => false,
+            ],
+        );
+
+        $user = User::factory()->create($attributes);
+        $user->assignRole($role);
+
+        return $user;
     }
 }

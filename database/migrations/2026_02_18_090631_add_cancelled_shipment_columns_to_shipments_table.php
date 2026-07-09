@@ -12,19 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('shipments', function (Blueprint $table) {
-            if (!Schema::hasColumn('shipments', 'incomplete_status')) {
+            if (! Schema::hasColumn('shipments', 'incomplete_status')) {
                 $table->string('incomplete_status', 100)->nullable()->after('status');
             }
 
-            if (!Schema::hasColumn('shipments', 'incomplete_reason')) {
+            if (! Schema::hasColumn('shipments', 'incomplete_reason')) {
                 $table->longText('incomplete_reason')->nullable()->after('incomplete_status');
             }
 
-            if (!Schema::hasColumn('shipments', 'incomplete_create_by')) {
+            if (! Schema::hasColumn('shipments', 'incomplete_create_by')) {
                 $table->string('incomplete_create_by', 100)->nullable()->after('incomplete_reason');
             }
 
-            if (!Schema::hasColumn('shipments', 'sender_receive_payment_status')) {
+            if (! Schema::hasColumn('shipments', 'sender_receive_payment_status')) {
                 $table->string('sender_receive_payment_status', 100)->nullable()->after('incomplete_create_by');
             }
         });
@@ -48,7 +48,7 @@ return new class extends Migration
             }
         }
 
-        if (!empty($columnsToDrop)) {
+        if (! empty($columnsToDrop)) {
             Schema::table('shipments', function (Blueprint $table) use ($columnsToDrop) {
                 $table->dropColumn($columnsToDrop);
             });

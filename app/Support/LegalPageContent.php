@@ -51,7 +51,7 @@ class LegalPageContent
         $locale = self::normalizeLocale($locale);
         $page = self::findPage($slug, $locale);
 
-        if (!$page && $fallbackToDefaultLocale && $locale !== 'en') {
+        if (! $page && $fallbackToDefaultLocale && $locale !== 'en') {
             $page = self::findPage($slug, 'en');
         }
 
@@ -69,7 +69,7 @@ class LegalPageContent
 
     private static function findPage(string $slug, string $locale): ?LegalPage
     {
-        if (!Schema::hasTable('legal_pages')) {
+        if (! Schema::hasTable('legal_pages')) {
             return null;
         }
 
@@ -105,15 +105,15 @@ class LegalPageContent
 
         return implode("\n\n", [
             self::translate('settingsTermsWelcome', $locale),
-            self::translate('servicesProvidedTitle', $locale) . "\n" . self::translate('settingsTermsServicesProvidedContent', $locale),
-            self::translate('commonAccountResponsibility', $locale) . "\n" . self::translate('settingsTermsAccountResponsibilityContent', $locale),
-            self::translate('settingsTermsPricingPayments', $locale) . "\n" . self::translate('settingsTermsPricingIntro', $locale) . ' ' . $pricingItems . "\n" . self::translate('settingsTermsPricingPayment', $locale),
-            self::translate('commonCancellationsRefunds', $locale) . "\n" . implode("\n", [
+            self::translate('servicesProvidedTitle', $locale)."\n".self::translate('settingsTermsServicesProvidedContent', $locale),
+            self::translate('commonAccountResponsibility', $locale)."\n".self::translate('settingsTermsAccountResponsibilityContent', $locale),
+            self::translate('settingsTermsPricingPayments', $locale)."\n".self::translate('settingsTermsPricingIntro', $locale).' '.$pricingItems."\n".self::translate('settingsTermsPricingPayment', $locale),
+            self::translate('commonCancellationsRefunds', $locale)."\n".implode("\n", [
                 self::translate('settingsTermsCancellationBefore', $locale),
                 self::translate('settingsTermsCancellationRefunds', $locale),
                 self::translate('settingsTermsCancellationAfter', $locale),
             ]),
-            self::translate('commonContactUs', $locale) . "\n" . self::translate('settingsTermsContactContent', $locale) . ' ' . self::translate('settingsTermsContactEmail', $locale),
+            self::translate('commonContactUs', $locale)."\n".self::translate('settingsTermsContactContent', $locale).' '.self::translate('settingsTermsContactEmail', $locale),
         ]);
     }
 
@@ -165,13 +165,13 @@ class LegalPageContent
                 $href = $hrefMatch[2] ?? $hrefMatch[3] ?? $hrefMatch[4] ?? null;
             }
 
-            if (!$href || !preg_match('/^(https?:|mailto:|tel:|#|\/)/i', $href)) {
+            if (! $href || ! preg_match('/^(https?:|mailto:|tel:|#|\/)/i', $href)) {
                 return '<a>';
             }
 
             $safeHref = e($href);
 
-            return '<a href="' . $safeHref . '" target="_blank" rel="noopener noreferrer">';
+            return '<a href="'.$safeHref.'" target="_blank" rel="noopener noreferrer">';
         }, $body);
     }
 }

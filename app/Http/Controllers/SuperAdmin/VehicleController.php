@@ -12,22 +12,18 @@ use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
-
 class VehicleController extends Controller
 {
-    public function __construct(private readonly VehicleServiceInterface $vehicleService)
-    {
-    }
+    public function __construct(private readonly VehicleServiceInterface $vehicleService) {}
 
     public function index(Request $request): Response
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('vehicles.view'))) {
+        if (! $user || (! $user->can('vehicles.view'))) {
             abort(401);
         }
 
@@ -132,7 +128,7 @@ class VehicleController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('vehicles.create'))) {
+        if (! $user || (! $user->can('vehicles.create'))) {
             abort(401);
         }
 
@@ -156,62 +152,65 @@ class VehicleController extends Controller
         if ($request->hasFile('vehicle_registration')) {
             $file = $request->file('vehicle_registration');
             if ($file->isValid()) {
-                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
                 $file->move($uploadPaths['absolute'], $filename);
-                $payload['vehicle_registration_path'] = $uploadPaths['relative'] . '/' . $filename;
+                $payload['vehicle_registration_path'] = $uploadPaths['relative'].'/'.$filename;
             }
         }
 
         if ($request->hasFile('car_insurance')) {
             $file = $request->file('car_insurance');
             if ($file->isValid()) {
-                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
                 $file->move($uploadPaths['absolute'], $filename);
-                $payload['car_insurance_path'] = $uploadPaths['relative'] . '/' . $filename;
+                $payload['car_insurance_path'] = $uploadPaths['relative'].'/'.$filename;
             }
         }
 
         if ($request->hasFile('operating_permit')) {
             $file = $request->file('operating_permit');
             if ($file->isValid()) {
-                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
                 $file->move($uploadPaths['absolute'], $filename);
-                $payload['operating_permit_path'] = $uploadPaths['relative'] . '/' . $filename;
+                $payload['operating_permit_path'] = $uploadPaths['relative'].'/'.$filename;
             }
         }
 
         if ($request->hasFile('additional_documents')) {
-        $files = $request->file('additional_documents');
-        $additionalDocs = [];
+            $files = $request->file('additional_documents');
+            $additionalDocs = [];
 
-        if (is_array($files)) {
-            foreach ($files as $file) {
-                if ($file && $file->isValid()) {
-                    $originalName = $file->getClientOriginalName();
-                    $size = $file->getSize();
-                    $mime = $file->getMimeType();
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    if ($file && $file->isValid()) {
+                        $originalName = $file->getClientOriginalName();
+                        $size = $file->getSize();
+                        $mime = $file->getMimeType();
 
-                    $filename = time() . '_' . uniqid() . '_' . $originalName;
+                        $filename = time().'_'.uniqid().'_'.$originalName;
 
-                    $file->move($uploadPaths['absolute'], $filename);
+                        $file->move($uploadPaths['absolute'], $filename);
 
-                    $additionalDocs[] = [
-                        'path' => $uploadPaths['relative'] . '/' . $filename,
-                        'original_name' => $originalName,
-                        'size' => $size,
-                        'mime_type' => $mime,
-                    ];
+                        $additionalDocs[] = [
+                            'path' => $uploadPaths['relative'].'/'.$filename,
+                            'original_name' => $originalName,
+                            'size' => $size,
+                            'mime_type' => $mime,
+                        ];
+                    }
                 }
+            }
+
+            if (! empty($additionalDocs)) {
+                $payload['additional_documents'] = $additionalDocs;
             }
         }
 
-        if (!empty($additionalDocs)) {
-            $payload['additional_documents'] = $additionalDocs;
+        $vehicle = $this->vehicleService->create($payload);
+
+        if (! empty($data['assigned_rider_id'])) {
+            $this->vehicleService->assignToUser($vehicle->id, (int) $data['assigned_rider_id']);
         }
-    }
-
-
-        $this->vehicleService->create($payload);
 
         return redirect()
             ->route('admin.vehicles.index')
@@ -222,7 +221,7 @@ class VehicleController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('vehicles.manage') && !$user->can('vehicles.create'))) {
+        if (! $user || (! $user->can('vehicles.manage') && ! $user->can('vehicles.create'))) {
             abort(401);
         }
 
@@ -241,7 +240,7 @@ class VehicleController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('vehicles.manage') && !$user->can('vehicles.create'))) {
+        if (! $user || (! $user->can('vehicles.manage') && ! $user->can('vehicles.create'))) {
             abort(401);
         }
 
@@ -263,27 +262,27 @@ class VehicleController extends Controller
         if ($request->hasFile('vehicle_registration')) {
             $file = $request->file('vehicle_registration');
             if ($file->isValid()) {
-                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
                 $file->move($uploadPaths['absolute'], $filename);
-                $payload['vehicle_registration_path'] = $uploadPaths['relative'] . '/' . $filename;
+                $payload['vehicle_registration_path'] = $uploadPaths['relative'].'/'.$filename;
             }
         }
 
         if ($request->hasFile('car_insurance')) {
             $file = $request->file('car_insurance');
             if ($file->isValid()) {
-                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
                 $file->move($uploadPaths['absolute'], $filename);
-                $payload['car_insurance_path'] = $uploadPaths['relative'] . '/' . $filename;
+                $payload['car_insurance_path'] = $uploadPaths['relative'].'/'.$filename;
             }
         }
 
         if ($request->hasFile('operating_permit')) {
             $file = $request->file('operating_permit');
             if ($file->isValid()) {
-                $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
+                $filename = time().'_'.uniqid().'_'.$file->getClientOriginalName();
                 $file->move($uploadPaths['absolute'], $filename);
-                $payload['operating_permit_path'] = $uploadPaths['relative'] . '/' . $filename;
+                $payload['operating_permit_path'] = $uploadPaths['relative'].'/'.$filename;
             }
         }
 
@@ -298,12 +297,12 @@ class VehicleController extends Controller
                         $size = $file->getSize();
                         $mime = $file->getMimeType();
 
-                        $filename = time() . '_' . uniqid() . '_' . $originalName;
+                        $filename = time().'_'.uniqid().'_'.$originalName;
 
                         $file->move($uploadPaths['absolute'], $filename);
 
                         $additionalDocs[] = [
-                            'path' => $uploadPaths['relative'] . '/' . $filename,
+                            'path' => $uploadPaths['relative'].'/'.$filename,
                             'original_name' => $originalName,
                             'size' => $size,
                             'mime_type' => $mime,
@@ -312,7 +311,7 @@ class VehicleController extends Controller
                 }
             }
 
-            if (!empty($additionalDocs)) {
+            if (! empty($additionalDocs)) {
                 $existingDocs = is_array($vehicle->additional_documents) ? $vehicle->additional_documents : [];
                 $payload['additional_documents'] = array_merge($existingDocs, $additionalDocs);
             }
@@ -329,7 +328,7 @@ class VehicleController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('vehicles.assign'))) {
+        if (! $user || (! $user->can('vehicles.assign'))) {
             abort(401);
         }
 

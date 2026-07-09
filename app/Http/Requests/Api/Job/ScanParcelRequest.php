@@ -34,7 +34,7 @@ class ScanParcelRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $routeId = $this->route('id');
-        if ($routeId && !$this->has('shipment_id')) {
+        if ($routeId && ! $this->has('shipment_id')) {
             $this->merge(['shipment_id' => $routeId]);
         }
     }

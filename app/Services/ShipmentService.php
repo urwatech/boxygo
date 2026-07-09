@@ -2,34 +2,31 @@
 
 namespace App\Services;
 
-use App\Enums\Role;
-use App\Models\User;
-use App\Models\Shipment;
-use App\Enums\DeliveryStage;
-use App\Enums\ShipmentStatus;
-use App\Models\PaymentTransaction;
-use App\Notifications\ShipmentDeliveredNotification;
-use App\Notifications\ShipmentPickedUpNotification;
-use App\Notifications\ShipmentReadyForPickupNotification;
-use App\Services\MtnSmsService;
-use App\Services\ZoneHelper;
-use App\Support\FinancialSettings;
-use Illuminate\Support\Facades\Log;
-use App\Helpers\helpers;
-use Illuminate\Database\Eloquent\Model;
-use App\Services\WalletService;
-use Illuminate\Http\JsonResponse;
-use App\Contracts\ShipmentServiceInterface;
-use App\Notifications\GenericNotification;
 use App\Contracts\ShipmentRepositoryInterface;
+use App\Contracts\ShipmentServiceInterface;
+use App\Enums\DeliveryStage;
+use App\Enums\Role;
+use App\Enums\ShipmentStatus;
+use App\Helpers\helpers;
+use App\Http\Controllers\Customer\OnlinePaymentController;
+use App\Models\PaymentTransaction;
+use App\Models\Shipment;
+use App\Models\User;
+use App\Notifications\GenericNotification;
+use App\Notifications\ShipmentDeliveredNotification;
 use App\Notifications\ShipmentIncompleteCreateNotification;
 use App\Notifications\ShipmentIncompleteCreateRecieverNotification;
 use App\Notifications\ShipmentIncompleteDroppointNotification;
 use App\Notifications\ShipmentIncompletePickUpNotification;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use App\Http\Controllers\Customer\OnlinePaymentController;
-use Illuminate\Support\Collection;
+use App\Notifications\ShipmentPickedUpNotification;
+use App\Notifications\ShipmentReadyForPickupNotification;
+use App\Support\FinancialSettings;
 use Carbon\Carbon;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Service layer for shipment-related business logic.
@@ -46,10 +43,6 @@ class ShipmentService implements ShipmentServiceInterface
 
     /**
      * Get paginated shipments for a user.
-     *
-     * @param int $userId
-     * @param int $perPage
-     * @return LengthAwarePaginator
      */
     public function getUserShipments(int $userId, int $perPage = 10, bool $isNormal = true, bool $isReturned = false, ?string $search = null, ?string $status = null, ?string $sortBy = null, ?string $sortDir = null): LengthAwarePaginator
     {
@@ -75,9 +68,7 @@ class ShipmentService implements ShipmentServiceInterface
      * Get available employees for a shipment based on zone and role.
      * Filters out employees who have reached their COD collection limit.
      *
-     * @param Shipment $shipment
-     * @param string $role Role needed (rider, car driver, etc.)
-     * @return Collection
+     * @param  string  $role  Role needed (rider, car driver, etc.)
      */
     public function getAvailableEmployeesForShipment(Shipment $shipment, string $role): Collection
     {
@@ -85,7 +76,7 @@ class ShipmentService implements ShipmentServiceInterface
         $latitude = $shipment->handover_latitude;
         $longitude = $shipment->handover_longitude;
 
-        if (!$latitude || !$longitude) {
+        if (! $latitude || ! $longitude) {
             // Fallback to all active employees with the role if no coordinates
             $employees = User::where('platform', 'Mobile App')
                 ->where('status', 'active')
@@ -111,6 +102,7 @@ class ShipmentService implements ShipmentServiceInterface
 
         return $employees->filter(function ($employee) use ($shipment, $role, $stage) {
             $codCheck = $this->checkCodLimitForAssignment($employee, $shipment, $role, $stage);
+
             return $codCheck['can_accept'];
         });
     }
@@ -118,18 +110,13 @@ class ShipmentService implements ShipmentServiceInterface
     /**
      * Get nearest employees for a shipment within the same zone.
      * Filters out employees who have reached their COD collection limit.
-     *
-     * @param Shipment $shipment
-     * @param string $role
-     * @param int $limit
-     * @return Collection
      */
     public function getNearestEmployeesForShipment(Shipment $shipment, string $role, int $limit = 10): Collection
     {
         $latitude = $shipment->handover_latitude;
         $longitude = $shipment->handover_longitude;
 
-        if (!$latitude || !$longitude) {
+        if (! $latitude || ! $longitude) {
             // Fallback to all active employees with the role if no coordinates
             $employees = User::where('platform', 'Mobile App')
                 ->where('status', 'active')
@@ -156,6 +143,7 @@ class ShipmentService implements ShipmentServiceInterface
 
         $filteredEmployees = $employees->filter(function ($employee) use ($shipment, $role, $stage) {
             $codCheck = $this->checkCodLimitForAssignment($employee, $shipment, $role, $stage);
+
             return $codCheck['can_accept'];
         });
 
@@ -165,10 +153,6 @@ class ShipmentService implements ShipmentServiceInterface
 
     /**
      * Create a new shipment for a user.
-     *
-     * @param array $data
-     * @param int $userId
-     * @return Model
      */
     public function createShipment(array $data, int $userId): Model
     {
@@ -195,10 +179,10 @@ class ShipmentService implements ShipmentServiceInterface
             $data['status'] = ShipmentStatus::PENDING->value;
         }
 
-        $data['verification_code'] = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $data['verification_code'] = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         // Zone auto-detection disabled — zone is assigned manually by admin
-        if (!isset($data['zone_id'])) {
+        if (! isset($data['zone_id'])) {
             $data['zone_id'] = null;
         }
 
@@ -206,7 +190,7 @@ class ShipmentService implements ShipmentServiceInterface
         // This ensures the fee doesn't change when insurance settings are updated
         // If frontend already calculated and sent insurance_fee, use that (preserves the exact fee shown to user)
         // Otherwise, calculate it server-side
-        if (!isset($data['insurance_fee']) || $data['insurance_fee'] === null) {
+        if (! isset($data['insurance_fee']) || $data['insurance_fee'] === null) {
             $data['insurance_fee'] = $this->calculateInsuranceFeeForNewShipment($data);
         }
 
@@ -225,18 +209,18 @@ class ShipmentService implements ShipmentServiceInterface
 
             Log::info('createShipment: shipment created', [
                 'shipment_id' => $shipment->id,
-                'user_id' => $shipment->user_id
+                'user_id' => $shipment->user_id,
             ]);
         } catch (\Throwable $e) {
             Log::error('createShipment: failed to create shipment', [
                 'user_id' => $userId,
                 'payload' => $data,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
 
-        if (!empty($shipment->receiver_email)) {
+        if (! empty($shipment->receiver_email)) {
             try {
                 $this->sendGridEmailService->sendShipmentVerificationCode(
                     $shipment->receiver_email,
@@ -248,24 +232,24 @@ class ShipmentService implements ShipmentServiceInterface
 
                 Log::info('createShipment: verification email sent', [
                     'shipment_id' => $shipment->id,
-                    'email' => $shipment->user->email
+                    'email' => $shipment->user->email,
                 ]);
             } catch (\Throwable $e) {
                 Log::error('createShipment: email failed', [
                     'shipment_id' => $shipment->id,
-                    'email' => $shipment->user->email
+                    'email' => $shipment->user->email,
                 ]);
             } catch (\Throwable $e) {
                 \Log::error('createShipment: email failed', [
                     'shipment_id' => $shipment->id,
                     'email' => $shipment->user->email,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         } else {
             Log::warning('createShipment: user email missing', [
                 'shipment_id' => $shipment->id,
-                'user_id' => $shipment->user_id
+                'user_id' => $shipment->user_id,
             ]);
         }
 
@@ -280,7 +264,7 @@ class ShipmentService implements ShipmentServiceInterface
         $shipment->incomplete_create_by = $data['cancelled_by_user_id'] ?? null;
         $shipment->incomplete_reason = $data['reason'];
         $shipment->incomplete_assign_id = $data['cancelled_by_user_id'];
-        $shipment->verification_code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $shipment->verification_code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         $shipment->save();
 
         $sender = User::find($shipment->user_id);
@@ -320,7 +304,7 @@ class ShipmentService implements ShipmentServiceInterface
                 $this->walletService->credit(
                     $shipment->receiver_id,
                     (float) $shipment->reciever_amount,
-                    'Payment refunded as the shipment has been cancelled by the ' . $data['cancelled_by'] . '. Order #' . $shipment->order_number
+                    'Payment refunded as the shipment has been cancelled by the '.$data['cancelled_by'].'. Order #'.$shipment->order_number
                 );
             }
 
@@ -333,7 +317,7 @@ class ShipmentService implements ShipmentServiceInterface
                     $this->walletService->deductHold(
                         $shipment->user_id,
                         (float) $shipment->rdf_amount,
-                        'Held amount released due to shipment cancellation. Order #' . $shipment->order_number
+                        'Held amount released due to shipment cancellation. Order #'.$shipment->order_number
                     );
                     $shipment->rdf_payment_status = 'refunded';
                 }
@@ -341,7 +325,7 @@ class ShipmentService implements ShipmentServiceInterface
                 $this->walletService->credit(
                     $shipment->user_id,
                     (float) $sender_amount,
-                    'Payment refunded as the shipment has been cancelled. Order #' . $shipment->order_number
+                    'Payment refunded as the shipment has been cancelled. Order #'.$shipment->order_number
                 );
 
                 if ($shipment->sender_receive_payment_status == 'released') {
@@ -351,7 +335,7 @@ class ShipmentService implements ShipmentServiceInterface
             }
         }
 
-        if (!empty($shipment->sender_email)) {
+        if (! empty($shipment->sender_email)) {
             try {
                 $this->sendGridEmailService->sendShipmentVerificationCode(
                     $shipment->sender_email,
@@ -363,21 +347,22 @@ class ShipmentService implements ShipmentServiceInterface
 
                 Log::info('createShipment: verification email sent', [
                     'shipment_id' => $shipment->id,
-                    'email' => $shipment->user->email
+                    'email' => $shipment->user->email,
                 ]);
             } catch (\Throwable $e) {
                 Log::error('createShipment: email failed', [
                     'shipment_id' => $shipment->id,
-                    'email' => $shipment->user->email
+                    'email' => $shipment->user->email,
                 ]);
             } catch (\Throwable $e) {
                 \Log::error('createShipment: email failed', [
                     'shipment_id' => $shipment->id,
                     'email' => $shipment->user->email,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
         }
+
         return $shipment;
     }
 
@@ -392,7 +377,7 @@ class ShipmentService implements ShipmentServiceInterface
             ->with(['latestStatusHistory'])
             ->find($shipmentId);
 
-        if (!$shipment) {
+        if (! $shipment) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Shipment not found or inaccessible.',
@@ -405,14 +390,14 @@ class ShipmentService implements ShipmentServiceInterface
 
         $resolvedZoneId = $normalizeZoneId($shipment->zone_id);
 
-        if (!$resolvedZoneId) {
+        if (! $resolvedZoneId) {
 
             $zone = \App\Services\ZoneHelper::findZoneByCoordinates(
                 (float) $shipment->handover_latitude,
                 (float) $shipment->handover_longitude
             );
 
-            if (!$zone) {
+            if (! $zone) {
 
                 return response()->json([
                     'ok' => false,
@@ -424,12 +409,12 @@ class ShipmentService implements ShipmentServiceInterface
         }
 
         $ridersQuery = User::query()
-            ->whereHas('roles', fn($query) => $query->where('name', 'rider'))
+            ->whereHas('roles', fn ($query) => $query->where('name', 'rider'))
             ->orderBy('id', 'desc');
 
         $zoneIds = $user->getAssignedZoneIds();
 
-        if (!empty($zoneIds)) {
+        if (! empty($zoneIds)) {
             $ridersQuery->where(function ($query) use ($zoneIds) {
                 $query->whereIn('zone_id', $zoneIds);
 
@@ -446,12 +431,12 @@ class ShipmentService implements ShipmentServiceInterface
             'zone_id',
             'zone_ids',
             'delivery_speed_mode',
-            'shipment_type'
+            'shipment_type',
         ]);
 
         $availableRider = $riders->first(function ($rider) use ($resolvedZoneId) {
 
-            if (!($rider->status === 'active' && ($rider->availability ?? 'offline') === 'online')) {
+            if (! ($rider->status === 'active' && ($rider->availability ?? 'offline') === 'online')) {
                 return false;
             }
 
@@ -459,14 +444,14 @@ class ShipmentService implements ShipmentServiceInterface
                 ? $rider->zone_ids
                 : json_decode($rider->zone_ids, true);
 
-            if (!in_array((int) $resolvedZoneId, array_map('intval', $zoneIds ?? []))) {
+            if (! in_array((int) $resolvedZoneId, array_map('intval', $zoneIds ?? []))) {
                 return false;
             }
 
             return true;
         });
 
-        if (!$availableRider) {
+        if (! $availableRider) {
 
             return response()->json([
                 'ok' => false,
@@ -499,6 +484,7 @@ class ShipmentService implements ShipmentServiceInterface
             foreach ($openPickupAssignments as $openAssignment) {
                 if ((int) $openAssignment->user_id === (int) $rider->id) {
                     $existingPickupAssignment = $openAssignment;
+
                     continue;
                 }
 
@@ -506,7 +492,7 @@ class ShipmentService implements ShipmentServiceInterface
                 $suffix = 'Unassigned by admin for reassignment';
                 $openAssignment->update([
                     'completed_at' => now(),
-                    'notes' => $notes ? $notes . "\n\n" . $suffix : $suffix,
+                    'notes' => $notes ? $notes."\n\n".$suffix : $suffix,
                 ]);
             }
 
@@ -516,7 +502,7 @@ class ShipmentService implements ShipmentServiceInterface
 
             if ($existingPickupAssignment) {
                 $assignment = $existingPickupAssignment;
-                if (!$assignment->started_at) {
+                if (! $assignment->started_at) {
                     $this->trackingService->startAssignment($assignment);
                     $assignment->refresh();
                 }
@@ -570,7 +556,7 @@ class ShipmentService implements ShipmentServiceInterface
             ->with(['latestStatusHistory'])
             ->find($shipmentId);
 
-        if (!$shipment) {
+        if (! $shipment) {
             return response()->json([
                 'ok' => false,
                 'message' => 'Shipment not found or inaccessible.',
@@ -583,14 +569,14 @@ class ShipmentService implements ShipmentServiceInterface
 
         $resolvedZoneId = $normalizeZoneId($shipment->zone_id);
 
-        if (!$resolvedZoneId) {
+        if (! $resolvedZoneId) {
 
             $zone = \App\Services\ZoneHelper::findZoneByCoordinates(
                 (float) $shipment->delivery_latitude,
                 (float) $shipment->delivery_longitude
             );
 
-            if (!$zone) {
+            if (! $zone) {
 
                 return response()->json([
                     'ok' => false,
@@ -602,12 +588,12 @@ class ShipmentService implements ShipmentServiceInterface
         }
 
         $ridersQuery = User::query()
-            ->whereHas('roles', fn($query) => $query->where('name', 'rider'))
+            ->whereHas('roles', fn ($query) => $query->where('name', 'rider'))
             ->orderBy('id', 'desc');
 
         $zoneIds = $user->getAssignedZoneIds();
 
-        if (!empty($zoneIds)) {
+        if (! empty($zoneIds)) {
             $ridersQuery->where(function ($query) use ($zoneIds) {
                 $query->whereIn('zone_id', $zoneIds);
 
@@ -624,12 +610,12 @@ class ShipmentService implements ShipmentServiceInterface
             'zone_id',
             'zone_ids',
             'delivery_speed_mode',
-            'shipment_type'
+            'shipment_type',
         ]);
 
         $availableRider = $riders->first(function ($rider) use ($resolvedZoneId) {
 
-            if (!($rider->status === 'active' && ($rider->availability ?? 'offline') === 'online')) {
+            if (! ($rider->status === 'active' && ($rider->availability ?? 'offline') === 'online')) {
                 return false;
             }
 
@@ -637,14 +623,14 @@ class ShipmentService implements ShipmentServiceInterface
                 ? $rider->zone_ids
                 : json_decode($rider->zone_ids, true);
 
-            if (!in_array((int) $resolvedZoneId, array_map('intval', $zoneIds ?? []))) {
+            if (! in_array((int) $resolvedZoneId, array_map('intval', $zoneIds ?? []))) {
                 return false;
             }
 
             return true;
         });
 
-        if (!$availableRider) {
+        if (! $availableRider) {
 
             return response()->json([
                 'ok' => false,
@@ -687,25 +673,20 @@ class ShipmentService implements ShipmentServiceInterface
         }
     }
 
-
     /**
      * Request a cancellation for a shipment with specific business rules.
      *
-     * @param int $shipmentId
-     * @param int $userId
-     * @param string $reason
-     * @return Model
      * @throws \Exception
      */
     public function requestCancellation(int $shipmentId, int $userId, string $reason): Model
     {
         $shipment = $this->repository->find($shipmentId);
-        if (!$shipment) {
+        if (! $shipment) {
             throw new \Exception('Shipment not found.');
         }
 
         // Check if user is the sender
-        if ((int)$shipment->user_id !== $userId) {
+        if ((int) $shipment->user_id !== $userId) {
             throw new \Exception('Only the sender can cancel this shipment.');
         }
 
@@ -745,7 +726,7 @@ class ShipmentService implements ShipmentServiceInterface
                 $this->walletService->credit(
                     $shipment->receiver_id,
                     (float) $shipment->reciever_amount,
-                    'Payment refunded as the shipment has been cancelled by the sender. Order #' . $shipment->order_number
+                    'Payment refunded as the shipment has been cancelled by the sender. Order #'.$shipment->order_number
                 );
             }
 
@@ -758,7 +739,7 @@ class ShipmentService implements ShipmentServiceInterface
                     $this->walletService->deductHold(
                         $shipment->user_id,
                         (float) $shipment->rdf_amount,
-                        'Held amount released due to shipment cancellation. Order #' . $shipment->order_number
+                        'Held amount released due to shipment cancellation. Order #'.$shipment->order_number
                     );
                     $shipment->rdf_payment_status = 'refunded';
                 }
@@ -766,7 +747,7 @@ class ShipmentService implements ShipmentServiceInterface
                 $this->walletService->credit(
                     $shipment->user_id,
                     (float) $sender_amount,
-                    'Payment refunded as the shipment has been cancelled. Order #' . $shipment->order_number
+                    'Payment refunded as the shipment has been cancelled. Order #'.$shipment->order_number
                 );
 
                 if ($shipment->sender_receive_payment_status == 'released') {
@@ -822,8 +803,6 @@ class ShipmentService implements ShipmentServiceInterface
 
     /**
      * Process refund for a cancelled shipment.
-     *
-     * @param Shipment $shipment
      */
     protected function processCancellationRefund(Shipment $shipment): void
     {
@@ -837,27 +816,24 @@ class ShipmentService implements ShipmentServiceInterface
                 $this->walletService->credit(
                     $shipment->user_id,
                     $totalRefund,
-                    'Refund for cancelled shipment - ' . $shipment->order_number,
+                    'Refund for cancelled shipment - '.$shipment->order_number,
                     [
                         'shipment_id' => $shipment->id,
                         'shipment_order_number' => $shipment->order_number,
                         'reason' => 'Cancellation refund',
-                        'type' => 'refund'
+                        'type' => 'refund',
                     ]
                 );
 
                 Log::info("Refunded {$totalRefund} to user {$shipment->user_id} for cancelled shipment {$shipment->order_number}");
             }
         } catch (\Exception $e) {
-            Log::error("Failed to process refund for shipment {$shipment->id}: " . $e->getMessage());
+            Log::error("Failed to process refund for shipment {$shipment->id}: ".$e->getMessage());
         }
     }
 
     /**
      * Find a shipment by ID.
-     *
-     * @param int|string $id
-     * @return Model|null
      */
     public function find(int|string $id): ?Model
     {
@@ -867,8 +843,6 @@ class ShipmentService implements ShipmentServiceInterface
     /**
      * Get jobs for a rider with optional filter.
      *
-     * @param int $riderId
-     * @param string|null $filter
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getRiderJobs(int $riderId, ?string $filter = 'assigned', ?string $search = null)
@@ -937,10 +911,6 @@ class ShipmentService implements ShipmentServiceInterface
 
     /**
      * Find a job for a specific rider.
-     *
-     * @param int $shipmentId
-     * @param int $riderId
-     * @return Model|null
      */
     public function findJobForRider(int $shipmentId, int $riderId): ?Model
     {
@@ -974,23 +944,20 @@ class ShipmentService implements ShipmentServiceInterface
     /**
      * Update shipment status with business logic.
      *
-     * @param int $shipmentId
-     * @param int $riderId
-     * @param array $data
-     * @return Model
      * @throws \Exception
      */
     public function updateJobStatus(int $shipmentId, int $riderId, array $data): Model
     {
         // Determine acting user and role
         $actor = User::find($riderId);
-        if (!$actor) {
+        if (! $actor) {
             throw new \Exception('User not found.');
         }
 
         // Helper for case-insensitive role checks (covers custom-cased role names)
         $hasRole = function (User $user, string $role): bool {
             $names = array_map('strtolower', $user->getRoleNames()->toArray());
+
             return in_array(strtolower($role), $names, true);
         };
 
@@ -1010,21 +977,22 @@ class ShipmentService implements ShipmentServiceInterface
             // Allow 000000 as verification code in local environment
             $isLocalBypass = config('app.env') === 'local' && $data['verification_code'] === '000000';
 
-            if (!$isLocalBypass && $shipment->verification_code != $data['verification_code']) {
+            if (! $isLocalBypass && $shipment->verification_code != $data['verification_code']) {
                 throw new \Exception('Invalid verification code. Please check with the customer.');
             }
 
             // Mark as verified if not already
-            if (!$shipment->verification_code_verified_at) {
+            if (! $shipment->verification_code_verified_at) {
                 $this->repository->update($shipmentId, ['verification_code_verified_at' => now()]);
             }
 
             $shipment->incomplete_status = ShipmentStatus::INCOMPLETE_COLLECTED->value;
             $shipment->save();
+
             return $shipment;
         }
 
-        if (!$shipment) {
+        if (! $shipment) {
             throw new \Exception('Job not found or not assigned to you.');
         }
 
@@ -1032,7 +1000,7 @@ class ShipmentService implements ShipmentServiceInterface
 
         // For indirect shipments, enforce scanning requirement for non-rider roles
         // Drop Point Keepers, Car Drivers, and Warehouse Keepers must scan before updating status
-        if ($shipment->delivery_speed === 'indirect' && !$hasRole($actor, Role::RIDER->value)) {
+        if ($shipment->delivery_speed === 'indirect' && ! $hasRole($actor, Role::RIDER->value)) {
             $hasActiveAssignment = $shipment->assignments()
                 ->where('user_id', $actor->id)
                 ->where(function ($query) {
@@ -1041,7 +1009,7 @@ class ShipmentService implements ShipmentServiceInterface
                 })
                 ->exists();
 
-            if (!$hasActiveAssignment) {
+            if (! $hasActiveAssignment) {
                 throw new \Exception('You must scan this parcel before you can update its status. Please use the scan parcel endpoint first.');
             }
         }
@@ -1058,7 +1026,7 @@ class ShipmentService implements ShipmentServiceInterface
             ];
 
             // Keep legacy behavior unchanged for local-city shipments.
-            if (!$isDiffCity && in_array($status, $warehouse2Statuses, true)) {
+            if (! $isDiffCity && in_array($status, $warehouse2Statuses, true)) {
                 throw new \Exception('Warehouse 2 statuses are only allowed when shipment is marked as different-city.');
             }
 
@@ -1075,7 +1043,7 @@ class ShipmentService implements ShipmentServiceInterface
                     ShipmentStatus::DELIVERED->value,
                 ];
 
-                if (!in_array($status, $riderAllowed, true)) {
+                if (! in_array($status, $riderAllowed, true)) {
                     throw new \Exception('Rider can only update to Pickup, In Transit, Arrived at Drop Point 1, Delivered to Drop Point 1, Pickup from Drop Point 2, In Transit to Customer, or Delivered for indirect deliveries.');
                 }
 
@@ -1103,13 +1071,13 @@ class ShipmentService implements ShipmentServiceInterface
                         ->orderBy('distance_km', 'asc')
                         ->first();
 
-                    if (!$nearestKeeper) {
+                    if (! $nearestKeeper) {
                         throw new \Exception('No drop point keeper with a valid location is configured.');
                     }
 
                     // Attach keeper details to metadata for auditability
                     $meta = $data['metadata'] ?? [];
-                    if (!is_array($meta)) {
+                    if (! is_array($meta)) {
                         $meta = ['raw' => $meta];
                     }
                     $meta['nearest_drop_point_keeper'] = [
@@ -1118,7 +1086,7 @@ class ShipmentService implements ShipmentServiceInterface
                         'address' => $nearestKeeper->address,
                         'latitude' => $nearestKeeper->latitude,
                         'longitude' => $nearestKeeper->longitude,
-                        'distance_km' => isset($nearestKeeper->distance_km) ? round((float)$nearestKeeper->distance_km, 3) : null,
+                        'distance_km' => isset($nearestKeeper->distance_km) ? round((float) $nearestKeeper->distance_km, 3) : null,
                     ];
                     $data['metadata'] = $meta;
 
@@ -1154,7 +1122,7 @@ class ShipmentService implements ShipmentServiceInterface
                     ShipmentStatus::DELIVERED->value,
                 ];
 
-                if (!in_array($status, $keeperAllowed, true)) {
+                if (! in_array($status, $keeperAllowed, true)) {
                     throw new \Exception('Drop point keeper can only update Delivered to Drop Point 1, Dispatched to Warehouse, Dispatched from Drop Point 2, Ready for Pickup, Picked up by Receiver, or Delivered.');
                 }
             }
@@ -1162,7 +1130,7 @@ class ShipmentService implements ShipmentServiceInterface
             // "Dispatched to Warehouse" must be done by Drop Point Keeper
             if (
                 $status === ShipmentStatus::DISPATCHED_TO_WAREHOUSE->value &&
-                !$hasRole($actor, Role::DROP_POINT_KEEPER->value)
+                ! $hasRole($actor, Role::DROP_POINT_KEEPER->value)
             ) {
                 throw new \Exception('Only the drop point keeper can dispatch to warehouse.');
             }
@@ -1178,7 +1146,7 @@ class ShipmentService implements ShipmentServiceInterface
                     $warehouseAllowed[] = ShipmentStatus::DISPATCHED_FROM_WAREHOUSE_2->value;
                 }
 
-                if (!in_array($status, $warehouseAllowed, true)) {
+                if (! in_array($status, $warehouseAllowed, true)) {
                     throw new \Exception(
                         $isDiffCity
                             ? 'Warehouse keeper can only update Dispatched from Warehouse, Dispatched from Warehouse 2, or Delivered.'
@@ -1211,7 +1179,7 @@ class ShipmentService implements ShipmentServiceInterface
                     ]);
                 }
 
-                if (!in_array($status, $driverAllowed, true)) {
+                if (! in_array($status, $driverAllowed, true)) {
                     throw new \Exception(
                         $isDiffCity
                             ? 'Car driver can only update Pickup from Drop Point 1, In Transit to Warehouse, Arrived at Warehouse, Pickup from Warehouse, In Transit to Warehouse 2, Arrived at Warehouse 2, Pickup from Warehouse 2, In Transit to Drop Point 2, Arrived at Drop Point 2, Pickup from Drop Point 2, In Transit to Customer, or Delivered.'
@@ -1234,6 +1202,7 @@ class ShipmentService implements ShipmentServiceInterface
                     if ($actor->hasRole(Role::RIDER->value)) {
                         return $this->repository->findForRider($shipmentId, $riderId) ?? $this->repository->find($shipmentId);
                     }
+
                     return $this->repository->find($shipmentId);
                 }
             }
@@ -1256,7 +1225,7 @@ class ShipmentService implements ShipmentServiceInterface
             $shipment->status === ShipmentStatus::READY_FOR_PICKUP->value
         );
 
-        if ($statusAlreadySetByUser && !$isKeeperFinalHandover) {
+        if ($statusAlreadySetByUser && ! $isKeeperFinalHandover) {
             throw new \Exception('You have already set this status for this shipment.');
         }
 
@@ -1284,12 +1253,12 @@ class ShipmentService implements ShipmentServiceInterface
             // Allow 000000 as verification code in local environment
             $isLocalBypass = config('app.env') === 'local' && $data['verification_code'] === '000000';
 
-            if (!$isLocalBypass && $shipment->verification_code != $data['verification_code']) {
+            if (! $isLocalBypass && $shipment->verification_code != $data['verification_code']) {
                 throw new \Exception('Invalid verification code. Please check with the customer.');
             }
 
             // Mark as verified if not already
-            if (!$shipment->verification_code_verified_at) {
+            if (! $shipment->verification_code_verified_at) {
                 $this->repository->update($shipmentId, ['verification_code_verified_at' => now()]);
             }
         }
@@ -1318,7 +1287,7 @@ class ShipmentService implements ShipmentServiceInterface
             ], true)
         ) {
             $meta = $options['metadata'] ?? [];
-            if (!is_array($meta)) {
+            if (! is_array($meta)) {
                 $meta = ['raw' => $meta];
             }
             $meta['delivery_type'] = 'individual';
@@ -1545,22 +1514,22 @@ class ShipmentService implements ShipmentServiceInterface
      * Supports riders (direct delivery), car drivers (indirect *_to_door modes),
      * and drop point keepers (*_to_drop_point modes).
      *
-     * @param int $shipmentId
-     * @param int $userId User ID (rider, car driver, or drop point keeper)
-     * @param string $collectedFrom 'sender' or 'receiver' to determine which party paid
-     * @return Model
+     * @param  int  $userId  User ID (rider, car driver, or drop point keeper)
+     * @param  string  $collectedFrom  'sender' or 'receiver' to determine which party paid
+     *
      * @throws \Exception
      */
     public function collectPayment(int $shipmentId, int $userId, string $collectedFrom = 'receiver'): Model
     {
         $user = User::find($userId);
-        if (!$user) {
+        if (! $user) {
             throw new \Exception('User not found.');
         }
 
         // Helper for case-insensitive role checks
         $hasRole = function (User $user, string $role): bool {
             $names = array_map('strtolower', $user->getRoleNames()->toArray());
+
             return in_array(strtolower($role), $names, true);
         };
 
@@ -1580,13 +1549,13 @@ class ShipmentService implements ShipmentServiceInterface
                     ->exists();
 
                 // If no assignment, check if they recorded the delivery in status history
-                if (!$hasAssignment) {
+                if (! $hasAssignment) {
                     $deliveredByUser = $shipment->statusHistory()
                         ->where('user_id', $userId)
                         ->where('to_status', ShipmentStatus::DELIVERED->value)
                         ->exists();
 
-                    if (!$deliveredByUser) {
+                    if (! $deliveredByUser) {
                         // Debug: Check what assignments and status history exist
                         $anyAssignment = $shipment->assignments()
                             ->where('user_id', $userId)
@@ -1597,11 +1566,11 @@ class ShipmentService implements ShipmentServiceInterface
                             ->exists();
 
                         $message = 'You are not authorized to collect payment for this shipment. ';
-                        if (!$anyAssignment && !$anyStatusByUser) {
+                        if (! $anyAssignment && ! $anyStatusByUser) {
                             $message .= 'You have no assignments or status updates for this shipment.';
-                        } elseif ($anyAssignment && !$hasAssignment) {
+                        } elseif ($anyAssignment && ! $hasAssignment) {
                             $message .= 'Your assignment has not been started. Please scan the parcel first.';
-                        } elseif ($anyStatusByUser && !$deliveredByUser) {
+                        } elseif ($anyStatusByUser && ! $deliveredByUser) {
                             $message .= 'You did not record the DELIVERED status for this shipment.';
                         }
 
@@ -1625,7 +1594,7 @@ class ShipmentService implements ShipmentServiceInterface
                     ->whereNotNull('started_at')
                     ->exists();
 
-                if (!$hasAssignment) {
+                if (! $hasAssignment) {
                     $shipment = null;
                 }
             }
@@ -1633,7 +1602,7 @@ class ShipmentService implements ShipmentServiceInterface
             throw new \Exception('Only riders, car drivers, or drop point keepers can collect payments.');
         }
 
-        if (!$shipment) {
+        if (! $shipment) {
             throw new \Exception('Job not found or not assigned to you.');
         }
 
@@ -1648,7 +1617,7 @@ class ShipmentService implements ShipmentServiceInterface
             ->where('to_status', ShipmentStatus::DELIVERED->value)
             ->exists();
 
-        if ($collectedFrom === 'receiver' && !$isDelivered) {
+        if ($collectedFrom === 'receiver' && ! $isDelivered) {
             throw new \Exception('Payment can only be collected after the shipment has been delivered.');
         }
 
@@ -1713,7 +1682,7 @@ class ShipmentService implements ShipmentServiceInterface
         ]);
 
         // Mark payment as collected and update status to Pending Handover
-        if (!$hasRole($user, Role::DROP_POINT_KEEPER->value)) {
+        if (! $hasRole($user, Role::DROP_POINT_KEEPER->value)) {
             $statusUpdate = [
                 'status' => ShipmentStatus::PENDING_HANDOVER->value,
             ];
@@ -1753,22 +1722,19 @@ class ShipmentService implements ShipmentServiceInterface
      * Scan and assign parcel to user (supports all roles and stages).
      * For indirect shipments, automatically detects the stage and creates self-assignment.
      *
-     * @param int $shipmentId
-     * @param int $userId
-     * @return Model
      * @throws \Exception
      */
     public function scanParcel(int $shipmentId, int $userId): Model
     {
         $shipment = $this->repository->find($shipmentId);
 
-        if (!$shipment) {
+        if (! $shipment) {
             throw new \Exception('Shipment not found.');
         }
 
         $user = User::find($userId);
 
-        if (!$user) {
+        if (! $user) {
             throw new \Exception('User not found.');
         }
 
@@ -1784,12 +1750,13 @@ class ShipmentService implements ShipmentServiceInterface
 
         // Check if shipment is already in a final status
         if ($this->isFinalStatus($currentStatus, $shipment->delivery_speed)) {
-            throw new \Exception('This shipment has already been completed with status: ' . $currentStatus);
+            throw new \Exception('This shipment has already been completed with status: '.$currentStatus);
         }
 
         // Helper for case-insensitive role checks
         $hasRole = function (User $user, string $role): bool {
             $names = array_map('strtolower', $user->getRoleNames()->toArray());
+
             return in_array(strtolower($role), $names, true);
         };
 
@@ -1806,9 +1773,9 @@ class ShipmentService implements ShipmentServiceInterface
             // For other modes, only riders can scan for initial pickup
             $isDropPointMode = $isIndirect && in_array($shipment->indirect_delivery_mode, ['drop_point_to_door', 'drop_point_to_drop_point'], true);
 
-            if ($isDropPointMode && !$hasRole($user, Role::DROP_POINT_KEEPER->value)) {
+            if ($isDropPointMode && ! $hasRole($user, Role::DROP_POINT_KEEPER->value)) {
                 throw new \Exception('Only drop point keepers can scan parcels for drop point deliveries.');
-            } elseif (!$isDropPointMode && !$hasRole($user, Role::RIDER->value)) {
+            } elseif (! $isDropPointMode && ! $hasRole($user, Role::RIDER->value)) {
                 throw new \Exception('Only riders can scan parcels for initial pickup.');
             }
 
@@ -1835,7 +1802,7 @@ class ShipmentService implements ShipmentServiceInterface
                         Role::DROP_POINT_KEEPER->value,
                         DeliveryStage::FIRST_DROP_POINT->value
                     );
-                    if (!$codCheck['can_accept']) {
+                    if (! $codCheck['can_accept']) {
                         throw new \Exception($codCheck['reason']);
                     }
                 }
@@ -1864,7 +1831,7 @@ class ShipmentService implements ShipmentServiceInterface
                 throw new \Exception('This parcel is already assigned to another rider.');
             }
 
-            $isNewAssignment = !$shipment->rider_id;
+            $isNewAssignment = ! $shipment->rider_id;
 
             // Update shipment rider_id (for backward compatibility)
             $this->repository->update($shipmentId, ['rider_id' => $userId]);
@@ -1879,7 +1846,7 @@ class ShipmentService implements ShipmentServiceInterface
             if ($isNewAssignment) {
                 // Check COD limit before allowing assignment
                 $codCheck = $this->checkCodLimitForAssignment($user, $shipment, $role, $stage);
-                if (!$codCheck['can_accept']) {
+                if (! $codCheck['can_accept']) {
                     throw new \Exception($codCheck['reason']);
                 }
 
@@ -1914,8 +1881,8 @@ class ShipmentService implements ShipmentServiceInterface
 
         // For direct shipments after initial assignment, scanning is not typically used
         // Direct flow uses status update API instead
-        if (!$isIndirect) {
-            throw new \Exception('Direct shipments should use status update API after initial pickup. Current status: ' . $shipment->status);
+        if (! $isIndirect) {
+            throw new \Exception('Direct shipments should use status update API after initial pickup. Current status: '.$shipment->status);
         }
 
         // Handle indirect shipment scanning - determine stage and role based on current status
@@ -1923,8 +1890,8 @@ class ShipmentService implements ShipmentServiceInterface
         $scanStatus = $this->resolveScanStatus($shipment);
         $stageInfo = $this->determineIndirectStageFromStatus($scanStatus, $user, $hasRole, $shipment);
 
-        if (!$stageInfo) {
-            throw new \Exception('Cannot scan parcel at current status: ' . $shipment->status);
+        if (! $stageInfo) {
+            throw new \Exception('Cannot scan parcel at current status: '.$shipment->status);
         }
 
         if ($hasRole($user, Role::CAR_DRIVER->value) || $hasRole($user, Role::RIDER->value)) {
@@ -1958,12 +1925,12 @@ class ShipmentService implements ShipmentServiceInterface
 
                 $link = $shipment->receiver_id ? route('customer.shipments.receiving_parcels_show', $shipment->id) : route('customer.shipments.show', helpers::getTrackShipmentId($shipment->id));
 
-                if($paymeraPaymentService){
+                if ($paymeraPaymentService) {
                     $data = [
                         'payment_type' => 'existing_shipment',
                         'payer_type' => 'receiver',
                         'shipment_id' => $shipment->id,
-                        'payment_method' => 'online'
+                        'payment_method' => 'online',
                     ];
                     $res = $paymeraPaymentService->createPaymeraPayment($data, $reciever);
                     $link = $res['payment_url'] ?? $link;
@@ -1993,7 +1960,7 @@ class ShipmentService implements ShipmentServiceInterface
 
         if ($existingAssignment) {
             // If already assigned, just start it if not started
-            if (!$existingAssignment->started_at) {
+            if (! $existingAssignment->started_at) {
                 $this->trackingService->startAssignment($existingAssignment);
 
                 // Auto-update status for car drivers (they scan and immediately take possession)
@@ -2024,7 +1991,7 @@ class ShipmentService implements ShipmentServiceInterface
             $stageInfo['expected_role'],
             $stageInfo['stage']
         );
-        if (!$codCheck['can_accept']) {
+        if (! $codCheck['can_accept']) {
             throw new \Exception($codCheck['reason']);
         }
 
@@ -2065,7 +2032,7 @@ class ShipmentService implements ShipmentServiceInterface
         $wasAutoUpdated = ($hasRole($user, Role::CAR_DRIVER->value) && isset($stageInfo['next_status']))
             || ($hasRole($user, Role::DROP_POINT_KEEPER->value) && isset($stageInfo['next_status']) && $stageInfo['next_status'] === ShipmentStatus::READY_FOR_PICKUP->value);
 
-        if ($shipment && $stageInfo && isset($stageInfo['next_status']) && !$wasAutoUpdated) {
+        if ($shipment && $stageInfo && isset($stageInfo['next_status']) && ! $wasAutoUpdated) {
             $shipment->suggested_next_status = $stageInfo['next_status'];
         }
 
@@ -2161,9 +2128,6 @@ class ShipmentService implements ShipmentServiceInterface
      * Determine the stage, role, and next status for scanning based on current shipment status.
      * This is used for indirect shipments to intelligently handle scanning at various stages.
      *
-     * @param string $currentStatus
-     * @param User $user
-     * @param callable $hasRole
      * @return array|null ['stage' => string, 'expected_role' => string, 'next_status' => string|null]
      */
     private function determineIndirectStageFromStatus(string $currentStatus, User $user, callable $hasRole, Shipment $shipment): ?array
@@ -2201,7 +2165,7 @@ class ShipmentService implements ShipmentServiceInterface
 
         // Safety guard: local-city shipments cannot scan Warehouse 2-only statuses.
         if (
-            !$useWarehouse2Flow &&
+            ! $useWarehouse2Flow &&
             in_array($currentStatus, [
                 ShipmentStatus::IN_TRANSIT_TO_WAREHOUSE_2->value,
                 ShipmentStatus::ARRIVED_AT_WAREHOUSE_2->value,
@@ -2498,11 +2462,12 @@ class ShipmentService implements ShipmentServiceInterface
      */
     private function isFinalStatus(?string $status, ?string $deliverySpeed): bool
     {
-        if (!$status) {
+        if (! $status) {
             return false;
         }
 
         $finalStatuses = array_map('strtolower', $this->finalStatusesForFlow($deliverySpeed));
+
         return in_array(strtolower($status), $finalStatuses, true);
     }
 
@@ -2513,7 +2478,7 @@ class ShipmentService implements ShipmentServiceInterface
      */
     private function ensureUserMatchesShipmentZone(Shipment $shipment, User $user): void
     {
-        if (($shipment->zone_id !== null && !$user->hasZone((int) $shipment->zone_id)) && ($shipment->delivery_zone_id !== null && !$user->hasZone((int) $shipment->delivery_zone_id))) {
+        if (($shipment->zone_id !== null && ! $user->hasZone((int) $shipment->zone_id)) && ($shipment->delivery_zone_id !== null && ! $user->hasZone((int) $shipment->delivery_zone_id))) {
             throw new \Exception('This shipment belongs to a different zone. Please contact your supervisor for reassignment.');
         }
     }
@@ -2523,16 +2488,16 @@ class ShipmentService implements ShipmentServiceInterface
      * For direct deliveries: Check the rider's limit.
      * For indirect deliveries: Check based on who will collect payment (usually final delivery employee).
      *
-     * @param User $user The employee to check
-     * @param Shipment $shipment The shipment being assigned
-     * @param string|null $role The role of the employee for this assignment
-     * @param string|null $stage The delivery stage being assigned
+     * @param  User  $user  The employee to check
+     * @param  Shipment  $shipment  The shipment being assigned
+     * @param  string|null  $role  The role of the employee for this assignment
+     * @param  string|null  $stage  The delivery stage being assigned
      * @return array ['can_accept' => bool, 'reason' => string|null, 'collected_today' => float, 'pending_cod' => float, 'limit' => float]
      */
     public function checkCodLimitForAssignment(User $user, Shipment $shipment, ?string $role = null, ?string $stage = null): array
     {
         // If user has no COD limit set, they can accept unlimited shipments
-        if (!$user->cod_collection_limit || $user->cod_collection_limit <= 0) {
+        if (! $user->cod_collection_limit || $user->cod_collection_limit <= 0) {
             return [
                 'can_accept' => true,
                 'reason' => null,
@@ -2557,7 +2522,7 @@ class ShipmentService implements ShipmentServiceInterface
         $willCollectPayment = $this->willUserCollectPayment($user, $shipment, $role, $stage);
 
         // If user won't collect payment for this shipment, COD limit doesn't apply
-        if (!$willCollectPayment) {
+        if (! $willCollectPayment) {
             return [
                 'can_accept' => true,
                 'reason' => null,
@@ -2611,12 +2576,6 @@ class ShipmentService implements ShipmentServiceInterface
 
     /**
      * Determine if a user will be responsible for collecting payment for a shipment.
-     *
-     * @param User $user
-     * @param Shipment $shipment
-     * @param string|null $role
-     * @param string|null $stage
-     * @return bool
      */
     private function willUserCollectPayment(User $user, Shipment $shipment, ?string $role = null, ?string $stage = null): bool
     {
@@ -2648,9 +2607,6 @@ class ShipmentService implements ShipmentServiceInterface
 
     /**
      * Calculate pending COD for a user (shipments assigned but payment not yet collected).
-     *
-     * @param User $user
-     * @return float
      */
     private function calculatePendingCod(User $user): float
     {
@@ -2713,16 +2669,14 @@ class ShipmentService implements ShipmentServiceInterface
     /**
      * Update barcode information for a shipment.
      *
-     * @param int $shipmentId
-     * @param int $userId The ID of the rider/user submitting the barcode
-     * @param string $barcodeNumber The barcode number to set
-     * @return Model|null
+     * @param  int  $userId  The ID of the rider/user submitting the barcode
+     * @param  string  $barcodeNumber  The barcode number to set
      */
     public function updateBarcode(int $shipmentId, int $userId, string $barcodeNumber): ?Model
     {
         $shipment = $this->repository->find($shipmentId);
 
-        if (!$shipment) {
+        if (! $shipment) {
             return null;
         }
 
@@ -2739,13 +2693,13 @@ class ShipmentService implements ShipmentServiceInterface
      * Calculate insurance fee for a new shipment based on current financial settings.
      * This method reads from the raw data array (before the Shipment model is created).
      *
-     * @param array $data The shipment data
+     * @param  array  $data  The shipment data
      * @return float The calculated insurance fee
      */
     private function calculateInsuranceFeeForNewShipment(array $data): float
     {
         // If insurance is not opted in, return 0
-        if (!isset($data['insurance']) || strtolower(trim($data['insurance'])) !== 'yes') {
+        if (! isset($data['insurance']) || strtolower(trim($data['insurance'])) !== 'yes') {
             return 0.0;
         }
 

@@ -7,6 +7,4 @@ use Interfaces\BaseRepositoryInterface;
 /**
  * Interface for role repository.
  */
-interface RoleRepositoryInterface extends BaseRepositoryInterface
-{
-}
+interface RoleRepositoryInterface extends BaseRepositoryInterface {}

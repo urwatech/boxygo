@@ -8,8 +8,8 @@ use App\Enums\ShipmentStatus;
 use App\Models\Shipment;
 use App\Models\ShipmentAssignment;
 use App\Models\ShipmentStatusDirect;
-use App\Models\ShipmentStatusIndirect;
 use App\Models\ShipmentStatusHistory;
+use App\Models\ShipmentStatusIndirect;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -65,22 +65,22 @@ class ShipmentFactory extends Factory
             'schedule_time' => fake()->randomElement(['immediate', 'scheduled']),
 
             // Pickup location
-            'handover_address' => fake()->streetAddress() . ', Damascus, Syria',
+            'handover_address' => fake()->streetAddress().', Damascus, Syria',
             'handover_latitude' => $pickupLat,
             'handover_longitude' => $pickupLng,
             'sender_name' => fake()->name(),
-            'sender_phone' => '+963' . fake()->numerify('9########'),
+            'sender_phone' => '+963'.fake()->numerify('9########'),
             'sender_landmark' => fake()->randomElement(['Near Central Bank', 'Behind Post Office', 'Next to School', 'Opposite Hospital']),
-            'sender_building' => 'Building ' . fake()->randomElement(['A', 'B', 'C']) . ', Floor ' . fake()->numberBetween(1, 10),
+            'sender_building' => 'Building '.fake()->randomElement(['A', 'B', 'C']).', Floor '.fake()->numberBetween(1, 10),
 
             // Delivery location
-            'delivery_address' => fake()->streetAddress() . ', Damascus, Syria',
+            'delivery_address' => fake()->streetAddress().', Damascus, Syria',
             'delivery_latitude' => $deliveryLat,
             'delivery_longitude' => $deliveryLng,
             'receiver_name' => fake()->name(),
-            'receiver_phone' => '+963' . fake()->numerify('9########'),
+            'receiver_phone' => '+963'.fake()->numerify('9########'),
             'receiver_landmark' => fake()->randomElement(['Near City Mall', 'Behind Police Station', 'Next to Pharmacy', 'Opposite Mosque']),
-            'receiver_building' => 'Building ' . fake()->randomElement(['1', '2', '3']) . ', Apt ' . fake()->numberBetween(1, 20),
+            'receiver_building' => 'Building '.fake()->randomElement(['1', '2', '3']).', Apt '.fake()->numberBetween(1, 20),
 
             // Extras
             'accept_returns' => fake()->boolean(30),
@@ -382,7 +382,7 @@ class ShipmentFactory extends Factory
      */
     protected function getStatusLatitude(Shipment $shipment, int $index): ?float
     {
-        return match($index) {
+        return match ($index) {
             1, 2 => $shipment->handover_latitude, // Assigned, Pickup - at pickup location
             5 => $shipment->delivery_latitude, // Delivered - at delivery location
             default => fake()->randomFloat(6, 33.48, 33.56), // In transit/out for delivery - random
@@ -394,7 +394,7 @@ class ShipmentFactory extends Factory
      */
     protected function getStatusLongitude(Shipment $shipment, int $index): ?float
     {
-        return match($index) {
+        return match ($index) {
             1, 2 => $shipment->handover_longitude, // Assigned, Pickup - at pickup location
             5 => $shipment->delivery_longitude, // Delivered - at delivery location
             default => fake()->randomFloat(6, 36.24, 36.36), // In transit/out for delivery - random
@@ -406,12 +406,12 @@ class ShipmentFactory extends Factory
      */
     protected function getLocationName(Shipment $shipment, int $index): ?string
     {
-        return match($index) {
+        return match ($index) {
             1 => 'Shipment assigned to rider',
-            2 => 'Picked up from sender: ' . $shipment->handover_address,
+            2 => 'Picked up from sender: '.$shipment->handover_address,
             3 => 'In transit to delivery location',
-            4 => 'Out for delivery in ' . $this->extractCity($shipment->delivery_address),
-            5 => 'Delivered to: ' . $shipment->delivery_address,
+            4 => 'Out for delivery in '.$this->extractCity($shipment->delivery_address),
+            5 => 'Delivered to: '.$shipment->delivery_address,
             default => null,
         };
     }
@@ -428,6 +428,7 @@ class ShipmentFactory extends Factory
         if ($index === $finalIndex) {
             return $shipment->delivery_latitude;
         }
+
         return fake()->randomFloat(6, 33.48, 33.56);
     }
 
@@ -443,6 +444,7 @@ class ShipmentFactory extends Factory
         if ($index === $finalIndex) {
             return $shipment->delivery_longitude;
         }
+
         return fake()->randomFloat(6, 36.24, 36.36);
     }
 
@@ -451,9 +453,9 @@ class ShipmentFactory extends Factory
      */
     protected function getIndirectLocationName(Shipment $shipment, int $index): ?string
     {
-        return match($index) {
+        return match ($index) {
             1 => 'Shipment assigned to rider',
-            2 => 'Picked up from sender: ' . $shipment->handover_address,
+            2 => 'Picked up from sender: '.$shipment->handover_address,
             3 => 'In transit to first drop point',
             4 => 'Arrived at first drop point',
             5 => 'Delivered to first drop point keeper',
@@ -464,7 +466,7 @@ class ShipmentFactory extends Factory
             10 => 'Dispatched from warehouse',
             11 => 'Pickup from warehouse',
             12 => 'In transit to second drop point',
-            13 => 'Arrived at second drop point in ' . $this->extractCity($shipment->delivery_address),
+            13 => 'Arrived at second drop point in '.$this->extractCity($shipment->delivery_address),
             14 => 'Ready for pickup at drop point',
             15 => 'Picked up by receiver',
             default => null,
@@ -477,6 +479,7 @@ class ShipmentFactory extends Factory
     protected function extractCity(string $address): string
     {
         $parts = explode(',', $address);
+
         return trim($parts[1] ?? 'Damascus');
     }
 
@@ -485,7 +488,7 @@ class ShipmentFactory extends Factory
      */
     protected function getStatusNotes(ShipmentStatus $status): ?string
     {
-        return match($status) {
+        return match ($status) {
             ShipmentStatus::ASSIGNED => 'Shipment has been assigned to a rider',
             ShipmentStatus::PICKUP => fake()->boolean(70) ? 'Package collected from sender' : null,
             ShipmentStatus::IN_TRANSIT => fake()->boolean(50) ? 'Package is on the way' : null,
@@ -495,7 +498,7 @@ class ShipmentFactory extends Factory
                 'Delivered to receiver',
                 'Left at front door',
                 'Handed to receiver',
-                null
+                null,
             ]),
             default => null,
         };
@@ -506,7 +509,7 @@ class ShipmentFactory extends Factory
      */
     protected function getIndirectStatusNotes(ShipmentStatus $status): ?string
     {
-        return match($status) {
+        return match ($status) {
             ShipmentStatus::ASSIGNED => 'Shipment has been assigned to a rider',
             ShipmentStatus::PICKUP => fake()->boolean(70) ? 'Package collected from sender' : null,
             ShipmentStatus::ARRIVED_AT_DROP_POINT_1 => fake()->boolean(60) ? 'Package arrived at first drop point' : null,
@@ -518,13 +521,13 @@ class ShipmentFactory extends Factory
             ShipmentStatus::READY_FOR_PICKUP => fake()->randomElement([
                 'Package is ready for pickup',
                 'Receiver can collect the package',
-                null
+                null,
             ]),
             ShipmentStatus::PICKED_UP_BY_RECEIVER => fake()->randomElement([
                 'Package picked up by receiver',
                 'Delivery completed',
                 'Receiver collected the package',
-                null
+                null,
             ]),
             ShipmentStatus::DISPATCHED_FROM_DROP_POINT_2 => fake()->boolean(60) ? 'Package dispatched for door delivery' : null,
             ShipmentStatus::PICKUP_FROM_DROP_POINT_2 => fake()->boolean(60) ? 'Car driver picked up from drop point 2' : null,

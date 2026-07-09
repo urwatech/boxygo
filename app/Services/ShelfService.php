@@ -34,18 +34,18 @@ class ShelfService extends AbstractService implements ShelfServiceInterface
         return DB::transaction(function () use ($shelfId, $shipmentId) {
             $shelf = $this->shelfRepository->lockForUpdate($shelfId);
 
-            if (!$shelf) {
-                throw (new ModelNotFoundException())->setModel(Shelf::class, [$shelfId]);
+            if (! $shelf) {
+                throw (new ModelNotFoundException)->setModel(Shelf::class, [$shelfId]);
             }
 
-            if (!$shelf->is_active) {
+            if (! $shelf->is_active) {
                 throw new RuntimeException('Selected shelf is not active.');
             }
 
             $shipment = $this->shipmentRepository->find($shipmentId);
 
-            if (!$shipment) {
-                throw (new ModelNotFoundException())->setModel(Shipment::class, [$shipmentId]);
+            if (! $shipment) {
+                throw (new ModelNotFoundException)->setModel(Shipment::class, [$shipmentId]);
             }
 
             $previousShelfId = $shipment->shelf_id;
@@ -55,7 +55,7 @@ class ShelfService extends AbstractService implements ShelfServiceInterface
             // }
 
             if ($previousShelfId === $shelf->id) {
-                if (!$shipment->shelf_assigned_at) {
+                if (! $shipment->shelf_assigned_at) {
                     $this->shipmentRepository->update($shipment->id, [
                         'shelf_assigned_at' => now(),
                     ]);

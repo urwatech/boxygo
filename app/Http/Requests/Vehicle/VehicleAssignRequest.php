@@ -11,7 +11,7 @@ class VehicleAssignRequest extends FormRequest
         // return $this->user()?->hasRole('superadmin') ?? false;
         $user = $this->user();
 
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -35,6 +35,7 @@ class VehicleAssignRequest extends FormRequest
                         // Check if user is already assigned to this vehicle
                         if ($vehicle->user_id == $value) {
                             $fail('This person is already assigned to this vehicle.');
+
                             return;
                         }
 
@@ -44,7 +45,7 @@ class VehicleAssignRequest extends FormRequest
                             ->first();
 
                         if ($existingAssignment) {
-                            $fail('This person is already assigned to another vehicle (Code: ' . $existingAssignment->code . ').');
+                            $fail('This person is already assigned to another vehicle (Code: '.$existingAssignment->code.').');
                         }
                     }
                 },

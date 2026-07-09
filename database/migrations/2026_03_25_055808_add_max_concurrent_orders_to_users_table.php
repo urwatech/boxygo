@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('users', 'max_concurrent_orders')) {
+        if (! Schema::hasColumn('users', 'max_concurrent_orders')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->unsignedInteger('max_concurrent_orders')->default(1)->after('availability');
             });

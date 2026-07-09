@@ -34,6 +34,7 @@ class BackfillShipmentInsuranceFee extends Command
 
         if ($shipments->isEmpty()) {
             $this->info('No shipments found that need backfilling.');
+
             return Command::SUCCESS;
         }
 
@@ -56,7 +57,7 @@ class BackfillShipmentInsuranceFee extends Command
 
                 $updated++;
             } catch (\Exception $e) {
-                $this->error("\nError updating shipment {$shipment->id}: " . $e->getMessage());
+                $this->error("\nError updating shipment {$shipment->id}: ".$e->getMessage());
                 $skipped++;
             }
 
@@ -66,7 +67,7 @@ class BackfillShipmentInsuranceFee extends Command
         $bar->finish();
         $this->newLine();
 
-        $this->info("Backfill complete!");
+        $this->info('Backfill complete!');
         $this->info("Updated: {$updated} shipments");
 
         if ($skipped > 0) {

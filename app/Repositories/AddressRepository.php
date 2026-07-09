@@ -16,14 +16,10 @@ class AddressRepository implements AddressRepositoryInterface
 {
     public function __construct(
         private readonly Address $model
-    ) {
-    }
+    ) {}
 
     /**
      * Get all addresses for a specific user.
-     *
-     * @param int $userId
-     * @return Collection
      */
     public function getByUserId(int $userId): Collection
     {
@@ -35,9 +31,6 @@ class AddressRepository implements AddressRepositoryInterface
 
     /**
      * Create a new address for a user.
-     *
-     * @param array $data
-     * @return Model
      */
     public function create(array $data): Model
     {
@@ -47,16 +40,13 @@ class AddressRepository implements AddressRepositoryInterface
     /**
      * Update an address.
      *
-     * @param int|string $id
-     * @param array $data
      * @return \Illuminate\Database\Eloquent\Model|null
      */
-
     public function update(int|string $id, array $data): bool
     {
         return $this->model
-                ->where($this->model->getKeyName(), $id)
-                ->update($data) > 0;
+            ->where($this->model->getKeyName(), $id)
+            ->update($data) > 0;
     }
     // public function update(int|string $id, array $data): ?\Illuminate\Database\Eloquent\Model
     // {
@@ -73,9 +63,6 @@ class AddressRepository implements AddressRepositoryInterface
 
     /**
      * Delete an address.
-     *
-     * @param int|string $id
-     * @return bool
      */
     public function delete(int|string $id): bool
     {
@@ -86,9 +73,6 @@ class AddressRepository implements AddressRepositoryInterface
 
     /**
      * Find an address by ID.
-     *
-     * @param int|string $id
-     * @return Model|null
      */
     public function find(int|string $id): ?Model
     {
@@ -97,10 +81,6 @@ class AddressRepository implements AddressRepositoryInterface
 
     /**
      * Check if address belongs to user.
-     *
-     * @param int|string $addressId
-     * @param int $userId
-     * @return bool
      */
     public function belongsToUser(int|string $addressId, int $userId): bool
     {

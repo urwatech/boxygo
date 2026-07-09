@@ -36,7 +36,7 @@ enum DeliveryStage: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PICKUP => 'Pickup from Sender',
             self::FIRST_DROP_POINT => 'First Drop Point',
             self::TO_WAREHOUSE => 'Transit to Warehouse',

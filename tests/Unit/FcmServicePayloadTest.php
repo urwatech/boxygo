@@ -9,7 +9,7 @@ class FcmServicePayloadTest extends TestCase
 {
     public function test_web_push_payload_is_data_only(): void
     {
-        $service = $this->testableService();
+        $service = $this->makeService();
 
         $payload = $service->messagePayload(
             'web-token',
@@ -39,7 +39,7 @@ class FcmServicePayloadTest extends TestCase
 
     public function test_native_payload_keeps_notification_block(): void
     {
-        $service = $this->testableService();
+        $service = $this->makeService();
 
         $payload = $service->messagePayload(
             'native-token',
@@ -62,9 +62,10 @@ class FcmServicePayloadTest extends TestCase
         $this->assertSame('default', $payload['apns']['payload']['aps']['sound']);
     }
 
-    private function testableService(): object
+    private function makeService(): object
     {
-        return new class extends FcmService {
+        return new class extends FcmService
+        {
             public function messagePayload(
                 string $fcmToken,
                 string $title,

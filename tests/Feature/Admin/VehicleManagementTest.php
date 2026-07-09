@@ -123,9 +123,7 @@ class VehicleManagementTest extends TestCase
             ],
         );
 
-        // $user = User::factory()->create([
-        //     'employment_type' => 'rider',
-        // ]);
+        $user = User::factory()->create();
 
         $user->assignRole($role);
 

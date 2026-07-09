@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
-use App\Support\FinancialSettings;
 use App\Models\System;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +20,7 @@ class SettingsController extends Controller
         $user = $request->user();
 
         // Allow access if user has at least one settings permission
-        if (!$user || (!$user->can('settings.profile') && !$user->can('settings.password'))) {
+        if (! $user || (! $user->can('settings.profile') && ! $user->can('settings.password'))) {
             abort(401);
         }
 
@@ -50,7 +49,7 @@ class SettingsController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('settings.profile')) {
+        if (! $user || ! $user->can('settings.profile')) {
             abort(401);
         }
 
@@ -87,7 +86,7 @@ class SettingsController extends Controller
                 delete_media_file($user->avatar_path);
             }
 
-            $fileName = 'avatar_' . $user->id . '_' . time();
+            $fileName = 'avatar_'.$user->id.'_'.time();
             $data['avatar_path'] = store_public_upload($avatar, 'admin-settings', 'avatars', $fileName);
         }
 
@@ -106,7 +105,7 @@ class SettingsController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('settings.password')) {
+        if (! $user || ! $user->can('settings.password')) {
             abort(401);
         }
 
@@ -129,8 +128,8 @@ class SettingsController extends Controller
         $user = $request->user();
 
         if (
-            !$user
-            || (!$user->can('settings.profile') && !$user->can('settings.financial'))
+            ! $user
+            || (! $user->can('settings.profile') && ! $user->can('settings.financial'))
         ) {
             abort(401);
         }
@@ -171,7 +170,7 @@ class SettingsController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('settings.profile') && !$user->can('settings.password'))) {
+        if (! $user || (! $user->can('settings.profile') && ! $user->can('settings.password'))) {
             abort(401);
         }
 

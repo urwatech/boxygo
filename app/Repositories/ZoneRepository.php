@@ -29,11 +29,11 @@ class ZoneRepository extends AbstractRepository implements ZoneRepositoryInterfa
             });
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['city'])) {
+        if (! empty($filters['city'])) {
             $query->where('city', $filters['city']);
         }
 
@@ -60,11 +60,11 @@ class ZoneRepository extends AbstractRepository implements ZoneRepositoryInterfa
             });
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['city'])) {
+        if (! empty($filters['city'])) {
             $query->where('city', $filters['city']);
         }
 
@@ -159,7 +159,7 @@ class ZoneRepository extends AbstractRepository implements ZoneRepositoryInterfa
     {
         $zone = $this->model->newQuery()->whereKey($id)->first();
 
-        if (!$zone) {
+        if (! $zone) {
             return false;
         }
 

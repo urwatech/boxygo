@@ -63,7 +63,7 @@ class SyncExternalZonesJob implements ShouldQueue
 
                 $this->updateProgress('fetching', $totalSynced, $totalCount, "Fetching Prices ($totalSynced / $totalCount)...");
 
-                if (!empty($batch)) {
+                if (! empty($batch)) {
                     DB::beginTransaction();
                     $this->processPrices($batch);
                     DB::commit();
@@ -79,8 +79,8 @@ class SyncExternalZonesJob implements ShouldQueue
             if (DB::transactionLevel() > 0) {
                 DB::rollBack();
             }
-            $this->updateProgress('failed', 0, 0, 'Sync failed: ' . $e->getMessage());
-            Log::error('SyncExternalZonesJob failed: ' . $e->getMessage(), [
+            $this->updateProgress('failed', 0, 0, 'Sync failed: '.$e->getMessage());
+            Log::error('SyncExternalZonesJob failed: '.$e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
             throw $e;
@@ -103,6 +103,7 @@ class SyncExternalZonesJob implements ShouldQueue
     {
         if (empty($zones)) {
             Log::warning('No zones returned from API.');
+
             return;
         }
 
@@ -121,6 +122,7 @@ class SyncExternalZonesJob implements ShouldQueue
                 Log::warning('Skipping zone sync row because code could not be resolved.', [
                     'zone_payload' => $zoneData,
                 ]);
+
                 continue;
             }
 
@@ -228,7 +230,7 @@ class SyncExternalZonesJob implements ShouldQueue
             ));
         }
 
-        Log::info('Zones synced: ' . count($zones));
+        Log::info('Zones synced: '.count($zones));
     }
 
     protected function normalizeExternalId(mixed $externalId): ?string
@@ -301,7 +303,7 @@ class SyncExternalZonesJob implements ShouldQueue
         $minLng = null;
         $maxLng = null;
 
-        if (!empty($zoneData['zoneDrawing'])) {
+        if (! empty($zoneData['zoneDrawing'])) {
             $rawDrawing = is_string($zoneData['zoneDrawing'])
                 ? json_decode($zoneData['zoneDrawing'], true)
                 : $zoneData['zoneDrawing'];
@@ -313,7 +315,7 @@ class SyncExternalZonesJob implements ShouldQueue
                 foreach ($rawDrawing as $drawingObj) {
                     $coordsArr = $drawingObj['coords'] ?? null;
 
-                    if (!is_array($coordsArr) || empty($coordsArr)) {
+                    if (! is_array($coordsArr) || empty($coordsArr)) {
                         continue;
                     }
 
@@ -348,12 +350,12 @@ class SyncExternalZonesJob implements ShouldQueue
                         $normalizedPoints[] = ['lat' => $lat, 'lng' => $lng];
                     }
 
-                    if (!empty($normalizedPoints)) {
+                    if (! empty($normalizedPoints)) {
                         $normalizedPolygons[] = $normalizedPoints;
                     }
                 }
 
-                $drawnPaths = !empty($normalizedPolygons) ? $normalizedPolygons : null;
+                $drawnPaths = ! empty($normalizedPolygons) ? $normalizedPolygons : null;
             }
         }
 
@@ -378,13 +380,14 @@ class SyncExternalZonesJob implements ShouldQueue
     {
         if (empty($dropPoints)) {
             Log::warning('No drop points returned from API.');
+
             return;
         }
 
         foreach ($dropPoints as $dpData) {
             // Find mapping zone
             $zoneId = null;
-            if (!empty($dpData['zoneId'])) {
+            if (! empty($dpData['zoneId'])) {
                 $zone = Zone::query()
                     ->notDeleted()
                     ->where('ext_id', $dpData['zoneId'])
@@ -396,7 +399,7 @@ class SyncExternalZonesJob implements ShouldQueue
 
             $drawingPoint = collect($dpData['locationDrawing'] ?? [])
                 ->first(function ($item) {
-                    return is_array($item) && !empty($item['coords']) && is_array($item['coords']);
+                    return is_array($item) && ! empty($item['coords']) && is_array($item['coords']);
                 });
             $coords = is_array($drawingPoint) ? ($drawingPoint['coords'][0] ?? null) : null;
             $latitude = $dpData['locationLat']
@@ -426,13 +429,14 @@ class SyncExternalZonesJob implements ShouldQueue
             );
         }
 
-        Log::info('Drop Points synced: ' . count($dropPoints));
+        Log::info('Drop Points synced: '.count($dropPoints));
     }
 
     protected function processPrices(array $prices): void
     {
         if (empty($prices)) {
             Log::warning('No City Shipment Prices returned from API.');
+
             return;
         }
 
@@ -475,7 +479,7 @@ class SyncExternalZonesJob implements ShouldQueue
                 'price4',
                 'price5',
                 'price6',
-                'updated_at'
+                'updated_at',
             ]
         );
     }

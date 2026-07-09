@@ -21,6 +21,7 @@ class WarehouseKeeperSeeder extends Seeder
 
         if ($existingUser) {
             $this->command->info('Warehouse keeper already exists: warehouse@example.com');
+
             return;
         }
 

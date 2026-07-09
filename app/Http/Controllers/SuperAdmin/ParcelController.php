@@ -7,10 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Parcel;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\File;
 
 class ParcelController extends Controller
 {
@@ -18,8 +18,7 @@ class ParcelController extends Controller
 
     public function __construct(
         private readonly ParcelServiceInterface $parcelService
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.
@@ -28,7 +27,7 @@ class ParcelController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('parcels.view')) {
+        if (! $user || ! $user->can('parcels.view')) {
             abort(401);
         }
 
@@ -46,6 +45,7 @@ class ParcelController extends Controller
             ], $perPage)
             ->through(function (Parcel $parcel) {
                 $icon = media_url($parcel->icon_path);
+
                 return [
                     'id' => $parcel->id,
                     'name' => $parcel->name,
@@ -90,7 +90,7 @@ class ParcelController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('parcels.create'))) {
+        if (! $user || (! $user->can('parcels.create'))) {
             abort(401);
         }
 
@@ -101,12 +101,12 @@ class ParcelController extends Controller
         if ($request->hasFile('icon')) {
             $file = $request->file('icon');
             $dir = public_path('assets/parcel-icons');
-            if (!File::exists($dir)) {
+            if (! File::exists($dir)) {
                 File::makeDirectory($dir, 0755, true);
             }
-            $filename = uniqid('icon_', true) . '.' . $file->getClientOriginalExtension();
+            $filename = uniqid('icon_', true).'.'.$file->getClientOriginalExtension();
             $file->move($dir, $filename);
-            $attributes['icon_path'] = '/assets/parcel-icons/' . $filename;
+            $attributes['icon_path'] = '/assets/parcel-icons/'.$filename;
         }
         $attributes['status'] = Parcel::STATUS_ACTIVE;
 
@@ -124,13 +124,13 @@ class ParcelController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || (!$user->can('parcels.edit'))) {
+        if (! $user || (! $user->can('parcels.edit'))) {
             abort(401);
         }
 
         $parcel = $this->parcelService->find($id);
 
-        if (!$parcel) {
+        if (! $parcel) {
             abort(404, __('parcelNotFound'));
         }
 
@@ -138,20 +138,20 @@ class ParcelController extends Controller
 
         $attributes = $this->formatAttributes($validated);
 
-            // Replace icon if a new one is uploaded
-            if ($request->hasFile('icon')) {
-                if (!empty($parcel->icon_path)) {
-                    delete_media_file($parcel->icon_path);
-                }
+        // Replace icon if a new one is uploaded
+        if ($request->hasFile('icon')) {
+            if (! empty($parcel->icon_path)) {
+                delete_media_file($parcel->icon_path);
+            }
 
             $file = $request->file('icon');
             $dir = public_path('assets/parcel-icons');
-            if (!File::exists($dir)) {
+            if (! File::exists($dir)) {
                 File::makeDirectory($dir, 0755, true);
             }
-            $filename = uniqid('icon_', true) . '.' . $file->getClientOriginalExtension();
+            $filename = uniqid('icon_', true).'.'.$file->getClientOriginalExtension();
             $file->move($dir, $filename);
-            $attributes['icon_path'] = '/assets/parcel-icons/' . $filename;
+            $attributes['icon_path'] = '/assets/parcel-icons/'.$filename;
         }
 
         if (array_key_exists('status', $validated)) {
@@ -172,13 +172,13 @@ class ParcelController extends Controller
     {
         $user = auth()->user();
 
-        if (!$user || (!$user->can('parcels.delete'))) {
+        if (! $user || (! $user->can('parcels.delete'))) {
             abort(401);
         }
 
         $parcel = $this->parcelService->find($id);
 
-        if (!$parcel) {
+        if (! $parcel) {
             abort(404, __('parcelNotFound'));
         }
 
@@ -196,13 +196,13 @@ class ParcelController extends Controller
     {
         $user = $request->user();
 
-        if (!$user || !$user->can('parcels.status')) {
+        if (! $user || ! $user->can('parcels.status')) {
             abort(401);
         }
 
         $parcel = $this->parcelService->find($id);
 
-        if (!$parcel) {
+        if (! $parcel) {
             abort(404, __('parcelNotFound'));
         }
 
@@ -258,7 +258,7 @@ class ParcelController extends Controller
         ];
 
         foreach ($numericFields as $field) {
-            if (!array_key_exists($field, $attributes)) {
+            if (! array_key_exists($field, $attributes)) {
                 continue;
             }
 

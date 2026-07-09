@@ -2,16 +2,16 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\LocalizedFcm;
 use App\Services\FcmService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
-use App\Notifications\Concerns\LocalizedFcm;
 
 class ShipmentIncompleteDroppointNotification extends Notification implements ShouldQueue
 {
-    use Queueable;
     use LocalizedFcm;
+    use Queueable;
 
     /**
      * Create a new notification instance.
@@ -33,14 +33,11 @@ class ShipmentIncompleteDroppointNotification extends Notification implements Sh
 
     /**
      * Send FCM push notification
-     *
-     * @param object $notifiable
-     * @return void
      */
     public function toFcm(object $notifiable): void
     {
         // Only send FCM if user has push notifications enabled and has a token
-        if (!$notifiable->push_notifications || !$notifiable->fcm_token) {
+        if (! $notifiable->push_notifications || ! $notifiable->fcm_token) {
             return;
         }
 

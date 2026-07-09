@@ -11,16 +11,13 @@ class ZoneController extends Controller
 {
     /**
      * Check if coordinates fall within any active zone.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function check(Request $request): JsonResponse
     {
         $latitude = $request->query('lat');
         $longitude = $request->query('lon');
 
-        if (!is_numeric($latitude) || !is_numeric($longitude)) {
+        if (! is_numeric($latitude) || ! is_numeric($longitude)) {
             return response()->json([
                 'exists' => false,
                 'data' => null,

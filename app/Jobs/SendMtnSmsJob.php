@@ -29,7 +29,7 @@ class SendMtnSmsJob implements ShouldQueue
 
     public function handle(MtnSmsService $smsService): void
     {
-        if (!$smsService->sendNow($this->phone, $this->message, $this->type)) {
+        if (! $smsService->sendNow($this->phone, $this->message, $this->type)) {
             throw new RuntimeException('MTN SMS sending failed.');
         }
     }

@@ -54,7 +54,7 @@ class UserFactory extends Factory
     public function rider(): static
     {
         return $this->state(fn (array $attributes) => [
-            'employee_id' => 'RDR-' . fake()->unique()->numberBetween(1000, 9999),
+            'employee_id' => 'RDR-'.fake()->unique()->numberBetween(1000, 9999),
             'shipment_type' => fake()->randomElement(['bike', 'van', 'car']),
             'delivery_speed_mode' => fake()->randomElement(['direct', 'indirect']),
             'employment_type' => fake()->randomElement(['full_time', 'part_time', 'contract']),
