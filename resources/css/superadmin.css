@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap');
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../js/Pages/SuperAdmin/**/*.jsx';
+@source '../js/Pages/Layouts/SuperAdminAuthenticated.jsx';
+
+@theme {
+    --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* SuperAdmin specific styles */
+body {
+    font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+}
+
+.sidebar {
+    background-color: #338dff;
+}
+
+.hover-effect:hover {
+    background-color: #f9fafb;
+}
+
+select {
+    appearance: none;
+    background: none;
+    padding-right: 1.5rem;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="none" stroke="%23666" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1rem;
+}
+.filter-blue {
+    filter: brightness(0) saturate(100%) invert(35%) sepia(93%) saturate(2221%)
+        hue-rotate(198deg) brightness(95%) contrast(90%);
+}
+
+.filter-black {
+    filter: brightness(0) saturate(100%) invert(0%) sepia(0%) saturate(0%)
+        hue-rotate(0deg) brightness(0%) contrast(100%);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

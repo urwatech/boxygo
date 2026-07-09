@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Push Notification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .result-details {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .user-info {
+            margin: 10px 0;
+        }
+
+        .user-info strong {
+            display: inline-block;
+            width: 120px;
+        }
+
+        .next-steps {
+            margin-top: 15px;
+        }
+
+        .next-steps ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .next-steps li {
+            margin: 5px 0;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .quick-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .quick-btn:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Test Push Notification</h1>
+        <p class="subtitle">Send a test push notification to any user with FCM token</p>
+
+        <div class="input-group">
+            <label for="userId">User ID</label>
+            <input type="number" id="userId" placeholder="Enter user ID (default: 165)" value="165">
+        </div>
+
+        <div class="quick-buttons">
+            <button class="quick-btn" onclick="setUserId(165)">User 165</button>
+            <button class="quick-btn" onclick="setUserId(1)">User 1</button>
+        </div>
+
+        <button id="sendBtn" onclick="sendNotification()">
+            Send Test Notification
+        </button>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function setUserId(id) {
+            document.getElementById('userId').value = id;
+        }
+
+        async function sendNotification() {
+            const userId = document.getElementById('userId').value || 165;
+            const sendBtn = document.getElementById('sendBtn');
+            const resultDiv = document.getElementById('result');
+
+            // Disable button and show loading
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = 'Sending... <span class="loading"></span>';
+            resultDiv.style.display = 'none';
+
+            try {
+                const response = await fetch(`/test-push-notification/${userId}`);
+                const data = await response.json();
+
+                resultDiv.style.display = 'block';
+
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ ${data.message}</h3>
+
+                        <div class="user-info">
+                            <strong>User ID:</strong> ${data.user.id}<br>
+                            <strong>Name:</strong> ${data.user.name}<br>
+                            <strong>Email:</strong> ${data.user.email}<br>
+                            <strong>Device:</strong> ${data.user.device_type || 'Unknown'}<br>
+                            <strong>FCM Token:</strong> ${data.user.fcm_token}
+                        </div>
+
+                        <div class="result-details">
+                            <strong>Notification Details:</strong><br>
+                            <strong>Title:</strong> ${data.notification.title}<br>
+                            <strong>Body:</strong> ${data.notification.body}<br>
+                            <strong>Type:</strong> ${data.notification.type}
+                        </div>
+
+                        <div class="next-steps">
+                            <strong>Next Steps:</strong>
+                            <ul>
+                                ${data.next_steps.map(step => `<li>${step}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ ${data.message}</h3>
+                        ${data.user ? `
+                            <div class="user-info">
+                                <strong>User ID:</strong> ${data.user.id}<br>
+                                <strong>Name:</strong> ${data.user.name}<br>
+                                <strong>Email:</strong> ${data.user.email || 'N/A'}<br>
+                                <strong>FCM Token:</strong> ${data.user.fcm_token || 'None'}<br>
+                                <strong>Push Enabled:</strong> ${data.user.push_notifications ? 'Yes' : 'No'}
+                            </div>
+                        ` : ''}
+                        ${data.error ? `
+                            <div class="result-details">
+                                <strong>Error:</strong> ${data.error}
+                            </div>
+                        ` : ''}
+                    `;
+                }
+            } catch (error) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Network Error</h3>
+                    <p>Failed to send notification. Please check your connection and try again.</p>
+                    <div class="result-details">${error.message}</div>
+                `;
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = 'Send Test Notification';
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('userId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendNotification();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap');
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../js/Pages/Customer/**/*.jsx';
+@source '../js/Pages/Layouts/Guest.jsx';
+
+@theme {
+    --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+/* Customer specific styles */
+body {
+    font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+img[alt="Google"] {
+  display: none !important;
+}
+
+button[aria-label="Keyboard shortcuts"] {
+    display: none !important;
+}
+
+.gm-style-cc{
+    display: none !important;
+}
+
+.gmnoprint.gm-style-cc{
+    display: none !important;
+}
+
+/* [dir="rtl"] .flex {
+    flex-direction: row-reverse;
+} */
+
+[dir="rtl"] .text-left {
+    text-align: right;
+}
+
+[dir="rtl"] .text-right {
+    text-align: left;
+}
+
+/* Adjust padding and margins for RTL */
+/* [dir="rtl"] .pl-4 {
+    padding-left: 0;
+    padding-right: 1rem;
+} */
+
+[dir="rtl"] .pr-4 {
+    padding-right: 0;
+    padding-left: 1rem;
+}
+
+[dir="rtl"] .ml-3 {
+    margin-left: 0;
+    margin-right: 0.75rem;
+}
+
+[dir="rtl"] .mr-3 {
+    margin-right: 0;
+    margin-left: 0.75rem;
+} */
+
+/* Reverse arrow icons for RTL */
+[dir="rtl"] .rotate-180 {
+    transform: rotate(0deg);
+}
+
+[dir="rtl"] img[alt="arrow"],
+[dir="rtl"] img[alt="back"] {
+    transform: scaleX(-1);
+}
+
+@media (min-width: 1024px) {
+    [dir="rtl"] .customer-settings-layout {
+        flex-direction: row-reverse;
+    }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

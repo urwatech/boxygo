@@ -1,0 +1,70 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.jsx';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-archivo: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Keep floating labels above autofilled values */
+.input-field:-webkit-autofill ~ label,
+.input-field:-webkit-autofill:focus ~ label,
+.input-field:-moz-autofill ~ label {
+    top: -0.5rem !important;
+    font-size: 0.875rem !important;
+    padding: 0 0.25rem !important;
+    background-color: #fff !important;
+    color: #3b82f6 !important;
+}
+
+img[alt="Google"] {
+  display: none !important;
+}
+
+button[aria-label="Keyboard shortcuts"] {
+    display: none !important;
+}
+
+.gm-style-cc{
+    display: none !important;
+}
+
+.gmnoprint.gm-style-cc{
+    display: none !important;
+}
+
+/* Firefox uses :-moz-ui-valid when autofill is applied */
+.input-field:-moz-ui-valid ~ label {
+    top: -0.5rem !important;
+    font-size: 0.875rem !important;
+    padding: 0 0.25rem !important;
+    background-color: #fff !important;
+    color: #3b82f6 !important;
+}
+
+/* Hide Google Maps "View larger map" link in customer dashboard */
+[data-map-container] .default-card,
+[data-map-container] .google-maps-link,
+[data-map-container] a[aria-label="View larger map"],
+[data-map-container] a[href*="maps.google.com"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Hide Google Maps bottom controls */
+[data-map-container] .gm-style-mtc,
+[data-map-container] [role="contentinfo"],
+[data-map-container] .gmnoprint {
+    display: none !important;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

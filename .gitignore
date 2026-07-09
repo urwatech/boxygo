@@ -1,0 +1,35 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+*.zip
+
+# Firebase service-account credentials (read by FcmService) and web push config
+/storage/app/firebase-credentials.json
+/public/firebase-messaging-sw-config.js
+
+# Runtime user uploads (created by the app, not source assets)
+/public/assets/customer-uploads
+/public/assets/admin-settings
+/public/assets/user-uploads
+/public/assets/assets
